@@ -299,9 +299,34 @@ Resolve the whole fight synchronously the moment Attack is pressed (you already 
 
 ---
 
-## 9. Open Questions to Resolve Before Stage 0
+## 9. Open Questions — RESOLVED (2026-07-05)
 
-- Working title / setting (fantasy realm name, tone — grim like Dao Unbound, or lighter like FallenSword's Erildath?)
-- Target zone count and rough hours-to-complete for 1.0
-- Whether stamina regen is wall-clock or play-time based (see Architecture Notes §6)
-- Art direction: placeholder geometric/text-based (fastest), pixel art, or hand-drawn
+### 9.1 Setting & Working Title
+**Xianxia fantasy** — cultivators, immortals, sects, spirit beasts. Working title: **Fallen Immortal** (placeholder, echoes the FallenSword heritage; rename freely later).
+
+This choice reflavors several core systems without changing their mechanics:
+
+| Generic system | Xianxia flavor |
+|---|---|
+| Levels / XP | Cultivation realms & stages (e.g. Qi Condensation 1–9 → Foundation Establishment → Core Formation → …) — progress bar is "cultivation progress toward breakthrough" |
+| Stamina | Spiritual Energy (Qi) — spent to move, fight, and activate techniques; regenerates on wall-clock time ("passive cultivation") |
+| Gold | Spirit Stones |
+| Gear | Artifacts / treasures (still degrade, still repaired — "artifact maintenance") |
+| Skills / buffs | Techniques (Offense/Defense/Special categories map cleanly) |
+| Guild / Warband stub | Sect — hireable NPC fellow disciples grant sect-style buffs |
+| Monsters | Demonic beasts, rogue cultivators, spirits |
+| Legendary Creatures | Ancient Terrors / calamity beasts |
+| Auction House | Treasure Pavilion — same MarketProvider design, xianxia skin |
+
+**Key design note:** realm-based leveling natively delivers the intended pacing — early stages break through quickly, later realms demand exponentially more cultivation progress, better artifacts, and technique investment. The XP curve should be authored per-realm, not as one smooth exponential.
+
+### 9.2 Scope for 1.0
+The long-term target is **MMO-scale content** (this is a fake-MMO that should eventually feel like a big world), with grindy pacing: fast early progression that deliberately slows, pushing players toward gear hunting and realm breakthroughs. The 8–15 zone figure in Stage 3 is a floor, not a ceiling — revisit once pacing data exists.
+
+**Immediate commitment: start with 2 zones** to validate the core loop and pacing model before committing to full content breadth. Stage 0/1 scope is unchanged; Stage 2's "2–3 zones" becomes these first 2 zones done properly.
+
+### 9.3 Stamina Regen
+**Wall-clock based** (per Architecture Notes §6 recommendation) — `Date.now()` against last-seen timestamp, regen accrues while the game is closed. Fits both the genre's check-in loop and the cultivation flavor ("your Qi recovers while you meditate away from the screen").
+
+### 9.4 Art Direction
+**Text/geometric UI** — clean CSS panels, iconography, rarity-colored text; no sprite art through 1.0. Art can be layered on later without rework.

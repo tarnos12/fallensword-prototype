@@ -43,6 +43,7 @@ import {
   initPavilion,
   updatePavilionBadge,
 } from './ui.js';
+import { initDebug } from './debug.js'; // TESTING ONLY (strip before demo)
 
 const state = createGame();
 let inCombat = false;
@@ -173,6 +174,7 @@ initPavilion(state, {
   cancel: (id) => { marketCancel(state, id); renderAll(); },
   collect: () => { marketCollect(state); renderAll(); },
 });
+initDebug(state, renderAll); // TESTING ONLY (strip before demo)
 renderAll();
 
 // Wall-clock Qi regen + passive spirit-stone income + technique-buff tick

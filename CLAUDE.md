@@ -49,6 +49,7 @@ All marked `TESTING ONLY` in code; in `game.js` `grantTestingKit()` and constant
 - `MAX_QI = 500` (`game.js`) → lower for real tuning.
 - Quartermaster kit: one item of every rarity + `+8 technique / +6 stat points` + full Qi (re-runs when `TEST_KIT_VERSION` bumps).
 - `INVENTORY_SIZE = 24` (`items.js`) → small starting size per GDD §6.2.
+- **Debug panel** (`js/debug.js` — the dashed purple "🛠 Debug" box at the bottom of the character column): God mode (one-shot / never die), item- & card-drop-rate multipliers, spawn any creature at any level on the current tile, mint gear of any rarity/slot/level, grant stones/XP/breakthrough/points/Qi, grant/max/clear Spirit Cards, reveal the whole codex, and rotate/resolve the market. **To strip:** delete `js/debug.js`; remove its `import`/`initDebug()` in `main.js`; remove the `TESTING ONLY — debug tools` block in `game.js` plus the `applyGodStats(actor)` call in `attack()`; and remove `setDropMultiplier`/`setCardDropMultiplier` (and their use in `rollDrop`/`rollCardDrop`) in `items.js`/`cards.js`. All are labelled `TESTING ONLY`.
 
 ## Workflow
 

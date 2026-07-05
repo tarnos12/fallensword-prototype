@@ -144,8 +144,16 @@ export function generateItem(slot, level, rarityKey, rng) {
   };
 }
 
+// TESTING ONLY (strip with the debug tooling before demo): a global multiplier
+// on the loot drop chance so debug tools can crank drops without touching the
+// tuned DROP_CHANCE. Defaults to 1 (no effect).
+let dropMultiplier = 1;
+export function setDropMultiplier(m) {
+  dropMultiplier = m;
+}
+
 export function rollDrop(creatureLevel, rng) {
-  if (rng() >= DROP_CHANCE) return null;
+  if (rng() >= DROP_CHANCE * dropMultiplier) return null;
   const slot = rng() < 0.5 ? 'weapon' : 'robe';
   return generateItem(slot, creatureLevel, null, rng);
 }

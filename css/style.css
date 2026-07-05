@@ -742,3 +742,34 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   border-radius: 5px;
   background: #262a38;
 }
+
+/* --- TESTING ONLY: debug panel (strip before demo) --- */
+
+.debug-box { border-color: #7e57c2; border-style: dashed; }
+
+.debug-box h2 { color: #b388ff; }
+
+.dbg-check { display: block; font-size: 0.8rem; color: var(--text); margin-bottom: 8px; cursor: pointer; }
+
+.dbg-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+
+.dbg-label { font-size: 0.76rem; color: var(--dim); min-width: 68px; }
+
+.dbg-mini { font-size: 0.72rem; color: var(--dim); }
+
+.dbg-select,
+.dbg-num {
+  background: #262a38;
+  color: var(--text);
+  border: 1px solid var(--panel-edge);
+  border-radius: 4px;
+  padding: 3px 5px;
+  font-family: inherit;
+  font-size: 0.76rem;
+}
+
+.dbg-btns { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0 2px; }
+
+.dbg-btn { font-size: 0.74rem; padding: 3px 8px; }
+
+.dbg-btn:hover:not(:disabled) { border-color: #b388ff; color: #b388ff; }

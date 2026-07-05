@@ -2,7 +2,7 @@
 // and persistence. Combat math itself lives in combat.js and is never
 // duplicated here.
 
-import { createPlayer } from './actors.js';
+import { createPlayer, spawnCreature, CREATURE_TYPES } from './actors.js';
 import { resolveCombat, MAX_TURNS } from './combat.js';
 import {
   ZONES,
@@ -19,6 +19,7 @@ import {
   applyBreakthroughs,
   allocateStat as allocPoint,
   stageName,
+  xpForBreakthrough,
 } from './progression.js';
 import {
   rollDrop,
@@ -295,7 +296,9 @@ export function attack(state, monsterId) {
   if (!monster) return null;
   if (!canAttack(state)) return null;
 
-  const result = resolveCombat(playerCombatActor(state.player), monster, randomSeed());
+  const actor = playerCombatActor(state.player);
+  applyGodStats(actor); // TESTING ONLY: no-op unless debug god mode is on
+  const result = resolveCombat(actor, monster, randomSeed());
   state.qi -= result.staminaSpent;
 
   const p = state.player;
@@ -533,6 +536,138 @@ export function marketCollect(state) {
   if (res.blocked) addLog(state, `${res.blocked} item(s) remain — clear pack space to collect them.`);
   if (res.stones || res.items.length) saveGame(state);
   return res;
+}
+
+// =====================================================================
+// TESTING ONLY — debug tools (strip before demo). Remove this whole block,
+// the `applyGodStats` call in attack(), `setDropMultiplier`/
+// `setCardDropMultiplier` in items.js/cards.js, and `js/debug.js` + its
+// wiring in main.js to fully strip the debug tooling.
+// =====================================================================
+
+let DEBUG_GOD = false;
+
+export function setGodMode(on) {
+  DEBUG_GOD = !!on;
+}
+
+export function isGodMode() {
+  return DEBUG_GOD;
+}
+
+// Boosts a combat snapshot so the player one-shots anything and never dies.
+// A no-op unless god mode is on, so it's safe to leave in the attack path.
+function applyGodStats(actor) {
+  if (!DEBUG_GOD) return;
+  actor.stats.attack = 99999;
+  actor.stats.damage = 99999;
+  actor.stats.defense = 99999;
+  actor.stats.armor = 99999;
+  actor.hp = 99999;
+  actor.maxHp = 99999;
+}
+
+export function debugSpawn(state, typeId, level) {
+  const tile = currentTile(state);
+  const lv = Number.isFinite(level) && level > 0 ? level : undefined;
+  const mon = spawnCreature(typeId, lv, state.worldRng);
+  tile.monsters.push(mon);
+  if (tile.clearedAt !== null) tile.clearedAt = null;
+  addLog(state, `[debug] Spawned ${mon.name} (Lv ${mon.level}) on this tile.`);
+  saveGame(state);
+}
+
+export function debugClearTile(state) {
+  currentTile(state).monsters = [];
+  addLog(state, '[debug] Cleared this tile.');
+  saveGame(state);
+}
+
+export function debugGrant(state, what) {
+  const p = state.player;
+  switch (what) {
+    case 'stones':
+      p.spiritStones += 5000;
+      addLog(state, '[debug] +5000 spirit stones.');
+      break;
+    case 'xp':
+      grantXp(state, 500);
+      addLog(state, '[debug] +500 XP.');
+      break;
+    case 'statpts':
+      p.statPoints += 5;
+      addLog(state, '[debug] +5 stat points.');
+      break;
+    case 'techpts':
+      p.skillPoints += 5;
+      addLog(state, '[debug] +5 technique points.');
+      break;
+    case 'qi':
+      state.qi = maxQi(p);
+      addLog(state, '[debug] Qi refilled.');
+      break;
+    case 'breakthrough':
+      grantXp(state, xpForBreakthrough(p.level)); // enough for one breakthrough
+      break;
+    default:
+      return;
+  }
+  saveGame(state);
+}
+
+export function debugGiveItem(state, slot, rarity, level) {
+  const p = state.player;
+  if (p.inventory.length >= INVENTORY_SIZE) {
+    addLog(state, '[debug] Pack full — cannot add item.');
+    return;
+  }
+  const lv = Number.isFinite(level) && level > 0 ? level : 1;
+  const item = generateItem(slot, lv, rarity, state.worldRng);
+  p.inventory.push(item);
+  addLog(state, `[debug] Added ${item.name} (Lv ${item.level}, ${rarity}).`);
+  saveGame(state);
+}
+
+export function debugCards(state, mode) {
+  const p = state.player;
+  if (!p.cards) p.cards = {};
+  if (mode === 'clear') {
+    p.cards = {};
+    addLog(state, '[debug] Cleared all Spirit Cards.');
+  } else {
+    for (const id of Object.keys(CARDS)) {
+      p.cards[id] = mode === 'max' ? CARDS[id].maxLevel : Math.max(1, p.cards[id] ?? 0);
+    }
+    addLog(state, mode === 'max' ? '[debug] All Spirit Cards maxed.' : '[debug] Granted all Spirit Cards.');
+  }
+  saveGame(state);
+}
+
+export function debugRevealCodex(state) {
+  const now = Date.now();
+  for (const typeId of Object.keys(CREATURE_TYPES)) {
+    state.player.bestiary[typeId] = { kills: 100, firstSeenAt: now };
+  }
+  addLog(state, '[debug] Beast Codex fully revealed (100 kills each).');
+  saveGame(state);
+}
+
+export function debugMarket(state, mode) {
+  const m = state.market;
+  if (mode === 'refresh') {
+    m.listings = [];
+    m.lastRefresh = 0;
+    state.marketProvider.tick();
+    addLog(state, '[debug] Rotated Pavilion listings.');
+  } else if (mode === 'resolve') {
+    for (const pl of m.playerListings) {
+      if (pl.willSell) pl.sellAt = 0; // resolve as a sale now
+      else pl.expiresAt = 0; // expire (return) now
+    }
+    tickMarket(state);
+    addLog(state, '[debug] Resolved all your listings.');
+  }
+  saveGame(state);
 }
 
 export { effectiveStats, stageName };

@@ -11,7 +11,7 @@ Public repo: https://github.com/tarnos12/fallensword-prototype (branch `master`)
 ## Run & test
 
 - Dev server: `npx serve -l 8123 .` (config in `.claude/launch.json`, name `fallen-immortal`). Use the preview tools, not Bash, to run/verify.
-- **Always end a change summary with the test link: http://localhost:8123**
+- **Always end a change summary with the test link: http://localhost:8123** — **except in cloud/remote sessions** (Claude Code on the web), where the server runs in a throwaway container the author can't reach. There, skip the link: verify in-container (headless Node sims + real-Chromium/Playwright DOM checks) and tell the author how to run it themselves (`git checkout <branch> && npx serve -l 8123 .`, open `http://localhost:8123` on **their** machine — ES modules need a static server, not `file://`).
 - Screenshots via the preview tool tend to time out in this environment — verify via DOM inspection (`preview_eval`, `preview_snapshot`, `preview_inspect`) instead.
 - Balance is tuned **headless**: import `resolveCombat`/`generateItem`/etc. in Node and run bulk sims (see scratchpad `*-sim.mjs` patterns). No browser needed for tuning.
 

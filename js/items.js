@@ -1,20 +1,48 @@
 // Items & gear (GDD §6.1, §6.2, §6.8). Two slots for Stage 1: weapon and
-// robe. Rarity gates the stat ROLL RANGE, not just base stats, so two drops
-// of the same rarity differ. Random drops only reach Rare — higher tiers are
+// robe. The full FallenSword-adapted rarity ladder: rarity gates the NUMBER
+// of attributes an item rolls (Common 1 → Mythic 5) plus a range multiplier.
+// Every item comes from a named template whose per-attribute roll ranges are
+// always respected. Random drops only reach Rare — Epic/Legendary/Mythic are
 // reserved for hand-authored items (quests, bosses) per §6.1.
 
 export const RARITIES = {
-  common: { key: 'common', label: 'Common', mult: 1.0, weight: 70, maxDurability: 30, repairPerPoint: 0.5, sellMult: 2 },
-  uncommon: { key: 'uncommon', label: 'Uncommon', mult: 1.4, weight: 25, maxDurability: 45, repairPerPoint: 1, sellMult: 5 },
-  rare: { key: 'rare', label: 'Rare', mult: 1.9, weight: 5, maxDurability: 60, repairPerPoint: 2, sellMult: 12 },
+  common: { key: 'common', label: 'Common', mult: 1.0, attributes: 1, weight: 70, maxDurability: 30, repairPerPoint: 0.5, sellMult: 2 },
+  uncommon: { key: 'uncommon', label: 'Uncommon', mult: 1.35, attributes: 2, weight: 25, maxDurability: 45, repairPerPoint: 1, sellMult: 5 },
+  rare: { key: 'rare', label: 'Rare', mult: 1.8, attributes: 3, weight: 5, maxDurability: 60, repairPerPoint: 2, sellMult: 12 },
+  epic: { key: 'epic', label: 'Epic', mult: 2.3, attributes: 4, weight: 0, maxDurability: 80, repairPerPoint: 3, sellMult: 30 },
+  legendary: { key: 'legendary', label: 'Legendary', mult: 2.9, attributes: 5, weight: 0, maxDurability: 100, repairPerPoint: 5, sellMult: 75 },
+  mythic: { key: 'mythic', label: 'Mythic', mult: 3.6, attributes: 5, weight: 0, maxDurability: 120, repairPerPoint: 8, sellMult: 180 },
 };
 
 export const INVENTORY_SIZE = 8;
 export const DROP_CHANCE = 0.22;
 
-const WEAPON_NAMES = ['Iron Sabre', 'Ashwood Spear', "Disciple's Jian", 'Bone-Carved Dagger'];
-const ROBE_NAMES = ['Grey Disciple Robe', 'Beast-Hide Mantle', 'Woven Reed Vest', 'Mountain Cotton Garb'];
-const RARITY_PREFIX = { common: '', uncommon: 'Refined ', rare: 'Spirit-Forged ' };
+// Templates: ordered attribute pools with level-1 roll ranges [stat, min, max].
+// The first attribute is the item's identity (a Common piece rolls only that);
+// higher rarities work down the list.
+const TEMPLATES = {
+  weapon: [
+    { name: 'Bone-Carved Dagger', attrs: [['attack', 1, 2], ['damage', 1, 2], ['defense', 1, 2], ['hp', 2, 4], ['armor', 1, 1]] },
+    { name: 'Iron Sabre', attrs: [['damage', 1, 3], ['attack', 1, 2], ['armor', 1, 1], ['hp', 2, 4], ['defense', 1, 2]] },
+    { name: 'Ashwood Spear', attrs: [['attack', 1, 3], ['damage', 1, 2], ['hp', 2, 4], ['defense', 1, 1], ['armor', 1, 1]] },
+    { name: "Disciple's Jian", attrs: [['damage', 1, 2], ['attack', 1, 3], ['defense', 1, 2], ['armor', 1, 1], ['hp', 2, 4]] },
+  ],
+  robe: [
+    { name: 'Grey Disciple Robe', attrs: [['defense', 1, 3], ['armor', 1, 2], ['hp', 2, 5], ['attack', 1, 1], ['damage', 1, 1]] },
+    { name: 'Beast-Hide Mantle', attrs: [['armor', 1, 2], ['hp', 2, 5], ['defense', 1, 2], ['damage', 1, 1], ['attack', 1, 1]] },
+    { name: 'Woven Reed Vest', attrs: [['hp', 3, 6], ['defense', 1, 2], ['armor', 1, 1], ['attack', 1, 1], ['damage', 1, 1]] },
+    { name: 'Mountain Cotton Garb', attrs: [['defense', 1, 2], ['hp', 2, 5], ['armor', 1, 2], ['damage', 1, 1], ['attack', 1, 1]] },
+  ],
+};
+
+const RARITY_PREFIX = {
+  common: '',
+  uncommon: 'Refined ',
+  rare: 'Spirit-Forged ',
+  epic: 'Ancient ',
+  legendary: 'Immortal ',
+  mythic: 'Celestial ',
+};
 
 let itemCounter = 0;
 
@@ -35,31 +63,31 @@ function rollRarity(rng) {
   return RARITIES.common;
 }
 
-// Stat budget scales with item level; rarity multiplies it; each stat rolls
-// ±15% independently so same-rarity items aren't identical.
-function roll(base, mult, rng) {
-  return Math.max(1, Math.round(base * mult * (0.85 + rng() * 0.3)));
+// An attribute's effective range is its template range scaled by item level
+// and rarity multiplier; the roll is always uniform WITHIN that range.
+function scaleBound(v, level, mult) {
+  return Math.max(1, Math.round(v * (1 + 0.45 * (level - 1)) * mult));
+}
+
+function rollAttr([stat, min, max], level, mult, rng) {
+  const lo = scaleBound(min, level, mult);
+  const hi = scaleBound(max, level, mult);
+  return [stat, lo + Math.floor(rng() * (hi - lo + 1))];
 }
 
 export function generateItem(slot, level, rarityKey, rng) {
   const rarity = rarityKey ? RARITIES[rarityKey] : rollRarity(rng);
-  const names = slot === 'weapon' ? WEAPON_NAMES : ROBE_NAMES;
-  const baseName = names[Math.floor(rng() * names.length)];
-  const bonuses =
-    slot === 'weapon'
-      ? {
-          attack: roll(1 + level * 0.8, rarity.mult, rng),
-          damage: roll(1 + level * 0.6, rarity.mult, rng),
-        }
-      : {
-          defense: roll(1 + level * 0.7, rarity.mult, rng),
-          armor: roll(0.5 + level * 0.4, rarity.mult, rng),
-          hp: roll(level * 2, rarity.mult, rng),
-        };
+  const templates = TEMPLATES[slot];
+  const template = templates[Math.floor(rng() * templates.length)];
+  const bonuses = {};
+  for (const attr of template.attrs.slice(0, rarity.attributes)) {
+    const [stat, value] = rollAttr(attr, level, rarity.mult, rng);
+    bonuses[stat] = (bonuses[stat] ?? 0) + value;
+  }
   return {
     id: `item-${++itemCounter}`,
     slot,
-    name: RARITY_PREFIX[rarity.key] + baseName,
+    name: RARITY_PREFIX[rarity.key] + template.name,
     rarity: rarity.key,
     level,
     bonuses,

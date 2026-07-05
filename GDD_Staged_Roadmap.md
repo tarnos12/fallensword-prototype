@@ -167,6 +167,8 @@ FallenSword uses rarity tiers that gate both power and scarcity — from most to
 - **Rarity should gate stat *rolls*, not just base stats** — a Rare sword rolls from a wider/better range than a Common one, so two items of the same rarity aren't identical (gives loot variance without needing an "affix" system yet).
 - **Reserve your top 1–2 tiers for named, hand-authored items** (boss drops, quest rewards, crafted uniques) rather than random drops — this is what made Epic/Legendary feel special in FallenSword rather than just "a bigger number."
 
+**Resolved (2026-07-05):** every item is generated from a named **template** (e.g. Bone-Carved Dagger, Grey Disciple Robe) that defines an ordered list of attributes, each with a fixed roll range (e.g. Dagger: 1–2 Attack) scaled by item level. **Rarity gates the number of attributes rolled** — Common 1, Uncommon 2, Rare 3, Epic 4, Legendary/Mythic 5 — plus a range multiplier and durability/repair/sell tiers. Random drops only reach Rare; Epic/Legendary/Mythic are hand-authored per the bullet above.
+
 ### 6.2 Inventory / Backpack
 
 The backpack starts small (3 slots in FallenSword, 12 slots per page, upgradeable) — clicking an equipped-slot item equips it and swaps the previously worn item back into the backpack, and players can maintain multiple **Combat Sets** (e.g., a leveling set and a defensive set) to swap gear loadouts without manually re-equipping each piece.

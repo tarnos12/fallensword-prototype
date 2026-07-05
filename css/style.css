@@ -297,6 +297,9 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 .item-slot.icon-common { border-color: #b8b5aa; }
 .item-slot.icon-uncommon { border-color: #7bc67e; }
 .item-slot.icon-rare { border-color: #64b5f6; }
+.item-slot.icon-epic { border-color: #b388ff; }
+.item-slot.icon-legendary { border-color: #ffb74d; }
+.item-slot.icon-mythic { border-color: #ff8a80; }
 
 .item-icon { line-height: 1; pointer-events: none; }
 
@@ -377,6 +380,9 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 .rarity-common { color: #b8b5aa; }
 .rarity-uncommon { color: #7bc67e; }
 .rarity-rare { color: #64b5f6; }
+.rarity-epic { color: #b388ff; }
+.rarity-legendary { color: #ffb74d; }
+.rarity-mythic { color: #ff8a80; }
 
 .broken { color: var(--loss); font-weight: bold; }
 

@@ -89,6 +89,7 @@ This loop must be fun and complete with zero other systems layered on — everyt
 - 1 full zone with a small quest chain (3–5 quests)
 - Modular file structure in place (per Architecture Notes)
 - Basic Actor schema shared by player/monsters
+- Lifetime kill tracking in the save schema + stat-modifier aggregation pipeline (per §7.3/§7.5 — data foundations only, no Bestiary/Card UI yet)
 
 **Out of scope:** guild-stub, market-stub, world events, multiple zones, art pass.
 
@@ -107,6 +108,7 @@ This loop must be fun and complete with zero other systems layered on — everyt
 - Tutorial/onboarding pass
 - Visual/UI polish pass (even if simple, needs to look intentional)
 - One "Legendary Creature" stub boss encounter
+- Bestiary ("Beast Codex") UI + Spirit Card drops for the demo zones' creatures (§7)
 
 **Out of scope:** full 1.0 content breadth, balancing for dozens of hours of play, multiplayer hooks beyond the interface design.
 
@@ -124,6 +126,7 @@ This loop must be fun and complete with zero other systems layered on — everyt
 - Warband (NPC guild-stub) fully fleshed out with meaningful buffs
 - Fake-multiplayer Auction House fully populated: full persona roster (60–150), tuned price variance, player-selling resolution loop, "Recently Active" and Rivals feeds sharing the same persona data
 - Multiple scheduled/solo Legendary Creature encounters as end-game content
+- Full Spirit Card set across all zones (incl. boss/Legendary cards) with duplicate-upgrade tuning; complete Bestiary coverage (§7)
 - Full save/export/import (so players can back up saves without an account)
 - Balancing pass across the full level range
 - Itch.io packaging, store page, screenshots
@@ -228,6 +231,64 @@ This is the system worth the most design care, since it's your best tool for mak
 - **Skill schema** needs: `category` (Offense/Defense/Special), `prerequisites[]`, `duration`, `staminaCost`, `effect`.
 - **Persona schema** (new) needs: `name`, `level`, `guildTag`, used by both the Market and the Profile/Rivals feed — build this once, consume it everywhere.
 - **Listing schema** needs: `itemId`, `sellerPersonaId`, `price`, `postedAt`, `expiresAt` — same shape a real listing table would have.
+
+---
+
+## 7. Bestiary & Spirit Card System
+
+Two linked collection systems that give every creature in the game long-term value beyond its XP — critical for the intended grindy pacing, since they keep low-level zones worth revisiting after their XP goes trivial.
+
+### 7.1 Bestiary ("Beast Codex")
+
+A per-creature catalog that fills in through play:
+
+- **An entry is created on first encounter** (inspecting or fighting a creature) and tracks lifetime kills per creature type.
+- **Progressive disclosure by kill count** — thresholds reveal more of the entry, e.g.:
+  - 1 kill: name, level, flavor text
+  - 10 kills: full combat stats (makes the inspect-eye redundant for farmed creatures)
+  - 50 kills: full drop table
+  - 100 kills: the creature's Spirit Card drop chance (see 7.2) + a codex "mastery" mark
+- **Cheap to build, high retention value:** the combat resolver already produces per-kill data; the bestiary is UI over a `{ creatureId: killCount }` map in the save. Kill tracking should be recorded in the save schema from Stage 1 even though the Bestiary UI lands later — retrofitting lifetime kill counts is impossible.
+- **Later (post-1.0 candidate):** per-zone codex completion rewards (e.g. complete all Zone 1 entries → small permanent bonus), which converts the bestiary from passive record into an explicit goal.
+
+### 7.2 Spirit Cards
+
+Every creature type has a corresponding **Spirit Card** with a small chance to drop on kill. Collected cards grant **always-on passive bonuses** — no equipping, no slot management; the collection itself is the power.
+
+- **Drop model:** low base chance per kill (tuning start: 0.5–2% for normal creatures, higher for bosses/Legendaries). The card roll is separate from the normal loot roll, so a card never "replaces" an item drop.
+- **Bonus types at launch:**
+  - Qi regen rate (+X per hour)
+  - Qi cap (+X max)
+  - Spirit stones per hour (passive wall-clock income — uses the same last-seen-timestamp machinery as Qi regen)
+  - Extra inventory slots
+  - (extensible enum — XP gain %, repair discount, drop-rate % etc. can be added without schema changes)
+- **Duplicates upgrade the card** (level 1→5, bonus scales per level, later copies beyond max convert to a small spirit-stone payout). This is the grind-longevity lever: a 1% card at level 5 is a long-term chase goal that keeps a zone alive for hundreds of kills, which is exactly the pacing profile we want.
+- **Cards are account-bound in 1.0.** Whether rare cards become tradeable on the market in 2.0 is an open economy question — flag it, don't decide it now.
+- **Bestiary integration:** each codex entry shows that creature's card (silhouetted until owned, with owned level), making the bestiary double as the card-collection UI instead of building a separate album screen.
+
+### 7.3 Architecture Implication: Stat Modifier Aggregation
+
+Cards are the third source of passive modifiers after gear and techniques, which forces a decision we should make in **Stage 1**, not later: the player's effective stats must be computed through a single aggregation pipeline —
+
+```
+effectiveStats = base + allocatedPoints + gearBonuses + activeTechniques + cardBonuses
+```
+
+— rather than mutating stats in place when things equip/unequip/drop. Every future passive source (sect buffs, set bonuses, codex completion rewards) then plugs into the same pipeline. This also matters for 2.0 server-side validation: a save is verifiable if effective stats are always derivable from owned sources.
+
+### 7.4 Data Model Additions
+
+- **Creature schema** gains: `cardId`.
+- **Card schema** (new): `id`, `creatureId`, `bonusType`, `bonusValuePerLevel`, `maxLevel`, `dropChance`.
+- **Save schema** gains: `bestiary: { creatureId: { kills, firstSeenAt } }`, `cards: { cardId: level }`.
+- **Passive income/regen** generalizes: instead of a Qi-only regen calculation, one wall-clock tick function applies all per-hour accruals (Qi regen, spirit stones/hour) from the aggregated modifier set.
+
+### 7.5 Roadmap Placement
+
+- **Stage 0:** nothing — no persistence yet.
+- **Stage 1:** kill tracking in the save schema + the stat-modifier aggregation pipeline (§7.3). No UI.
+- **Stage 2:** Bestiary UI + Spirit Cards live for the first 2 zones' creatures (this is the stage where retention systems earn their keep in a public demo).
+- **Stage 3:** full card set across all zones, duplicate-upgrade tuning, boss/Legendary cards.
 
 ---
 

@@ -4,7 +4,14 @@
 
 import { createPlayer } from './actors.js';
 import { resolveCombat, MAX_TURNS } from './combat.js';
-import { createMap, moveCost, maybeRespawn, removeMonster } from './map.js';
+import {
+  ZONES,
+  createZone,
+  moveCost,
+  maybeRespawn,
+  removeMonster,
+  portalAt,
+} from './map.js';
 import { mulberry32, randomSeed } from './rng.js';
 import {
   playerCombatActor,
@@ -44,8 +51,9 @@ export function createGame() {
     ? { ...loaded, worldRng, offlineQi: 0 }
     : {
         player: createPlayer(),
-        map: createMap(worldRng),
-        pos: { x: 0, y: 0 },
+        zones: {},
+        zoneId: 'azuremist',
+        pos: { ...ZONES.azuremist.start },
         qi: MAX_QI,
         lastQiTick: Date.now(),
         quests: Quests.createQuestState(),
@@ -53,6 +61,16 @@ export function createGame() {
         worldRng,
         offlineQi: 0,
       };
+
+  // Ensure every defined zone exists (fills gaps for new games, migrated v1
+  // saves, and zones added after a save was written).
+  if (!state.zones) state.zones = {};
+  for (const id of Object.keys(ZONES)) {
+    if (!state.zones[id]) state.zones[id] = createZone(id, worldRng);
+  }
+  if (!ZONES[state.zoneId]) state.zoneId = 'azuremist';
+  state.map = state.zones[state.zoneId];
+
   state.loadedFromSave = !!loaded;
   if (loaded) {
     const before = state.qi;
@@ -89,8 +107,36 @@ export function currentTile(state) {
   return state.map.at(state.pos.x, state.pos.y);
 }
 
-export function atSectGate(state) {
+export function currentZone(state) {
+  return ZONES[state.zoneId];
+}
+
+// A haven (each zone's start tile) is spawn-free and offers sect services
+// (repair, sell). Kept as one predicate so services follow the player to
+// each zone's outpost.
+export function atHaven(state) {
   return currentTile(state).isStart;
+}
+
+// The portal on the current tile, if any (for the travel action).
+export function currentPortal(state) {
+  return portalAt(state.zoneId, state.pos.x, state.pos.y);
+}
+
+export function travel(state, portal) {
+  const dest = portal ?? currentPortal(state);
+  if (!dest) return { ok: false, reason: 'No portal here' };
+  if (state.player.level < dest.minStage) {
+    return { ok: false, reason: `Requires ${stageName(dest.minStage)}` };
+  }
+  state.zoneId = dest.to;
+  state.map = state.zones[dest.to];
+  state.pos = { x: dest.entryX, y: dest.entryY };
+  maybeRespawn(state.map, currentTile(state), state.worldRng);
+  Quests.onMove(state.quests, state.zoneId, state.pos.x, state.pos.y);
+  addLog(state, `You travel to ${ZONES[dest.to].name}.`);
+  saveGame(state);
+  return { ok: true };
 }
 
 export function addLog(state, msg) {
@@ -112,15 +158,16 @@ export function tickQi(state, now = Date.now()) {
 }
 
 export function tryMove(state, x, y) {
-  if (x < 0 || y < 0 || x >= 10 || y >= 10) return { ok: false, reason: 'Out of bounds' };
+  const size = state.map.size;
+  if (x < 0 || y < 0 || x >= size || y >= size) return { ok: false, reason: 'Out of bounds' };
   const cost = moveCost(state.pos, { x, y });
   if (cost === null) return { ok: false, reason: 'Not adjacent' };
   if (state.qi < cost) return { ok: false, reason: `Need ${cost} Qi to move` };
   state.qi -= cost;
   state.pos = { x, y };
   const tile = currentTile(state);
-  maybeRespawn(tile, state.worldRng);
-  Quests.onMove(state.quests, x, y);
+  maybeRespawn(state.map, tile, state.worldRng);
+  Quests.onMove(state.quests, state.zoneId, x, y);
   saveGame(state);
   return { ok: true, cost };
 }
@@ -226,7 +273,7 @@ export function unequipItem(state, slot) {
 }
 
 export function sellItem(state, itemId) {
-  if (!atSectGate(state)) return false;
+  if (!atHaven(state)) return false;
   const idx = state.player.inventory.findIndex((i) => i.id === itemId);
   if (idx === -1) return false;
   const item = state.player.inventory[idx];
@@ -253,7 +300,7 @@ export function totalRepairCost(state) {
 }
 
 export function repairAll(state) {
-  if (!atSectGate(state)) return false;
+  if (!atHaven(state)) return false;
   const cost = totalRepairCost(state);
   if (cost === 0 || state.player.spiritStones < cost) return false;
   state.player.spiritStones -= cost;

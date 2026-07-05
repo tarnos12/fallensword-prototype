@@ -1,19 +1,43 @@
-// Leveling & stat allocation (GDD §6.3, §9.1). Levels are cultivation stages:
-// Qi Condensation 1-9 for zone 1. The XP curve is authored per-stage — later
-// breakthroughs cost dramatically more — which is what delivers the intended
-// "fast early, slows down" pacing rather than one smooth exponential.
+// Leveling & stat allocation (GDD §6.3, §9.1). A "level" is a global stage
+// index across cultivation realms: 1-9 = Qi Condensation 1-9, 10-18 =
+// Foundation Establishment 1-9, and so on. The XP curve is authored per-stage
+// — later breakthroughs cost dramatically more, with a big spike at each realm
+// barrier — which delivers the intended "fast early, slows down" pacing.
 
-export const MAX_STAGE = 9;
+// Realms in ascending order; each spans `stages` sub-levels.
+export const REALMS = [
+  { name: 'Qi Condensation', stages: 9 },
+  { name: 'Foundation Establishment', stages: 9 },
+];
 
-// Cost to break through FROM stage n to n+1.
-const STAGE_XP = [0, 100, 160, 256, 410, 655, 1050, 1680, 2690];
+export const MAX_STAGE = REALMS.reduce((s, r) => s + r.stages, 0);
+
+// Cost to break through FROM stage n to n+1. The QC9 -> FE1 jump (index 9) is
+// a deliberate realm-barrier spike — the classic xianxia bottleneck.
+const STAGE_XP = [
+  0, // stage 0 (unused)
+  100, 160, 256, 410, 655, 1050, 1680, 2690, // QC1->2 .. QC8->9
+  6000, // QC9 -> FE1 (realm barrier)
+  8600, 12000, 16800, 23500, 33000, 46000, 64000, 90000, // FE1->2 .. FE8->9
+];
 
 export function xpForBreakthrough(stage) {
   return stage >= MAX_STAGE ? Infinity : STAGE_XP[stage];
 }
 
-export function stageName(stage) {
-  return `Qi Condensation ${stage}`;
+export function realmFor(level) {
+  let n = level;
+  for (const r of REALMS) {
+    if (n <= r.stages) return { realm: r.name, sub: n };
+    n -= r.stages;
+  }
+  const last = REALMS[REALMS.length - 1];
+  return { realm: last.name, sub: last.stages };
+}
+
+export function stageName(level) {
+  const { realm, sub } = realmFor(level);
+  return `${realm} ${sub}`;
 }
 
 export const STAT_POINTS_PER_STAGE = 3;

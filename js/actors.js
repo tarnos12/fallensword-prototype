@@ -36,6 +36,9 @@ export const CREATURE_TYPES = {
   // Deliberately a defensive wall at Stage 0 stats: a level-1 player can
   // neither kill it nor be killed fast, so fights hit the 20-turn draw —
   // the "this foe is beyond you" signal (GDD §8.3).
+  // Deliberately a defensive wall at Stage 0 stats: a level-1 player can
+  // neither kill it nor be killed fast, so fights hit the 20-turn draw —
+  // the "this foe is beyond you" signal (GDD §8.3).
   rogueCultivator: {
     id: 'rogueCultivator',
     name: 'Rogue Cultivator',
@@ -44,6 +47,43 @@ export const CREATURE_TYPES = {
     perLevel: { attack: 1.5, defense: 1.5, damage: 0.25, armor: 0.5, maxHp: 4 },
     xp: 55,
     stones: 30,
+  },
+
+  // --- Zone 2: Cindervein Gorge (Foundation Establishment tier). `base` is
+  // the level-1 baseline; effective stats are base + perLevel*(level-1), so
+  // these are tuned to land at the intended values at each creature's own
+  // level band (verified in the zone-2 balance sim). ---
+  // Band 1, farmable from arrival (~QC4-5): a fast striker with low defenses.
+  emberHound: {
+    id: 'emberHound',
+    name: 'Ember Hound',
+    levels: [7, 8],
+    base: { attack: 5, defense: 9, damage: 3, armor: 1, maxHp: 18 },
+    perLevel: { attack: 1, defense: 1, damage: 1, armor: 0.3, maxHp: 4 },
+    xp: 90,
+    stones: 45,
+  },
+  // Band 2, mid wall: tanky armor/HP that better gear grinds down.
+  cinderGolem: {
+    id: 'cinderGolem',
+    name: 'Cinder Golem',
+    levels: [9, 10],
+    base: { attack: 6, defense: 10, damage: 4, armor: 3, maxHp: 25 },
+    perLevel: { attack: 1, defense: 1, damage: 0.8, armor: 0.5, maxHp: 5 },
+    xp: 150,
+    stones: 80,
+  },
+  // Band 3 wall: high defense + armor; under-geared cultivators draw against
+  // it the way QC1 players drew against the Rogue Cultivator. The FE1 quest
+  // weapon is what cracks it.
+  ashenRevenant: {
+    id: 'ashenRevenant',
+    name: 'Ashen Revenant',
+    levels: [11, 12],
+    base: { attack: 8, defense: 10, damage: 5, armor: 3, maxHp: 30 },
+    perLevel: { attack: 1, defense: 1.2, damage: 0.5, armor: 0.6, maxHp: 5 },
+    xp: 240,
+    stones: 130,
   },
 };
 

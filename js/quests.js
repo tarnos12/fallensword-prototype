@@ -14,9 +14,9 @@ export const QUESTS = [
   {
     id: 'into-wilds',
     title: 'Into the Wilds',
-    text: 'An elder asks you to scout the deeper wilds. Reach the stone marker at (5, 5).',
+    text: 'An elder asks you to scout the deeper wilds. Reach the stone marker at (5, 5) in Azuremist Vale.',
     type: 'reach',
-    target: { x: 5, y: 5 },
+    target: { zone: 'azuremist', x: 5, y: 5 },
     reward: { stones: 80, xp: 60, item: { slot: 'robe', level: 2, rarity: 'uncommon' } },
   },
   {
@@ -38,10 +38,43 @@ export const QUESTS = [
   {
     id: 'breakthrough-4',
     title: 'Foundation of the Path',
-    text: 'Your master senses your potential. Reach Qi Condensation 4 and claim a treasure from the sect vault.',
+    text: 'Your master senses your potential. Reach Qi Condensation 4 and claim a treasure from the sect vault — it will open the way beyond the Vale.',
     type: 'stage',
     target: { stage: 4 },
     reward: { stones: 300, item: { slot: 'weapon', level: 4, rarity: 'rare' } },
+  },
+  // --- Zone 2 bridge: Cindervein Gorge ---
+  {
+    id: 'seek-the-gorge',
+    title: 'The Road Beyond',
+    text: 'A rift at the Vale’s far corner (9, 9) leads to the Cindervein Gorge. Travel through it.',
+    type: 'reach',
+    target: { zone: 'cindervein', x: 0, y: 0 },
+    reward: { stones: 120, xp: 150 },
+  },
+  {
+    id: 'ember-hunt',
+    title: 'Hounds of Ash',
+    text: 'Ember hounds harry the outpost. Slay 5 to prove your footing in the Gorge.',
+    type: 'kill',
+    target: { typeId: 'emberHound', count: 5 },
+    reward: { stones: 250, xp: 300, item: { slot: 'robe', level: 7, rarity: 'rare' } },
+  },
+  {
+    id: 'gorge-wall',
+    title: 'The Ashen Sentinel',
+    text: 'An ashen revenant guards the deep Gorge. Face one — measure yourself against the wall of this realm.',
+    type: 'face',
+    target: { typeId: 'ashenRevenant', count: 1 },
+    reward: { xp: 500 },
+  },
+  {
+    id: 'foundation-1',
+    title: 'Establishing the Foundation',
+    text: 'Break through the realm barrier and reach Foundation Establishment. The sect will reward the ascent.',
+    type: 'stage',
+    target: { stage: 10 },
+    reward: { stones: 800, item: { slot: 'weapon', level: 8, rarity: 'rare' } },
   },
 ];
 
@@ -78,9 +111,16 @@ export function onFace(qs, typeId) {
   }
 }
 
-export function onMove(qs, x, y) {
+export function onMove(qs, zoneId, x, y) {
   const q = currentQuest(qs);
-  if (q && !qs.claimable && q.type === 'reach' && q.target.x === x && q.target.y === y) {
+  if (
+    q &&
+    !qs.claimable &&
+    q.type === 'reach' &&
+    q.target.zone === zoneId &&
+    q.target.x === x &&
+    q.target.y === y
+  ) {
     qs.progress = 1;
     checkComplete(qs);
   }

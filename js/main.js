@@ -6,7 +6,8 @@ import {
   canAttack,
   tickQi,
   addLog,
-  atSectGate,
+  atHaven,
+  travel,
   allocateStat,
   equipItem,
   unequipItem,
@@ -51,13 +52,18 @@ function renderAll() {
       repairAll(state);
       renderAll();
     },
+    onTravel: (portal) => {
+      const res = travel(state, portal);
+      if (!res.ok && res.reason) addLog(state, res.reason);
+      renderAll();
+    },
   });
   renderCharSheet(state, (stat) => {
     allocateStat(state, stat);
     renderAll();
   });
   renderGear(state, {
-    atGate: atSectGate(state),
+    atGate: atHaven(state),
     onEquip: (id) => {
       equipItem(state, id);
       renderAll();

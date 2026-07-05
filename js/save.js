@@ -2,23 +2,26 @@
 // plain JSON — the same blob could later be uploaded as server account state.
 // Persisting lastQiTick is what makes offline wall-clock Qi regen work.
 
-import { rehydrateMap } from './map.js';
+import { ZONES, rehydrateZone } from './map.js';
 import { getItemCounter, setItemCounter } from './items.js';
 import { getCreatureCounter, setCreatureCounter } from './actors.js';
 
 const KEY = 'fallen-immortal-save';
-const VERSION = 1;
+const VERSION = 2;
 
 export function saveGame(state) {
+  const zones = {};
+  for (const [id, map] of Object.entries(state.zones)) zones[id] = map.tiles;
   const blob = {
     version: VERSION,
     savedAt: Date.now(),
     player: state.player,
+    zoneId: state.zoneId,
     pos: state.pos,
     qi: state.qi,
     lastQiTick: state.lastQiTick,
     quests: state.quests,
-    tiles: state.map.tiles,
+    zones,
     log: state.log,
     counters: { item: getItemCounter(), creature: getCreatureCounter() },
   };
@@ -29,7 +32,8 @@ export function saveGame(state) {
   }
 }
 
-// Returns a partial state to merge, or null if no (or incompatible) save.
+// Returns a partial state to merge, or null if no save. createGame() fills in
+// any zones not present here (new games, migrated saves, newly-added zones).
 export function loadGame() {
   let blob;
   try {
@@ -37,16 +41,37 @@ export function loadGame() {
   } catch {
     return null;
   }
-  if (!blob || blob.version !== VERSION) return null;
+  if (!blob) return null;
+
+  let zonesData;
+  let zoneId;
+  if (blob.version === 1) {
+    // v1 stored a single zone's tiles under `tiles`; map it onto Azuremist.
+    zonesData = { azuremist: blob.tiles };
+    zoneId = 'azuremist';
+  } else if (blob.version === 2) {
+    zonesData = blob.zones ?? {};
+    zoneId = blob.zoneId ?? 'azuremist';
+  } else {
+    return null; // unknown/newer format
+  }
+
   setItemCounter(blob.counters?.item ?? 1000);
   setCreatureCounter(blob.counters?.creature ?? 1000);
+
+  const zones = {};
+  for (const [id, tiles] of Object.entries(zonesData)) {
+    if (ZONES[id]) zones[id] = rehydrateZone(id, tiles);
+  }
+
   return {
     player: blob.player,
+    zoneId: ZONES[zoneId] ? zoneId : 'azuremist',
     pos: blob.pos,
     qi: blob.qi,
     lastQiTick: blob.lastQiTick,
     quests: blob.quests,
-    map: rehydrateMap(blob.tiles),
+    zones,
     log: blob.log ?? [],
     savedAt: blob.savedAt,
   };

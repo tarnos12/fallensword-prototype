@@ -1,7 +1,7 @@
 // Rendering + combat playback. Reads game state, never mutates it except
 // through the action functions passed in from main.js.
 
-import { MAP_SIZE } from './map.js';
+import { ZONES, portalAt } from './map.js';
 import { MAX_QI, effectiveStats, stageName, totalRepairCost } from './game.js';
 import { MAX_TURNS } from './combat.js';
 import { xpForBreakthrough, ALLOC_STATS, POINT_VALUE, MAX_STAGE } from './progression.js';
@@ -25,11 +25,13 @@ export function renderPlayerBar(state) {
 
 export function renderMap(state, onTileClick) {
   const grid = $('map-grid');
+  const size = state.map.size;
   grid.innerHTML = '';
-  grid.style.gridTemplateColumns = `repeat(${MAP_SIZE}, 1fr)`;
-  for (let y = 0; y < MAP_SIZE; y++) {
-    for (let x = 0; x < MAP_SIZE; x++) {
+  grid.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
       const tile = state.map.at(x, y);
+      const portal = portalAt(state.zoneId, x, y);
       const el = document.createElement('button');
       el.type = 'button';
       el.className = `tile band-${tile.band}`;
@@ -38,27 +40,52 @@ export function renderMap(state, onTileClick) {
       const here = state.pos.x === x && state.pos.y === y;
       if (here) el.classList.add('player-here');
       if (tile.isStart) el.classList.add('start-tile');
+      if (portal) el.classList.add('portal-tile');
       el.innerHTML =
         (here ? '<span class="player-marker">☯</span>' : '') +
+        (portal ? '<span class="portal-marker">⟠</span>' : '') +
         (tile.monsters.length > 0
           ? `<span class="monster-dots">${'●'.repeat(tile.monsters.length)}</span>`
           : '');
-      el.title = `(${x},${y}) — danger band ${tile.band}${tile.monsters.length ? `, ${tile.monsters.length} creature(s)` : ''}`;
+      const portalNote = portal ? `, portal to ${ZONES[portal.to].name}` : '';
+      el.title = `(${x},${y}) — danger band ${tile.band}${tile.monsters.length ? `, ${tile.monsters.length} creature(s)` : ''}${portalNote}`;
       el.addEventListener('click', () => onTileClick(x, y));
       grid.appendChild(el);
     }
   }
 }
 
-export function renderTilePanel(state, { onInspect, onAttack, canAttack, onRepair }) {
+export function renderTilePanel(state, { onInspect, onAttack, canAttack, onRepair, onTravel }) {
+  const zone = ZONES[state.zoneId];
   const tile = state.map.at(state.pos.x, state.pos.y);
-  $('tile-title').textContent = `Location (${tile.x}, ${tile.y})${tile.isStart ? ' — Sect Gate (safe)' : ''}`;
+  const portal = portalAt(state.zoneId, tile.x, tile.y);
+  const havenLabel = tile.isStart ? ` — ${zone.startLabel} (safe)` : '';
+  $('tile-title').textContent = `${zone.name} · (${tile.x}, ${tile.y})${havenLabel}`;
 
-  // Sect Gate services: location actions come before monsters (GDD §6.6).
+  // Location actions come before monsters (GDD §6.6): travel portals, then
+  // haven services (repair; selling is enabled in the pack panel at a haven).
   const gate = $('gate-actions');
   gate.innerHTML = '';
+  let hasActions = false;
+
+  if (portal) {
+    hasActions = true;
+    const locked = state.player.level < portal.minStage;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'travel-btn';
+    btn.textContent = `Travel to ${ZONES[portal.to].name}`;
+    if (locked) {
+      btn.disabled = true;
+      btn.title = `Requires ${stageName(portal.minStage)}`;
+      btn.textContent += ` 🔒`;
+    }
+    btn.addEventListener('click', () => onTravel(portal));
+    gate.appendChild(btn);
+  }
+
   if (tile.isStart) {
-    gate.classList.remove('hidden');
+    hasActions = true;
     const cost = totalRepairCost(state);
     const btn = document.createElement('button');
     btn.type = 'button';
@@ -69,11 +96,11 @@ export function renderTilePanel(state, { onInspect, onAttack, canAttack, onRepai
     gate.appendChild(btn);
     const note = document.createElement('p');
     note.className = 'empty-note';
-    note.textContent = 'You may also sell items from your pack while here.';
+    note.textContent = 'A sect haven — sell items from your pack here.';
     gate.appendChild(note);
-  } else {
-    gate.classList.add('hidden');
   }
+
+  gate.classList.toggle('hidden', !hasActions);
 
   const list = $('monster-list');
   list.innerHTML = '';
@@ -82,7 +109,7 @@ export function renderTilePanel(state, { onInspect, onAttack, canAttack, onRepai
     const p = document.createElement('p');
     p.className = 'empty-note';
     p.textContent = tile.isStart
-      ? 'The gate of your sect. Nothing hunts you here.'
+      ? 'A place of safety. Nothing hunts you here.'
       : 'Nothing stirs here. Cleared tiles repopulate after a while.';
     list.appendChild(p);
     return;

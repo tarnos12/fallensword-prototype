@@ -20,6 +20,11 @@ import {
   tickBuffs,
   tickStones,
   markSeen,
+  tickMarket,
+  marketBuy,
+  marketList,
+  marketCancel,
+  marketCollect,
 } from './game.js';
 import {
   renderPlayerBar,
@@ -35,6 +40,8 @@ import {
   playCombat,
   initCombatSettings,
   initCodex,
+  initPavilion,
+  updatePavilionBadge,
 } from './ui.js';
 
 const state = createGame();
@@ -49,6 +56,10 @@ if (state.loadedFromSave) {
   );
   if (state.offlineStones > 0) {
     addLog(state, `Your Spirit Cards gathered ${state.offlineStones} spirit stones while you were away.`);
+  }
+  const om = state.offlineMarket;
+  if (om && (om.sales.length || om.returns.length)) {
+    addLog(state, `While away, the Pavilion resolved ${om.sales.length} sale(s) and returned ${om.returns.length} unsold listing(s) — check your mailbox.`);
   }
 }
 
@@ -116,6 +127,7 @@ function renderAll() {
   renderTechniques(state, techHandlers);
   renderActiveBuffs(state);
   renderEventLog(state);
+  updatePavilionBadge(state);
 }
 
 // Lightweight refresh for the per-second buff countdown: updates only the
@@ -155,6 +167,12 @@ document.getElementById('btn-reset').addEventListener('click', () => {
 
 initCombatSettings();
 initCodex(state);
+initPavilion(state, {
+  buy: (id) => { marketBuy(state, id); renderAll(); },
+  list: (itemId, price) => { marketList(state, itemId, price); renderAll(); },
+  cancel: (id) => { marketCancel(state, id); renderAll(); },
+  collect: () => { marketCollect(state); renderAll(); },
+});
 renderAll();
 
 // Wall-clock Qi regen + passive spirit-stone income + technique-buff tick
@@ -163,16 +181,17 @@ setInterval(() => {
   const qiBefore = state.qi;
   tickQi(state);
   const stonesGained = tickStones(state); // spirit-stones/hour Spirit Cards
+  const market = tickMarket(state); // rotate Pavilion listings + resolve sales
   const buffExpired = tickBuffs(state);
   const qiChanged = state.qi !== qiBefore;
   const hasBuffs = state.player.activeBuffs.length > 0;
 
   if (inCombat) {
-    if (qiChanged || stonesGained) renderPlayerBar(state);
+    if (qiChanged || stonesGained || market.changed) renderPlayerBar(state);
     return;
   }
-  if (qiChanged || buffExpired || stonesGained) {
-    renderAll(); // Qi regen, passive stones, or a buff fading changes the HUD
+  if (qiChanged || buffExpired || stonesGained || market.changed) {
+    renderAll(); // Qi regen, passive stones, market activity, or a fading buff
   } else if (hasBuffs) {
     refreshLive(); // just tick the countdown + buffed stats
   }

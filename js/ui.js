@@ -2,13 +2,15 @@
 // through the action functions passed in from main.js.
 
 import { ZONES, portalAt } from './map.js';
-import { maxQi, effectiveStats, stageName, totalRepairCost } from './game.js';
+import { maxQi, effectiveStats, stageName, totalRepairCost, marketListings, marketPlayerListings, marketMailbox } from './game.js';
 import { MAX_TURNS } from './combat.js';
 import { xpForBreakthrough, ALLOC_STATS, POINT_VALUE, MAX_STAGE } from './progression.js';
 import { sellValue, RARITIES, INVENTORY_SIZE, DROP_CHANCE } from './items.js';
 import { currentQuest, progressText, QUESTS } from './quests.js';
 import { CREATURE_TYPES, creatureStatBlock } from './actors.js';
 import { CARDS, cardForCreature, cardBonuses, cardBonusText, ownedCardCount } from './cards.js';
+import { marketValue } from './market.js';
+import { personaById, personaLabel } from './personas.js';
 import { TECHNIQUES, CATEGORIES, get as getTech, isLearned, canLearn, canCast, activeBuffs } from './techniques.js';
 
 const $ = (id) => document.getElementById(id);
@@ -748,4 +750,252 @@ export function initCodex(state) {
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) close();
   });
+}
+
+// --- Treasure Pavilion (GDD §6.7). A tabbed modal over the MarketProvider:
+// Browse (buy), Sell (list pack items), My Listings (active + cancel), Mailbox
+// (collect proceeds). Actions are passed in from main.js so this stays a pure
+// view; after each action the modal and mailbox badge re-render. ---
+
+let pav = null; // { state, actions }
+let pavTab = 'buy';
+const pavFilters = { slot: 'all', rarity: 'all', sort: 'price-asc' };
+
+function fmtLeft(ms) {
+  const s = Math.max(0, Math.ceil(ms / 1000));
+  if (s >= 60) return `${Math.ceil(s / 60)}m left`;
+  return `${s}s left`;
+}
+
+function pavItemIcon(item) {
+  const el = document.createElement('div');
+  el.className = `item-slot pav-icon icon-${item.rarity}`;
+  el.innerHTML = `<span class="item-icon">${SLOT_ICONS[item.slot]}</span>`;
+  attachTooltip(el, () => itemTooltip(item, `Fair value ≈ ${marketValue(item)} ◆`));
+  return el;
+}
+
+function selectControl(label, value, options, onChange) {
+  const wrap = document.createElement('label');
+  wrap.className = 'pav-filter';
+  wrap.textContent = label + ' ';
+  const sel = document.createElement('select');
+  for (const [val, text] of options) {
+    const opt = document.createElement('option');
+    opt.value = val;
+    opt.textContent = text;
+    if (val === value) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  sel.addEventListener('change', () => onChange(sel.value));
+  wrap.appendChild(sel);
+  return wrap;
+}
+
+function emptyNote(text) {
+  const p = document.createElement('p');
+  p.className = 'empty-note';
+  p.textContent = text;
+  return p;
+}
+
+function renderBuyTab(body) {
+  const { state, actions } = pav;
+  const bar = document.createElement('div');
+  bar.className = 'pav-filter-bar';
+  bar.append(
+    selectControl('Type', pavFilters.slot, [['all', 'All'], ['weapon', 'Weapons'], ['robe', 'Robes']], (v) => { pavFilters.slot = v; renderPavilionBody(); }),
+    selectControl('Rarity', pavFilters.rarity, [['all', 'All'], ['common', 'Common'], ['uncommon', 'Uncommon'], ['rare', 'Rare']], (v) => { pavFilters.rarity = v; renderPavilionBody(); }),
+    selectControl('Sort', pavFilters.sort, [['price-asc', 'Cheapest'], ['price-desc', 'Priciest']], (v) => { pavFilters.sort = v; renderPavilionBody(); })
+  );
+  body.appendChild(bar);
+
+  const listings = marketListings(state, pavFilters);
+  if (listings.length === 0) {
+    body.appendChild(emptyNote('No listings match. New wares arrive as cultivators post them.'));
+    return;
+  }
+  const list = document.createElement('div');
+  list.className = 'pav-list';
+  const now = Date.now();
+  for (const l of listings) {
+    const row = document.createElement('div');
+    row.className = 'pav-row';
+    const seller = personaById(l.sellerPersonaId);
+    const info = document.createElement('div');
+    info.className = 'pav-info';
+    const fair = marketValue(l.item);
+    const deal = l.price <= fair * 0.85 ? '<span class="pav-deal">bargain</span>' : l.price >= fair * 1.25 ? '<span class="pav-pricey">steep</span>' : '';
+    info.innerHTML = `<div class="pav-name rarity-${l.item.rarity}">${l.item.name} <span class="dim">Lv ${l.item.level} ${l.item.slot}</span></div>
+      <div class="pav-sub dim">${personaLabel(seller)}</div>
+      <div class="pav-price">${l.price} ◆ ${deal} <span class="dim">· ${fmtLeft(l.expiresAt - now)}</span></div>`;
+    const buy = document.createElement('button');
+    buy.type = 'button';
+    buy.className = 'pav-buy-btn';
+    buy.textContent = 'Buy';
+    if (state.player.spiritStones < l.price) {
+      buy.disabled = true;
+      buy.title = 'Not enough spirit stones';
+    }
+    buy.addEventListener('click', () => { hideTip(); actions.buy(l.id); afterPavAction(); });
+    row.append(pavItemIcon(l.item), info, buy);
+    list.appendChild(row);
+  }
+  body.appendChild(list);
+}
+
+function renderSellTab(body) {
+  const { state, actions } = pav;
+  body.appendChild(emptyNote('List an artifact from your pack. Price below its fair value to sell faster; overprice it and it may sit unsold. Proceeds arrive in your mailbox.'));
+  const inv = state.player.inventory;
+  if (inv.length === 0) {
+    body.appendChild(emptyNote('Your pack is empty — nothing to sell.'));
+    return;
+  }
+  const list = document.createElement('div');
+  list.className = 'pav-list';
+  for (const item of inv) {
+    const row = document.createElement('div');
+    row.className = 'pav-row';
+    const info = document.createElement('div');
+    info.className = 'pav-info';
+    const fair = marketValue(item);
+    info.innerHTML = `<div class="pav-name rarity-${item.rarity}">${item.name} <span class="dim">Lv ${item.level} ${item.slot}</span></div>
+      <div class="pav-sub dim">Fair value ≈ ${fair} ◆ · vendor ${sellValue(item)} ◆</div>`;
+    const price = document.createElement('input');
+    price.type = 'number';
+    price.className = 'pav-price-input';
+    price.min = '1';
+    price.value = String(fair);
+    const listBtn = document.createElement('button');
+    listBtn.type = 'button';
+    listBtn.className = 'pav-list-btn';
+    listBtn.textContent = 'List';
+    listBtn.addEventListener('click', () => {
+      const p = parseInt(price.value, 10);
+      actions.list(item.id, p);
+      afterPavAction();
+    });
+    row.append(pavItemIcon(item), info, price, listBtn);
+    list.appendChild(row);
+  }
+  body.appendChild(list);
+}
+
+function renderMineTab(body) {
+  const { state, actions } = pav;
+  const listings = marketPlayerListings(state);
+  if (listings.length === 0) {
+    body.appendChild(emptyNote('You have no active listings. Post gear from the Sell tab.'));
+    return;
+  }
+  const now = Date.now();
+  const list = document.createElement('div');
+  list.className = 'pav-list';
+  for (const l of listings) {
+    const row = document.createElement('div');
+    row.className = 'pav-row';
+    const info = document.createElement('div');
+    info.className = 'pav-info';
+    info.innerHTML = `<div class="pav-name rarity-${l.item.rarity}">${l.item.name} <span class="dim">Lv ${l.item.level} ${l.item.slot}</span></div>
+      <div class="pav-sub dim">Asking ${l.price} ◆ · fair ≈ ${l.value ?? marketValue(l.item)} ◆</div>
+      <div class="pav-price dim">Awaiting a buyer · ${fmtLeft(l.expiresAt - now)}</div>`;
+    const cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.textContent = 'Reclaim';
+    cancel.addEventListener('click', () => { actions.cancel(l.id); afterPavAction(); });
+    row.append(pavItemIcon(l.item), info, cancel);
+    list.appendChild(row);
+  }
+  body.appendChild(list);
+}
+
+function renderMailboxTab(body) {
+  const { state, actions } = pav;
+  const mail = marketMailbox(state);
+  const collectAll = document.createElement('button');
+  collectAll.type = 'button';
+  collectAll.className = 'claim-btn';
+  collectAll.textContent = 'Collect all';
+  collectAll.disabled = mail.length === 0;
+  collectAll.addEventListener('click', () => { actions.collect(); afterPavAction(); });
+  body.appendChild(collectAll);
+
+  if (mail.length === 0) {
+    body.appendChild(emptyNote('Your mailbox is empty. Sale proceeds and unsold returns land here.'));
+    return;
+  }
+  const list = document.createElement('div');
+  list.className = 'pav-list';
+  for (const e of mail) {
+    const row = document.createElement('div');
+    row.className = 'pav-row mail-row';
+    if (e.kind === 'sale') {
+      row.innerHTML = `<span class="mail-glyph">◆</span><div class="pav-info"><div class="pav-name">Sold <span class="rarity-${e.rarity}">${e.itemName}</span></div><div class="pav-sub dim">to ${e.buyerName} · +${e.stones} spirit stones</div></div>`;
+    } else {
+      const item = e.item;
+      const label = e.kind === 'return' ? 'Returned (unsold)' : 'Purchased';
+      row.innerHTML = `<span class="mail-glyph rarity-${item.rarity}">${SLOT_ICONS[item.slot]}</span><div class="pav-info"><div class="pav-name rarity-${item.rarity}">${item.name}</div><div class="pav-sub dim">${label} · Lv ${item.level} ${item.slot}</div></div>`;
+    }
+    list.appendChild(row);
+  }
+  body.appendChild(list);
+}
+
+function renderPavilionBody() {
+  const body = $('pavilion-body');
+  body.innerHTML = '';
+  if (pavTab === 'buy') renderBuyTab(body);
+  else if (pavTab === 'sell') renderSellTab(body);
+  else if (pavTab === 'mine') renderMineTab(body);
+  else renderMailboxTab(body);
+}
+
+function renderPavilionChrome() {
+  const { state } = pav;
+  $('pavilion-stones').textContent = `— ◆ ${state.player.spiritStones}`;
+  document.querySelectorAll('.pav-tab').forEach((b) => b.classList.toggle('active', b.dataset.tab === pavTab));
+  updatePavilionBadge(state);
+}
+
+function renderPavilion() {
+  renderPavilionChrome();
+  renderPavilionBody();
+}
+
+// Re-render the modal after an action (the action already refreshed the HUD).
+function afterPavAction() {
+  renderPavilion();
+}
+
+// Mailbox count badge on the Pavilion button + the Mailbox tab.
+export function updatePavilionBadge(state) {
+  const n = marketMailbox(state).length;
+  for (const id of ['pavilion-mail-count', 'pav-mail-badge']) {
+    const el = $(id);
+    if (!el) continue;
+    el.textContent = String(n);
+    el.classList.toggle('hidden', n === 0);
+  }
+}
+
+export function initPavilion(state, actions) {
+  pav = { state, actions };
+  const overlay = $('pavilion-overlay');
+  $('btn-pavilion').addEventListener('click', () => {
+    pavTab = 'buy';
+    renderPavilion();
+    overlay.classList.remove('hidden');
+  });
+  $('btn-close-pavilion').addEventListener('click', () => overlay.classList.add('hidden'));
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.classList.add('hidden');
+  });
+  for (const btn of document.querySelectorAll('.pav-tab')) {
+    btn.addEventListener('click', () => {
+      pavTab = btn.dataset.tab;
+      renderPavilion();
+    });
+  }
+  updatePavilionBadge(state);
 }

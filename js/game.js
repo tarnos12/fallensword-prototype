@@ -34,6 +34,7 @@ import {
 import * as Quests from './quests.js';
 import * as Techniques from './techniques.js';
 import { rollCardDrop, acquireCard, cardBonuses, CARDS } from './cards.js';
+import { createMarketProvider, emptyMarket } from './market.js';
 import { saveGame, loadGame, clearSave } from './save.js';
 
 // --- Qi (stamina) tuning. Prototype regen is fast so playtesting isn't
@@ -66,6 +67,7 @@ export function createGame() {
         qi: MAX_QI,
         lastQiTick: Date.now(),
         lastStoneTick: Date.now(),
+        market: emptyMarket(),
         quests: Quests.createQuestState(),
         log: [],
         worldRng,
@@ -87,7 +89,12 @@ export function createGame() {
   if (!state.player.activeBuffs) state.player.activeBuffs = [];
   if (!state.player.cards) state.player.cards = {};
   if (state.lastStoneTick == null) state.lastStoneTick = Date.now();
+  if (!state.market) state.market = emptyMarket();
   state.offlineStones = 0;
+
+  // The Treasure Pavilion provider (GDD §6.7) is created fresh each load over
+  // the persisted market state; normalize() inside back-fills legacy blobs.
+  state.marketProvider = createMarketProvider(state);
 
   state.loadedFromSave = !!loaded;
   if (loaded) {
@@ -98,6 +105,8 @@ export function createGame() {
   } else {
     addLog(state, 'You step out from the sect gate. The wilds await.');
   }
+  // Rotate listings and resolve any player sales that completed while away.
+  state.offlineMarket = state.marketProvider.tick();
   grantTestingKit(state);
   return state;
 }
@@ -450,6 +459,80 @@ export function claimQuest(state) {
   Quests.advance(qs, p.level);
   saveGame(state);
   return true;
+}
+
+// --- Treasure Pavilion (fake-multiplayer market, GDD §6.7). Thin wrappers over
+// the MarketProvider that log outcomes and persist on any change. ---
+
+// Rotate NPC listings + resolve completed player sales. Called on the world
+// tick; saves only when something actually changed (like tickQi's pattern).
+export function tickMarket(state, now = Date.now()) {
+  const res = state.marketProvider.tick(now);
+  for (const pl of res.sales) addLog(state, `The Pavilion sold your ${pl.item.name} — proceeds await in your mailbox.`);
+  for (const pl of res.returns) addLog(state, `Your ${pl.item.name} went unsold and was returned to your mailbox.`);
+  if (res.changed) saveGame(state);
+  return res;
+}
+
+export function marketListings(state, filters) {
+  return state.marketProvider.getListings(filters);
+}
+
+export function marketPlayerListings(state) {
+  return state.marketProvider.getPlayerListings();
+}
+
+export function marketMailbox(state) {
+  return state.marketProvider.getMailbox();
+}
+
+export function marketBuy(state, listingId) {
+  const res = state.marketProvider.buyNow(listingId);
+  if (res.ok) {
+    addLog(
+      state,
+      res.toMailbox
+        ? `Bought ${res.item.name} for ${res.price} stones — pack full, delivered to your mailbox.`
+        : `Bought ${res.item.name} for ${res.price} stones.`
+    );
+    saveGame(state);
+  } else if (res.reason) {
+    addLog(state, res.reason);
+  }
+  return res;
+}
+
+export function marketList(state, itemId, price) {
+  const res = state.marketProvider.listItem(itemId, price);
+  if (res.ok) {
+    addLog(state, `Listed ${res.listing.item.name} in the Treasure Pavilion for ${res.listing.price} stones.`);
+    saveGame(state);
+  } else if (res.reason) {
+    addLog(state, res.reason);
+  }
+  return res;
+}
+
+export function marketCancel(state, listingId) {
+  const res = state.marketProvider.cancelListing(listingId);
+  if (res.ok) {
+    addLog(state, `Reclaimed ${res.item.name} from the Pavilion.`);
+    saveGame(state);
+  } else if (res.reason) {
+    addLog(state, res.reason);
+  }
+  return res;
+}
+
+export function marketCollect(state) {
+  const res = state.marketProvider.collectMailbox();
+  const bits = [];
+  if (res.stones) bits.push(`${res.stones} spirit stones`);
+  if (res.items.length) bits.push(`${res.items.length} item(s)`);
+  if (bits.length) addLog(state, `Collected ${bits.join(' and ')} from your mailbox.`);
+  if (res.blocked) addLog(state, `${res.blocked} item(s) remain — clear pack space to collect them.`);
+  if (res.stones || res.items.length) saveGame(state);
+  return res;
 }
 
 export { effectiveStats, stageName };

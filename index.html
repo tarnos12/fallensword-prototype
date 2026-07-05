@@ -77,6 +77,7 @@
 
       <div class="panel-box">
         <button id="btn-codex" type="button" class="codex-btn" title="Beast Codex & Spirit Cards">📖 Beast Codex</button>
+        <button id="btn-pavilion" type="button" class="pavilion-btn" title="Treasure Pavilion — buy & sell artifacts">🏛 Treasure Pavilion <span id="pavilion-mail-count" class="mail-badge hidden"></span></button>
       </div>
 
       <div class="panel-box">
@@ -93,6 +94,22 @@
       </div>
       <div id="codex-summary"></div>
       <div id="codex-body"></div>
+    </div>
+  </div>
+
+  <div id="pavilion-overlay" class="hidden">
+    <div id="pavilion-panel">
+      <div id="pavilion-header">
+        <h2>Treasure Pavilion <span id="pavilion-stones" class="dim"></span></h2>
+        <button id="btn-close-pavilion" type="button" title="Close">✕</button>
+      </div>
+      <div id="pavilion-tabs">
+        <button type="button" class="pav-tab active" data-tab="buy">Browse</button>
+        <button type="button" class="pav-tab" data-tab="sell">Sell</button>
+        <button type="button" class="pav-tab" data-tab="mine">My Listings</button>
+        <button type="button" class="pav-tab" data-tab="mailbox">Mailbox <span id="pav-mail-badge" class="mail-badge hidden"></span></button>
+      </div>
+      <div id="pavilion-body"></div>
     </div>
   </div>
 

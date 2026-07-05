@@ -51,10 +51,12 @@ export const POINT_VALUE = { attack: 1, defense: 1, damage: 1, armor: 1, hp: 4 }
 export const ALLOC_STATS = ['attack', 'defense', 'damage', 'armor', 'hp'];
 
 // --- Stat-modifier aggregation pipeline (GDD §7.3). Effective stats are
-// always derived, never mutated in place: base + allocated points + gear.
-// Techniques (Stage 2) and Spirit Cards (Stage 2+) plug in here later.
+// always derived, never mutated in place: base + allocated points + gear +
+// active technique buffs. Spirit Cards (Stage 2+) will plug in here too.
 
-export function effectiveStats(player) {
+import { activeBuffs } from './techniques.js';
+
+export function effectiveStats(player, now = Date.now()) {
   const eff = {
     attack: player.base.attack + player.allocated.attack * POINT_VALUE.attack,
     defense: player.base.defense + player.allocated.defense * POINT_VALUE.defense,
@@ -69,13 +71,20 @@ export function effectiveStats(player) {
       else eff[stat] += val;
     }
   }
+  // Technique buffs are percentage modifiers on the gear-inclusive subtotal.
+  for (const buff of activeBuffs(player, now)) {
+    for (const [stat, pct] of Object.entries(buff.effect)) {
+      const key = stat === 'hp' ? 'maxHp' : stat;
+      eff[key] = Math.max(1, Math.round(eff[key] * (1 + pct)));
+    }
+  }
   return eff;
 }
 
 // Combat snapshot: the plain Actor shape resolveCombat() expects. The player
 // enters every fight at full effective HP (Stage 0 full-heal rule stands).
-export function playerCombatActor(player) {
-  const eff = effectiveStats(player);
+export function playerCombatActor(player, now = Date.now()) {
+  const eff = effectiveStats(player, now);
   return {
     id: 'player',
     name: player.name,

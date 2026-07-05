@@ -134,5 +134,7 @@ export function createPlayer() {
     equipment: { weapon: null, robe: null },
     inventory: [],
     bestiary: {}, // { typeId: { kills, firstSeenAt } } — GDD §7.5 Stage 1 foundations
+    learnedTechniques: [], // technique ids (GDD §6.4)
+    activeBuffs: [], // { techniqueId, effect, expiresAt } — timed technique buffs
   };
 }

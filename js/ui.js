@@ -7,6 +7,7 @@ import { MAX_TURNS } from './combat.js';
 import { xpForBreakthrough, ALLOC_STATS, POINT_VALUE, MAX_STAGE } from './progression.js';
 import { sellValue, RARITIES, INVENTORY_SIZE } from './items.js';
 import { currentQuest, progressText, QUESTS } from './quests.js';
+import { TECHNIQUES, CATEGORIES, get as getTech, isLearned, canLearn, canCast, activeBuffs } from './techniques.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -404,6 +405,87 @@ export function renderQuests(state, onClaim) {
     btn.textContent = 'Claim reward';
     btn.addEventListener('click', onClaim);
     box.appendChild(btn);
+  }
+}
+
+// --- Techniques: learn (banked points) + cast (Qi) + active buff readout ---
+
+const EFFECT_LABELS = { attack: 'Attack', defense: 'Defense', damage: 'Damage', armor: 'Armor', hp: 'Max HP' };
+
+function effectText(effect) {
+  return Object.entries(effect)
+    .map(([s, v]) => `${v > 0 ? '+' : ''}${Math.round(v * 100)}% ${EFFECT_LABELS[s] ?? s}`)
+    .join(', ');
+}
+
+export function renderActiveBuffs(state, now = Date.now()) {
+  const box = $('active-buffs');
+  const buffs = activeBuffs(state.player, now);
+  box.innerHTML = '';
+  if (buffs.length === 0) {
+    box.innerHTML = '<p class="empty-note">No techniques active. Channel one before a hard fight.</p>';
+    return;
+  }
+  for (const b of buffs) {
+    const t = getTech(b.techniqueId);
+    const secs = Math.max(0, Math.ceil((b.expiresAt - now) / 1000));
+    const row = document.createElement('div');
+    row.className = 'buff-row';
+    row.innerHTML = `<span class="buff-name cat-${t.category.toLowerCase()}">${t.name}</span>
+      <span class="buff-eff dim">${effectText(t.effect)}</span>
+      <span class="buff-time">${secs}s</span>`;
+    box.appendChild(row);
+  }
+}
+
+export function renderTechniques(state, { onLearn, onCast }) {
+  const p = state.player;
+  const list = $('tech-list');
+  list.innerHTML = '';
+
+  const head = document.createElement('p');
+  head.className = 'empty-note';
+  head.textContent = `Technique points: ${p.skillPoints}. Learn once, then channel (costs Qi) for a timed buff.`;
+  list.appendChild(head);
+
+  for (const cat of CATEGORIES) {
+    const catHead = document.createElement('h3');
+    catHead.className = `cat-${cat.toLowerCase()}`;
+    catHead.textContent = cat;
+    list.appendChild(catHead);
+
+    for (const t of Object.values(TECHNIQUES).filter((x) => x.category === cat)) {
+      const learned = isLearned(p, t.id);
+      const row = document.createElement('div');
+      row.className = 'tech-row';
+      if (learned) row.classList.add('learned');
+
+      const info = document.createElement('div');
+      info.className = 'tech-info';
+      info.innerHTML = `<span class="tech-name">${t.name}</span>
+        <span class="tech-desc dim">${t.desc}</span>
+        <span class="tech-meta dim">Qi ${t.qiCost} · ${Math.round(t.duration / 1000)}s · needs stage ${t.minStage}${t.prereqs.length ? ` · after ${t.prereqs.map((pr) => getTech(pr).name).join(', ')}` : ''}</span>`;
+      row.appendChild(info);
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      if (!learned) {
+        const chk = canLearn(p, t.id);
+        btn.textContent = `Learn (${t.cost}✦)`;
+        btn.disabled = !chk.ok;
+        if (!chk.ok && chk.reason) btn.title = chk.reason;
+        btn.addEventListener('click', () => onLearn(t.id));
+      } else {
+        const chk = canCast(p, state.qi, t.id);
+        btn.textContent = 'Channel';
+        btn.className = 'cast-btn';
+        btn.disabled = !chk.ok;
+        if (!chk.ok && chk.reason) btn.title = chk.reason;
+        btn.addEventListener('click', () => onCast(t.id));
+      }
+      row.appendChild(btn);
+      list.appendChild(row);
+    }
   }
 }
 

@@ -412,6 +412,56 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 
 #gate-actions { margin-bottom: 8px; }
 
+/* Techniques */
+.cat-offense { color: #e57373; }
+.cat-defense { color: #64b5f6; }
+.cat-special { color: #b388ff; }
+
+#tech-list h3 { margin: 12px 0 4px; letter-spacing: 1px; }
+
+.tech-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--panel-edge);
+}
+
+.tech-row:last-child { border-bottom: none; }
+
+.tech-row.learned { opacity: 1; }
+
+.tech-info { flex: 1; display: flex; flex-direction: column; gap: 1px; }
+
+.tech-name { font-size: 0.88rem; }
+
+.tech-desc { font-size: 0.76rem; }
+
+.tech-meta { font-size: 0.7rem; }
+
+.tech-row button { font-size: 0.75rem; padding: 4px 10px; white-space: nowrap; }
+
+.cast-btn { color: var(--qi); border-color: var(--qi); }
+
+#active-buffs { margin-bottom: 6px; }
+
+.buff-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  background: var(--bg);
+  border: 1px solid var(--panel-edge);
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+.buff-name { font-size: 0.82rem; font-weight: bold; }
+
+.buff-eff { flex: 1; font-size: 0.72rem; }
+
+.buff-time { font-size: 0.8rem; color: var(--qi); font-variant-numeric: tabular-nums; }
+
 .instant-toggle {
   display: block;
   font-size: 0.78rem;

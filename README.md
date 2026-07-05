@@ -22,6 +22,7 @@ then open http://localhost:8123.
 - `js/map.js` — multi-zone grid definitions, movement costs, danger bands, portals between zones, respawns
 - `js/items.js` — item generation (rarity gates stat rolls), equip/unequip, durability, repair and sell values
 - `js/quests.js` — event-driven sequential quest chain
+- `js/techniques.js` — learnable techniques (Offense/Defense/Special) cast as timed, Qi-cost percentage buffs; stored as data and applied through the stat pipeline
 - `js/save.js` — versioned localStorage persistence with migration; persisting `lastQiTick` gives offline Qi regen for free
 - `js/game.js` — game state and rules: Qi, zone travel, rewards, penalties, XP scaling, drops, kill tracking
 - `js/ui.js` — rendering + turn-by-turn combat playback (resolution and presentation are fully decoupled)

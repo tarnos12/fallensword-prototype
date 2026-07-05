@@ -15,6 +15,9 @@ import {
   destroyItem,
   repairAll,
   claimQuest,
+  learnTechnique,
+  castTechnique,
+  tickBuffs,
 } from './game.js';
 import {
   renderPlayerBar,
@@ -23,6 +26,8 @@ import {
   renderCharSheet,
   renderGear,
   renderQuests,
+  renderTechniques,
+  renderActiveBuffs,
   renderEventLog,
   toggleInspect,
   playCombat,
@@ -41,6 +46,23 @@ if (state.loadedFromSave) {
   );
 }
 
+// Handlers hoisted so the per-second live refresh can reuse them without
+// rebuilding closures (and without a full renderAll that clobbers tooltips).
+const allocHandler = (stat) => {
+  allocateStat(state, stat);
+  renderAll();
+};
+const techHandlers = {
+  onLearn: (id) => {
+    learnTechnique(state, id);
+    renderAll();
+  },
+  onCast: (id) => {
+    castTechnique(state, id);
+    renderAll();
+  },
+};
+
 function renderAll() {
   renderPlayerBar(state);
   renderMap(state, onTileClick);
@@ -58,10 +80,7 @@ function renderAll() {
       renderAll();
     },
   });
-  renderCharSheet(state, (stat) => {
-    allocateStat(state, stat);
-    renderAll();
-  });
+  renderCharSheet(state, allocHandler);
   renderGear(state, {
     atGate: atHaven(state),
     onEquip: (id) => {
@@ -85,7 +104,18 @@ function renderAll() {
     claimQuest(state);
     renderAll();
   });
+  renderTechniques(state, techHandlers);
+  renderActiveBuffs(state);
   renderEventLog(state);
+}
+
+// Lightweight refresh for the per-second buff countdown: updates only the
+// buff-affected panels, leaving the map/gear/tooltips untouched.
+function refreshLive() {
+  renderPlayerBar(state);
+  renderCharSheet(state, allocHandler);
+  renderTechniques(state, techHandlers);
+  renderActiveBuffs(state);
 }
 
 function onTileClick(x, y) {
@@ -117,12 +147,21 @@ document.getElementById('btn-reset').addEventListener('click', () => {
 initCombatSettings();
 renderAll();
 
-// Wall-clock Qi regen tick.
+// Wall-clock Qi regen + technique-buff tick (once per second).
 setInterval(() => {
-  const before = state.qi;
+  const qiBefore = state.qi;
   tickQi(state);
-  if (state.qi !== before) {
-    renderPlayerBar(state);
-    if (!inCombat) renderAll();
+  const buffExpired = tickBuffs(state);
+  const qiChanged = state.qi !== qiBefore;
+  const hasBuffs = state.player.activeBuffs.length > 0;
+
+  if (inCombat) {
+    if (qiChanged) renderPlayerBar(state);
+    return;
+  }
+  if (qiChanged || buffExpired) {
+    renderAll(); // Qi regen or a buff fading changes buttons/stats broadly
+  } else if (hasBuffs) {
+    refreshLive(); // just tick the countdown + buffed stats
   }
 }, 1000);

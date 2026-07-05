@@ -32,6 +32,7 @@ import {
   INVENTORY_SIZE,
 } from './items.js';
 import * as Quests from './quests.js';
+import * as Techniques from './techniques.js';
 import { saveGame, loadGame, clearSave } from './save.js';
 
 // --- Qi (stamina) tuning. Prototype regen is fast so playtesting isn't
@@ -71,6 +72,10 @@ export function createGame() {
   if (!ZONES[state.zoneId]) state.zoneId = 'azuremist';
   state.map = state.zones[state.zoneId];
 
+  // Fields added after a save was first written default to empty.
+  if (!state.player.learnedTechniques) state.player.learnedTechniques = [];
+  if (!state.player.activeBuffs) state.player.activeBuffs = [];
+
   state.loadedFromSave = !!loaded;
   if (loaded) {
     const before = state.qi;
@@ -83,19 +88,29 @@ export function createGame() {
   return state;
 }
 
-// TESTING ONLY (remove before demo): one randomized drop of every rarity
-// tier, rolled exactly like an enemy drop, plus a full Qi top-up. Granted
-// once per save via the testingKit flag.
+// TESTING ONLY (remove before demo): a randomized drop of every rarity tier
+// plus enough points/Qi to exercise every system. The item kit is one-time;
+// the points top-up re-runs when TEST_KIT_VERSION bumps so existing saves get
+// newly-added testing conveniences.
+const TEST_KIT_VERSION = 2;
 function grantTestingKit(state) {
-  if (state.player.testingKit) return;
-  state.player.testingKit = true;
-  for (const rarity of Object.keys(RARITIES)) {
-    const slot = state.worldRng() < 0.5 ? 'weapon' : 'robe';
-    const level = 1 + Math.floor(state.worldRng() * 6);
-    state.player.inventory.push(generateItem(slot, level, rarity, state.worldRng));
+  const p = state.player;
+  if (!p.testingKit) {
+    p.testingKit = true;
+    for (const rarity of Object.keys(RARITIES)) {
+      const slot = state.worldRng() < 0.5 ? 'weapon' : 'robe';
+      const level = 1 + Math.floor(state.worldRng() * 6);
+      p.inventory.push(generateItem(slot, level, rarity, state.worldRng));
+    }
+    addLog(state, 'The sect quartermaster issues a testing kit: one artifact of every rarity.');
   }
-  state.qi = MAX_QI;
-  addLog(state, 'The sect quartermaster issues a testing kit: one artifact of every rarity.');
+  if ((p.testingKitVersion ?? 0) < TEST_KIT_VERSION) {
+    p.testingKitVersion = TEST_KIT_VERSION;
+    p.skillPoints += 8;
+    p.statPoints += 6;
+    state.qi = MAX_QI;
+    addLog(state, 'Sect insight granted (testing): +8 technique points, +6 stat points.');
+  }
   saveGame(state);
 }
 
@@ -257,6 +272,39 @@ export function allocateStat(state, stat) {
   const ok = allocPoint(state.player, stat);
   if (ok) saveGame(state);
   return ok;
+}
+
+// --- Techniques (learn with banked points; cast for a timed Qi-cost buff) ---
+
+export function learnTechnique(state, id) {
+  const res = Techniques.learn(state.player, id);
+  if (res.ok) {
+    addLog(state, `You comprehend the ${Techniques.get(id).name}.`);
+    saveGame(state);
+  } else if (res.reason) {
+    addLog(state, res.reason);
+  }
+  return res;
+}
+
+export function castTechnique(state, id) {
+  const res = Techniques.cast(state.player, state.qi, id);
+  if (res.ok) {
+    state.qi -= res.cost;
+    addLog(state, `You channel ${Techniques.get(id).name} (${Math.round(res.duration / 1000)}s).`);
+    saveGame(state);
+  } else if (res.reason) {
+    addLog(state, res.reason);
+  }
+  return res;
+}
+
+// Drop expired buffs; returns true if anything changed (for re-render).
+export function tickBuffs(state, now = Date.now()) {
+  const expired = Techniques.cleanExpired(state.player, now);
+  for (const b of expired) addLog(state, `${Techniques.get(b.techniqueId).name} fades.`);
+  if (expired.length) saveGame(state);
+  return expired.length > 0;
 }
 
 export function equipItem(state, itemId) {

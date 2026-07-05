@@ -20,6 +20,8 @@ export function saveGame(state) {
     pos: state.pos,
     qi: state.qi,
     lastQiTick: state.lastQiTick,
+    lastStoneTick: state.lastStoneTick,
+    market: state.market,
     quests: state.quests,
     zones,
     log: state.log,
@@ -70,6 +72,8 @@ export function loadGame() {
     pos: blob.pos,
     qi: blob.qi,
     lastQiTick: blob.lastQiTick,
+    lastStoneTick: blob.lastStoneTick, // may be undefined on pre-card saves; createGame defaults it
+    market: blob.market, // may be undefined on pre-Pavilion saves; createGame back-fills it
     quests: blob.quests,
     zones,
     log: blob.log ?? [],

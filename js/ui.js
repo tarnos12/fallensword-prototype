@@ -2,11 +2,15 @@
 // through the action functions passed in from main.js.
 
 import { ZONES, portalAt } from './map.js';
-import { MAX_QI, effectiveStats, stageName, totalRepairCost } from './game.js';
+import { maxQi, effectiveStats, stageName, totalRepairCost, marketListings, marketPlayerListings, marketMailbox } from './game.js';
 import { MAX_TURNS } from './combat.js';
 import { xpForBreakthrough, ALLOC_STATS, POINT_VALUE, MAX_STAGE } from './progression.js';
-import { sellValue, RARITIES, INVENTORY_SIZE } from './items.js';
+import { sellValue, RARITIES, INVENTORY_SIZE, DROP_CHANCE } from './items.js';
 import { currentQuest, progressText, QUESTS } from './quests.js';
+import { CREATURE_TYPES, creatureStatBlock } from './actors.js';
+import { CARDS, cardForCreature, cardBonuses, cardBonusText, ownedCardCount } from './cards.js';
+import { marketValue } from './market.js';
+import { personaById, personaLabel } from './personas.js';
 import { TECHNIQUES, CATEGORIES, get as getTech, isLearned, canLearn, canCast, activeBuffs } from './techniques.js';
 
 const $ = (id) => document.getElementById(id);
@@ -21,7 +25,7 @@ export function renderPlayerBar(state) {
   $('chip-points').classList.toggle('attention', p.statPoints > 0);
   $('chip-stones').textContent = `◆ ${p.spiritStones}`;
   $('chip-hp').textContent = `HP ${eff.maxHp}`;
-  $('chip-qi').textContent = `Qi ${state.qi}/${MAX_QI}`;
+  $('chip-qi').textContent = `Qi ${state.qi}/${maxQi(p)}`;
 }
 
 export function renderMap(state, onTileClick) {
@@ -232,12 +236,15 @@ export function renderCharSheet(state, onAllocate) {
   const box = $('char-stats');
   box.innerHTML = '';
 
+  const cardStat = cardBonuses(p).stat;
   const grid = document.createElement('div');
   grid.className = 'stat-grid';
   for (const stat of ALLOC_STATS) {
     const effKey = stat === 'hp' ? 'maxHp' : stat;
     const trained = p.allocated[stat] * POINT_VALUE[stat];
-    const gearPart = eff[effKey] - p.base[effKey] - trained;
+    const cardPart = cardStat[stat] ?? 0;
+    const gearPart = eff[effKey] - p.base[effKey] - trained - cardPart;
+    const cardBit = cardPart ? ` + ${cardPart} cards` : '';
     const cell = document.createElement('div');
     cell.className = 'stat-cell';
     cell.innerHTML = `<span class="stat-label">${STAT_LABELS[stat]}</span><span class="stat-value">${eff[effKey]}</span>`;
@@ -245,7 +252,7 @@ export function renderCharSheet(state, onAllocate) {
       cell,
       () =>
         `<div class="tt-name">${STAT_LABELS[stat]}: ${eff[effKey]}</div>
-         <div class="tt-line">${p.base[effKey]} base + ${trained} trained + ${gearPart} gear</div>`
+         <div class="tt-line">${p.base[effKey]} base + ${trained} trained + ${gearPart} gear${cardBit}</div>`
     );
     if (p.statPoints > 0) {
       const btn = document.createElement('button');
@@ -595,11 +602,400 @@ function outcomeBanner(result) {
   if (result.outcome === 'win') {
     const r = result.rewards;
     const drop = r.itemDrop ? `, looted <span class="rarity-${r.itemDrop.rarity}">${r.itemDrop.name}</span>` : '';
-    return `<div class="banner win">VICTORY — +${r.xp} XP, +${r.stones} spirit stones${drop} <span class="dim">(${result.staminaSpent} Qi spent)</span></div>`;
+    let banner = `<div class="banner win">VICTORY — +${r.xp} XP, +${r.stones} spirit stones${drop} <span class="dim">(${result.staminaSpent} Qi spent)</span></div>`;
+    if (result.cardDrop) banner += cardDropBanner(result.cardDrop);
+    return banner;
   }
   if (result.outcome === 'loss') {
     const p = result.penalty;
     return `<div class="banner loss">DEFEAT — lost ${p.stonesLost} stones, ${p.xpLost} XP <span class="dim">(${result.staminaSpent} Qi spent)</span></div>`;
   }
   return `<div class="banner draw">UNRESOLVED — ${MAX_TURNS} turns passed; this foe is beyond you for now <span class="dim">(${result.staminaSpent} Qi spent)</span></div>`;
+}
+
+function cardDropBanner(cd) {
+  const c = cd.card;
+  if (cd.kind === 'new') {
+    return `<div class="banner card-drop">✦ SPIRIT CARD — ${c.creatureName} obtained! <span class="dim">${cardBonusText(c, 1)}</span></div>`;
+  }
+  if (cd.kind === 'upgrade') {
+    return `<div class="banner card-drop">✦ SPIRIT CARD refined — ${c.creatureName} → Lv ${cd.level} <span class="dim">${cardBonusText(c, cd.level)}</span></div>`;
+  }
+  if (cd.kind === 'duplicate') {
+    return `<div class="banner card-drop">✦ Duplicate ${c.creatureName} card dissolves into +${cd.stones} spirit stones</div>`;
+  }
+  return '';
+}
+
+// --- Beast Codex (GDD §7.1) + Spirit Card collection (GDD §7.2). A modal over
+// the bestiary kill data with progressive disclosure by kill count; each entry
+// doubles as the card-collection slot (silhouette until owned). ---
+
+const CODEX_STATS_AT = 10; // kills to reveal full combat stats
+const CODEX_DROPS_AT = 50; // kills to reveal the drop table
+const CODEX_CARD_AT = 100; // kills to reveal the Spirit Card drop chance + mastery
+
+function cardBonusSummary(player) {
+  const { stat, meta } = cardBonuses(player);
+  const parts = [];
+  for (const [k, v] of Object.entries(stat)) if (v) parts.push(`+${v} ${STAT_LABELS[k]}`);
+  if (meta.qiCap) parts.push(`+${meta.qiCap} max Qi`);
+  if (meta.stones) parts.push(`+${meta.stones} spirit stones/hr`);
+  return parts;
+}
+
+function codexCardSlot(card, level) {
+  const owned = level > 0;
+  if (!owned) {
+    return `<div class="card-slot locked" title="Spirit Card — undiscovered">
+      <span class="card-mark">✦</span></div>`;
+  }
+  return `<div class="card-slot owned" title="${card.creatureName} Spirit Card">
+    <span class="card-mark">✦</span>
+    <span class="card-lvl">${level}/${card.maxLevel}</span></div>`;
+}
+
+function codexEntry(state, typeId) {
+  const p = state.player;
+  const t = CREATURE_TYPES[typeId];
+  const entry = p.bestiary[typeId];
+  const discovered = !!entry;
+  const kills = entry?.kills ?? 0;
+  const card = cardForCreature(typeId);
+  const cardLevel = p.cards[card.id] ?? 0;
+  const mastered = kills >= CODEX_CARD_AT;
+
+  const el = document.createElement('div');
+  el.className = 'codex-entry';
+  if (!discovered) el.classList.add('undiscovered');
+  if (mastered) el.classList.add('mastered');
+
+  if (!discovered) {
+    el.innerHTML = `
+      <div class="codex-head">
+        <div class="codex-title">??? <span class="dim">— undiscovered</span></div>
+        ${codexCardSlot(card, 0)}
+      </div>
+      <p class="empty-note">Encounter this beast — inspect or fight it — to begin its codex entry.</p>`;
+    return el;
+  }
+
+  const bandLabel = t.levels[0] === t.levels[t.levels.length - 1] ? `Lv ${t.levels[0]}` : `Lv ${t.levels[0]}–${t.levels[t.levels.length - 1]}`;
+
+  let body = `<p class="codex-flavor">${t.flavor}</p>
+    <p class="codex-kills">Kills: <b>${kills}</b>${mastered ? ' <span class="mastery">✦ mastered</span>' : ''}</p>`;
+
+  // 10 kills: full combat stats (GDD §7.1 disclosure thresholds).
+  if (kills >= CODEX_STATS_AT) {
+    const s = creatureStatBlock(typeId);
+    body += `<p class="codex-line">ATK ${s.attack} · DEF ${s.defense} · DMG ${s.damage} · ARM ${s.armor} · HP ${s.maxHp} <span class="dim">(at ${bandLabel === `Lv ${t.levels[0]}` ? bandLabel : `Lv ${t.levels[0]}`})</span></p>
+      <p class="codex-line dim">Rewards ~${s.xp} XP, ~${s.stones} spirit stones</p>`;
+  } else {
+    body += `<p class="codex-line locked-line">Combat stats revealed at ${CODEX_STATS_AT} kills.</p>`;
+  }
+
+  // 50 kills: drop table.
+  if (kills >= CODEX_DROPS_AT) {
+    body += `<p class="codex-line">Drops: artifacts up to <span class="rarity-rare">Rare</span> · ~${Math.round(DROP_CHANCE * 100)}% per kill</p>`;
+  } else {
+    body += `<p class="codex-line locked-line">Drop table revealed at ${CODEX_DROPS_AT} kills.</p>`;
+  }
+
+  // 100 kills: Spirit Card drop chance + mastery mark.
+  const cardChanceLine = kills >= CODEX_CARD_AT
+    ? `<p class="codex-line">Spirit Card: <b>${(card.dropChance * 100).toFixed(1)}%</b> per kill · ${cardBonusText(card, 1)}/level</p>`
+    : `<p class="codex-line locked-line">Spirit Card drop chance revealed at ${CODEX_CARD_AT} kills.</p>`;
+
+  const cardStatusLine = cardLevel > 0
+    ? `<p class="codex-line card-owned">Card held: Lv ${cardLevel}/${card.maxLevel} — <b>${cardBonusText(card, cardLevel)}</b></p>`
+    : `<p class="codex-line dim">Spirit Card not yet obtained.</p>`;
+
+  el.innerHTML = `
+    <div class="codex-head">
+      <div class="codex-title">${t.name} <span class="dim">${bandLabel}</span></div>
+      ${codexCardSlot(card, cardLevel)}
+    </div>
+    ${body}${cardChanceLine}${cardStatusLine}`;
+  return el;
+}
+
+export function renderCodex(state) {
+  const p = state.player;
+  const total = Object.keys(CARDS).length;
+  const discoveredCount = Object.keys(CREATURE_TYPES).filter((id) => p.bestiary[id]).length;
+  $('codex-count').textContent = `— ${discoveredCount}/${Object.keys(CREATURE_TYPES).length} beasts · ${ownedCardCount(p)}/${total} cards`;
+
+  const summaryBox = $('codex-summary');
+  const bonuses = cardBonusSummary(p);
+  summaryBox.innerHTML = bonuses.length
+    ? `<span class="codex-summary-label">Active card bonuses:</span> ${bonuses.map((b) => `<span class="card-bonus-chip">${b}</span>`).join(' ')}`
+    : `<span class="empty-note">No Spirit Cards collected yet. Slain beasts have a small chance to yield their card — always-on bonuses, no equipping.</span>`;
+
+  const body = $('codex-body');
+  body.innerHTML = '';
+  for (const typeId of Object.keys(CREATURE_TYPES)) {
+    body.appendChild(codexEntry(state, typeId));
+  }
+}
+
+export function initCodex(state) {
+  const overlay = $('codex-overlay');
+  const open = () => {
+    renderCodex(state);
+    overlay.classList.remove('hidden');
+  };
+  const close = () => overlay.classList.add('hidden');
+  $('btn-codex').addEventListener('click', open);
+  $('btn-close-codex').addEventListener('click', close);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) close();
+  });
+}
+
+// --- Treasure Pavilion (GDD §6.7). A tabbed modal over the MarketProvider:
+// Browse (buy), Sell (list pack items), My Listings (active + cancel), Mailbox
+// (collect proceeds). Actions are passed in from main.js so this stays a pure
+// view; after each action the modal and mailbox badge re-render. ---
+
+let pav = null; // { state, actions }
+let pavTab = 'buy';
+const pavFilters = { slot: 'all', rarity: 'all', sort: 'price-asc' };
+
+function fmtLeft(ms) {
+  const s = Math.max(0, Math.ceil(ms / 1000));
+  if (s >= 60) return `${Math.ceil(s / 60)}m left`;
+  return `${s}s left`;
+}
+
+function pavItemIcon(item) {
+  const el = document.createElement('div');
+  el.className = `item-slot pav-icon icon-${item.rarity}`;
+  el.innerHTML = `<span class="item-icon">${SLOT_ICONS[item.slot]}</span>`;
+  attachTooltip(el, () => itemTooltip(item, `Fair value ≈ ${marketValue(item)} ◆`));
+  return el;
+}
+
+function selectControl(label, value, options, onChange) {
+  const wrap = document.createElement('label');
+  wrap.className = 'pav-filter';
+  wrap.textContent = label + ' ';
+  const sel = document.createElement('select');
+  for (const [val, text] of options) {
+    const opt = document.createElement('option');
+    opt.value = val;
+    opt.textContent = text;
+    if (val === value) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  sel.addEventListener('change', () => onChange(sel.value));
+  wrap.appendChild(sel);
+  return wrap;
+}
+
+function emptyNote(text) {
+  const p = document.createElement('p');
+  p.className = 'empty-note';
+  p.textContent = text;
+  return p;
+}
+
+function renderBuyTab(body) {
+  const { state, actions } = pav;
+  const bar = document.createElement('div');
+  bar.className = 'pav-filter-bar';
+  bar.append(
+    selectControl('Type', pavFilters.slot, [['all', 'All'], ['weapon', 'Weapons'], ['robe', 'Robes']], (v) => { pavFilters.slot = v; renderPavilionBody(); }),
+    selectControl('Rarity', pavFilters.rarity, [['all', 'All'], ['common', 'Common'], ['uncommon', 'Uncommon'], ['rare', 'Rare']], (v) => { pavFilters.rarity = v; renderPavilionBody(); }),
+    selectControl('Sort', pavFilters.sort, [['price-asc', 'Cheapest'], ['price-desc', 'Priciest']], (v) => { pavFilters.sort = v; renderPavilionBody(); })
+  );
+  body.appendChild(bar);
+
+  const listings = marketListings(state, pavFilters);
+  if (listings.length === 0) {
+    body.appendChild(emptyNote('No listings match. New wares arrive as cultivators post them.'));
+    return;
+  }
+  const list = document.createElement('div');
+  list.className = 'pav-list';
+  const now = Date.now();
+  for (const l of listings) {
+    const row = document.createElement('div');
+    row.className = 'pav-row';
+    const seller = personaById(l.sellerPersonaId);
+    const info = document.createElement('div');
+    info.className = 'pav-info';
+    const fair = marketValue(l.item);
+    const deal = l.price <= fair * 0.85 ? '<span class="pav-deal">bargain</span>' : l.price >= fair * 1.25 ? '<span class="pav-pricey">steep</span>' : '';
+    info.innerHTML = `<div class="pav-name rarity-${l.item.rarity}">${l.item.name} <span class="dim">Lv ${l.item.level} ${l.item.slot}</span></div>
+      <div class="pav-sub dim">${personaLabel(seller)}</div>
+      <div class="pav-price">${l.price} ◆ ${deal} <span class="dim">· ${fmtLeft(l.expiresAt - now)}</span></div>`;
+    const buy = document.createElement('button');
+    buy.type = 'button';
+    buy.className = 'pav-buy-btn';
+    buy.textContent = 'Buy';
+    if (state.player.spiritStones < l.price) {
+      buy.disabled = true;
+      buy.title = 'Not enough spirit stones';
+    }
+    buy.addEventListener('click', () => { hideTip(); actions.buy(l.id); afterPavAction(); });
+    row.append(pavItemIcon(l.item), info, buy);
+    list.appendChild(row);
+  }
+  body.appendChild(list);
+}
+
+function renderSellTab(body) {
+  const { state, actions } = pav;
+  body.appendChild(emptyNote('List an artifact from your pack. Price below its fair value to sell faster; overprice it and it may sit unsold. Proceeds arrive in your mailbox.'));
+  const inv = state.player.inventory;
+  if (inv.length === 0) {
+    body.appendChild(emptyNote('Your pack is empty — nothing to sell.'));
+    return;
+  }
+  const list = document.createElement('div');
+  list.className = 'pav-list';
+  for (const item of inv) {
+    const row = document.createElement('div');
+    row.className = 'pav-row';
+    const info = document.createElement('div');
+    info.className = 'pav-info';
+    const fair = marketValue(item);
+    info.innerHTML = `<div class="pav-name rarity-${item.rarity}">${item.name} <span class="dim">Lv ${item.level} ${item.slot}</span></div>
+      <div class="pav-sub dim">Fair value ≈ ${fair} ◆ · vendor ${sellValue(item)} ◆</div>`;
+    const price = document.createElement('input');
+    price.type = 'number';
+    price.className = 'pav-price-input';
+    price.min = '1';
+    price.value = String(fair);
+    const listBtn = document.createElement('button');
+    listBtn.type = 'button';
+    listBtn.className = 'pav-list-btn';
+    listBtn.textContent = 'List';
+    listBtn.addEventListener('click', () => {
+      const p = parseInt(price.value, 10);
+      actions.list(item.id, p);
+      afterPavAction();
+    });
+    row.append(pavItemIcon(item), info, price, listBtn);
+    list.appendChild(row);
+  }
+  body.appendChild(list);
+}
+
+function renderMineTab(body) {
+  const { state, actions } = pav;
+  const listings = marketPlayerListings(state);
+  if (listings.length === 0) {
+    body.appendChild(emptyNote('You have no active listings. Post gear from the Sell tab.'));
+    return;
+  }
+  const now = Date.now();
+  const list = document.createElement('div');
+  list.className = 'pav-list';
+  for (const l of listings) {
+    const row = document.createElement('div');
+    row.className = 'pav-row';
+    const info = document.createElement('div');
+    info.className = 'pav-info';
+    info.innerHTML = `<div class="pav-name rarity-${l.item.rarity}">${l.item.name} <span class="dim">Lv ${l.item.level} ${l.item.slot}</span></div>
+      <div class="pav-sub dim">Asking ${l.price} ◆ · fair ≈ ${l.value ?? marketValue(l.item)} ◆</div>
+      <div class="pav-price dim">Awaiting a buyer · ${fmtLeft(l.expiresAt - now)}</div>`;
+    const cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.textContent = 'Reclaim';
+    cancel.addEventListener('click', () => { actions.cancel(l.id); afterPavAction(); });
+    row.append(pavItemIcon(l.item), info, cancel);
+    list.appendChild(row);
+  }
+  body.appendChild(list);
+}
+
+function renderMailboxTab(body) {
+  const { state, actions } = pav;
+  const mail = marketMailbox(state);
+  const collectAll = document.createElement('button');
+  collectAll.type = 'button';
+  collectAll.className = 'claim-btn';
+  collectAll.textContent = 'Collect all';
+  collectAll.disabled = mail.length === 0;
+  collectAll.addEventListener('click', () => { actions.collect(); afterPavAction(); });
+  body.appendChild(collectAll);
+
+  if (mail.length === 0) {
+    body.appendChild(emptyNote('Your mailbox is empty. Sale proceeds and unsold returns land here.'));
+    return;
+  }
+  const list = document.createElement('div');
+  list.className = 'pav-list';
+  for (const e of mail) {
+    const row = document.createElement('div');
+    row.className = 'pav-row mail-row';
+    if (e.kind === 'sale') {
+      row.innerHTML = `<span class="mail-glyph">◆</span><div class="pav-info"><div class="pav-name">Sold <span class="rarity-${e.rarity}">${e.itemName}</span></div><div class="pav-sub dim">to ${e.buyerName} · +${e.stones} spirit stones</div></div>`;
+    } else {
+      const item = e.item;
+      const label = e.kind === 'return' ? 'Returned (unsold)' : 'Purchased';
+      row.innerHTML = `<span class="mail-glyph rarity-${item.rarity}">${SLOT_ICONS[item.slot]}</span><div class="pav-info"><div class="pav-name rarity-${item.rarity}">${item.name}</div><div class="pav-sub dim">${label} · Lv ${item.level} ${item.slot}</div></div>`;
+    }
+    list.appendChild(row);
+  }
+  body.appendChild(list);
+}
+
+function renderPavilionBody() {
+  const body = $('pavilion-body');
+  body.innerHTML = '';
+  if (pavTab === 'buy') renderBuyTab(body);
+  else if (pavTab === 'sell') renderSellTab(body);
+  else if (pavTab === 'mine') renderMineTab(body);
+  else renderMailboxTab(body);
+}
+
+function renderPavilionChrome() {
+  const { state } = pav;
+  $('pavilion-stones').textContent = `— ◆ ${state.player.spiritStones}`;
+  document.querySelectorAll('.pav-tab').forEach((b) => b.classList.toggle('active', b.dataset.tab === pavTab));
+  updatePavilionBadge(state);
+}
+
+function renderPavilion() {
+  renderPavilionChrome();
+  renderPavilionBody();
+}
+
+// Re-render the modal after an action (the action already refreshed the HUD).
+function afterPavAction() {
+  renderPavilion();
+}
+
+// Mailbox count badge on the Pavilion button + the Mailbox tab.
+export function updatePavilionBadge(state) {
+  const n = marketMailbox(state).length;
+  for (const id of ['pavilion-mail-count', 'pav-mail-badge']) {
+    const el = $(id);
+    if (!el) continue;
+    el.textContent = String(n);
+    el.classList.toggle('hidden', n === 0);
+  }
+}
+
+export function initPavilion(state, actions) {
+  pav = { state, actions };
+  const overlay = $('pavilion-overlay');
+  $('btn-pavilion').addEventListener('click', () => {
+    pavTab = 'buy';
+    renderPavilion();
+    overlay.classList.remove('hidden');
+  });
+  $('btn-close-pavilion').addEventListener('click', () => overlay.classList.add('hidden'));
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.classList.add('hidden');
+  });
+  for (const btn of document.querySelectorAll('.pav-tab')) {
+    btn.addEventListener('click', () => {
+      pavTab = btn.dataset.tab;
+      renderPavilion();
+    });
+  }
+  updatePavilionBadge(state);
 }

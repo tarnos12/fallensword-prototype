@@ -18,6 +18,8 @@ export const CREATURE_TYPES = {
   wolfSpirit: {
     id: 'wolfSpirit',
     name: 'Ravenous Wolf Spirit',
+    cardId: 'card_wolfSpirit',
+    flavor: 'A pack-beast whose spirit refused the wheel of reincarnation. It hunts the living for the warmth it lost.',
     levels: [1, 2],
     base: { attack: 7, defense: 5, damage: 4, armor: 1, maxHp: 12 },
     perLevel: { attack: 1.5, defense: 1, damage: 1, armor: 0.5, maxHp: 3 },
@@ -27,6 +29,8 @@ export const CREATURE_TYPES = {
   boneSerpent: {
     id: 'boneSerpent',
     name: 'Bone Serpent',
+    cardId: 'card_boneSerpent',
+    flavor: 'Grave-soil coils into the shape of a serpent where too many cultivators have died. Its bite carries the chill of the tomb.',
     levels: [3, 4],
     base: { attack: 9, defense: 7, damage: 5, armor: 2, maxHp: 16 },
     perLevel: { attack: 1.5, defense: 1, damage: 1, armor: 0.5, maxHp: 3 },
@@ -42,6 +46,8 @@ export const CREATURE_TYPES = {
   rogueCultivator: {
     id: 'rogueCultivator',
     name: 'Rogue Cultivator',
+    cardId: 'card_rogueCultivator',
+    flavor: 'A disciple who forsook their sect for a faster path. Heavily warded and patient, they wait for the unwary to overreach.',
     levels: [5, 6],
     base: { attack: 12, defense: 12, damage: 3, armor: 5, maxHp: 30 },
     perLevel: { attack: 1.5, defense: 1.5, damage: 0.25, armor: 0.5, maxHp: 4 },
@@ -57,6 +63,8 @@ export const CREATURE_TYPES = {
   emberHound: {
     id: 'emberHound',
     name: 'Ember Hound',
+    cardId: 'card_emberHound',
+    flavor: 'Born in the coal-fires of the Gorge, it burns through its own life to strike fast. Fragile, but it hits before you are ready.',
     levels: [7, 8],
     base: { attack: 5, defense: 9, damage: 3, armor: 1, maxHp: 18 },
     perLevel: { attack: 1, defense: 1, damage: 1, armor: 0.3, maxHp: 4 },
@@ -67,6 +75,8 @@ export const CREATURE_TYPES = {
   cinderGolem: {
     id: 'cinderGolem',
     name: 'Cinder Golem',
+    cardId: 'card_cinderGolem',
+    flavor: 'Slag and spirit-ash bound by a dead forge-master\'s will. It does not tire, and it does not hurry.',
     levels: [9, 10],
     base: { attack: 6, defense: 10, damage: 4, armor: 3, maxHp: 25 },
     perLevel: { attack: 1, defense: 1, damage: 0.8, armor: 0.5, maxHp: 5 },
@@ -79,6 +89,8 @@ export const CREATURE_TYPES = {
   ashenRevenant: {
     id: 'ashenRevenant',
     name: 'Ashen Revenant',
+    cardId: 'card_ashenRevenant',
+    flavor: 'What remains when a cultivator burns their own foundation for one last breakthrough — and fails. Armoured in grief, slow to fall.',
     levels: [11, 12],
     base: { attack: 8, defense: 10, damage: 5, armor: 3, maxHp: 30 },
     perLevel: { attack: 1, defense: 1.2, damage: 0.5, armor: 0.6, maxHp: 5 },
@@ -86,6 +98,25 @@ export const CREATURE_TYPES = {
     stones: 130,
   },
 };
+
+// The scaled stat block a creature type presents at a given level (defaults to
+// the low end of its level band). Pure derivation from the template — used by
+// the Beast Codex to show combat stats without needing a live spawned instance.
+export function creatureStatBlock(typeId, level) {
+  const t = CREATURE_TYPES[typeId];
+  const lv = level ?? t.levels[0];
+  const scale = (stat) => Math.round(t.base[stat] + t.perLevel[stat] * (lv - 1));
+  return {
+    level: lv,
+    attack: scale('attack'),
+    defense: scale('defense'),
+    damage: scale('damage'),
+    armor: scale('armor'),
+    maxHp: scale('maxHp'),
+    xp: t.xp,
+    stones: t.stones,
+  };
+}
 
 let creatureCounter = 0;
 
@@ -134,6 +165,7 @@ export function createPlayer() {
     equipment: { weapon: null, robe: null },
     inventory: [],
     bestiary: {}, // { typeId: { kills, firstSeenAt } } — GDD §7.5 Stage 1 foundations
+    cards: {}, // { cardId: level } — Spirit Card collection (GDD §7.4)
     learnedTechniques: [], // technique ids (GDD §6.4)
     activeBuffs: [], // { techniqueId, effect, expiresAt } — timed technique buffs
   };

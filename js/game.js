@@ -2,7 +2,7 @@
 // and persistence. Combat math itself lives in combat.js and is never
 // duplicated here.
 
-import { createPlayer } from './actors.js';
+import { createPlayer, spawnCreature, CREATURE_TYPES } from './actors.js';
 import { resolveCombat, MAX_TURNS } from './combat.js';
 import {
   ZONES,
@@ -19,6 +19,7 @@ import {
   applyBreakthroughs,
   allocateStat as allocPoint,
   stageName,
+  xpForBreakthrough,
 } from './progression.js';
 import {
   rollDrop,
@@ -33,12 +34,21 @@ import {
 } from './items.js';
 import * as Quests from './quests.js';
 import * as Techniques from './techniques.js';
+import { rollCardDrop, acquireCard, cardBonuses, CARDS } from './cards.js';
+import { createMarketProvider, emptyMarket } from './market.js';
 import { saveGame, loadGame, clearSave } from './save.js';
 
 // --- Qi (stamina) tuning. Prototype regen is fast so playtesting isn't
 // gated on a real clock; 1.0 tuning will slow this dramatically (GDD §9.3).
 export const MAX_QI = 500; // testing cap; 1.0 tuning will lower this
 export const QI_REGEN_MS = 3_000; // 1 Qi per 3s, wall-clock
+const STONE_ACCRUAL_MS = 3_600_000; // spirit-stones/hour cards accrue per real hour
+
+// Effective Qi cap: base cap + any Qi-cap Spirit Card bonus (GDD §7.2). Always
+// derived so the cap tracks the card collection with no stored duplicate.
+export function maxQi(player) {
+  return MAX_QI + cardBonuses(player).meta.qiCap;
+}
 
 // Death penalty (GDD §8.3 starting values). XP loss is progress toward the
 // next stage only — a death can never undo a breakthrough.
@@ -57,10 +67,13 @@ export function createGame() {
         pos: { ...ZONES.azuremist.start },
         qi: MAX_QI,
         lastQiTick: Date.now(),
+        lastStoneTick: Date.now(),
+        market: emptyMarket(),
         quests: Quests.createQuestState(),
         log: [],
         worldRng,
         offlineQi: 0,
+        offlineStones: 0,
       };
 
   // Ensure every defined zone exists (fills gaps for new games, migrated v1
@@ -75,15 +88,26 @@ export function createGame() {
   // Fields added after a save was first written default to empty.
   if (!state.player.learnedTechniques) state.player.learnedTechniques = [];
   if (!state.player.activeBuffs) state.player.activeBuffs = [];
+  if (!state.player.cards) state.player.cards = {};
+  if (state.lastStoneTick == null) state.lastStoneTick = Date.now();
+  if (!state.market) state.market = emptyMarket();
+  state.offlineStones = 0;
+
+  // The Treasure Pavilion provider (GDD §6.7) is created fresh each load over
+  // the persisted market state; normalize() inside back-fills legacy blobs.
+  state.marketProvider = createMarketProvider(state);
 
   state.loadedFromSave = !!loaded;
   if (loaded) {
     const before = state.qi;
     tickQi(state); // apply offline wall-clock regen accrued while away
     state.offlineQi = state.qi - before;
+    state.offlineStones = tickStones(state); // passive spirit-stone income (cards)
   } else {
     addLog(state, 'You step out from the sect gate. The wilds await.');
   }
+  // Rotate listings and resolve any player sales that completed while away.
+  state.offlineMarket = state.marketProvider.tick();
   grantTestingKit(state);
   return state;
 }
@@ -108,7 +132,7 @@ function grantTestingKit(state) {
     p.testingKitVersion = TEST_KIT_VERSION;
     p.skillPoints += 8;
     p.statPoints += 6;
-    state.qi = MAX_QI;
+    state.qi = maxQi(p);
     addLog(state, 'Sect insight granted (testing): +8 technique points, +6 stat points.');
   }
   saveGame(state);
@@ -161,15 +185,34 @@ export function addLog(state, msg) {
 
 // Wall-clock Qi regen: accrue whole Qi for elapsed time since the last tick.
 export function tickQi(state, now = Date.now()) {
-  if (state.qi >= MAX_QI) {
+  const cap = maxQi(state.player);
+  if (state.qi >= cap) {
     state.lastQiTick = now;
     return;
   }
   const gained = Math.floor((now - state.lastQiTick) / QI_REGEN_MS);
   if (gained > 0) {
-    state.qi = Math.min(MAX_QI, state.qi + gained);
+    state.qi = Math.min(cap, state.qi + gained);
     state.lastQiTick += gained * QI_REGEN_MS;
   }
+}
+
+// Wall-clock passive income from spirit-stones/hour Spirit Cards (GDD §7.4:
+// the same last-seen-timestamp machinery as Qi regen). Accrues whole stones and
+// advances the timestamp only by the consumed portion, so fractions aren't lost.
+// Returns the number of stones granted this tick.
+export function tickStones(state, now = Date.now()) {
+  const perHour = cardBonuses(state.player).meta.stones;
+  if (perHour <= 0) {
+    state.lastStoneTick = now;
+    return 0;
+  }
+  const gained = Math.floor(((now - state.lastStoneTick) / STONE_ACCRUAL_MS) * perHour);
+  if (gained > 0) {
+    state.player.spiritStones += gained;
+    state.lastStoneTick += Math.floor((gained / perHour) * STONE_ACCRUAL_MS);
+  }
+  return gained;
 }
 
 export function tryMove(state, x, y) {
@@ -194,10 +237,40 @@ function scaleXp(baseXp, playerLevel, creatureLevel) {
   return Math.max(1, Math.round(baseXp * mult));
 }
 
-function trackKill(state, monster) {
+function ensureSeen(state, typeId) {
   const b = state.player.bestiary;
-  if (!b[monster.typeId]) b[monster.typeId] = { kills: 0, firstSeenAt: Date.now() };
-  b[monster.typeId].kills += 1;
+  if (!b[typeId]) b[typeId] = { kills: 0, firstSeenAt: Date.now() };
+  return b[typeId];
+}
+
+// A Beast Codex entry is created on first encounter — inspecting OR fighting
+// (GDD §7.1). Returns true if this was a new entry (for a save + re-render).
+export function markSeen(state, typeId) {
+  const b = state.player.bestiary;
+  if (b[typeId]) return false;
+  b[typeId] = { kills: 0, firstSeenAt: Date.now() };
+  saveGame(state);
+  return true;
+}
+
+function trackKill(state, monster) {
+  ensureSeen(state, monster.typeId).kills += 1;
+}
+
+// Award a dropped Spirit Card: new card, duplicate upgrade, or (beyond max) a
+// spirit-stone payout (GDD §7.2). Returns the acquire result for the banner.
+function grantCard(state, cardId) {
+  const res = acquireCard(state.player, cardId);
+  const c = CARDS[cardId];
+  if (res.kind === 'new') {
+    addLog(state, `Spirit Card obtained: ${c.creatureName} (Lv 1)!`);
+  } else if (res.kind === 'upgrade') {
+    addLog(state, `Spirit Card refined: ${c.creatureName} → Lv ${res.level}.`);
+  } else if (res.kind === 'duplicate') {
+    state.player.spiritStones += res.stones;
+    addLog(state, `Duplicate ${c.creatureName} card dissolves into ${res.stones} spirit stones.`);
+  }
+  return res;
 }
 
 function grantXp(state, xp) {
@@ -223,11 +296,14 @@ export function attack(state, monsterId) {
   if (!monster) return null;
   if (!canAttack(state)) return null;
 
-  const result = resolveCombat(playerCombatActor(state.player), monster, randomSeed());
+  const actor = playerCombatActor(state.player);
+  applyGodStats(actor); // TESTING ONLY: no-op unless debug god mode is on
+  const result = resolveCombat(actor, monster, randomSeed());
   state.qi -= result.staminaSpent;
 
   const p = state.player;
   degradeEquipment(p); // gear wears with use, win or lose
+  ensureSeen(state, monster.typeId); // facing a beast enters it in the codex
   Quests.onFace(state.quests, monster.typeId);
 
   if (result.outcome === 'win') {
@@ -247,6 +323,11 @@ export function attack(state, monsterId) {
         addLog(state, `A ${drop.name} dropped, but your pack is full — it is lost.`);
       }
     }
+    // Spirit Card roll is independent of the loot roll (GDD §7.2) — a card
+    // never replaces an item drop.
+    const cardId = rollCardDrop(monster.typeId, state.worldRng);
+    if (cardId) result.cardDrop = grantCard(state, cardId);
+
     result.rewards = { xp, stones, itemDrop: drop };
     addLog(state, `Slew ${monster.name} (Lv ${monster.level}): +${xp} XP, +${stones} stones.`);
     grantXp(state, xp);
@@ -381,6 +462,212 @@ export function claimQuest(state) {
   Quests.advance(qs, p.level);
   saveGame(state);
   return true;
+}
+
+// --- Treasure Pavilion (fake-multiplayer market, GDD §6.7). Thin wrappers over
+// the MarketProvider that log outcomes and persist on any change. ---
+
+// Rotate NPC listings + resolve completed player sales. Called on the world
+// tick; saves only when something actually changed (like tickQi's pattern).
+export function tickMarket(state, now = Date.now()) {
+  const res = state.marketProvider.tick(now);
+  for (const pl of res.sales) addLog(state, `The Pavilion sold your ${pl.item.name} — proceeds await in your mailbox.`);
+  for (const pl of res.returns) addLog(state, `Your ${pl.item.name} went unsold and was returned to your mailbox.`);
+  if (res.changed) saveGame(state);
+  return res;
+}
+
+export function marketListings(state, filters) {
+  return state.marketProvider.getListings(filters);
+}
+
+export function marketPlayerListings(state) {
+  return state.marketProvider.getPlayerListings();
+}
+
+export function marketMailbox(state) {
+  return state.marketProvider.getMailbox();
+}
+
+export function marketBuy(state, listingId) {
+  const res = state.marketProvider.buyNow(listingId);
+  if (res.ok) {
+    addLog(
+      state,
+      res.toMailbox
+        ? `Bought ${res.item.name} for ${res.price} stones — pack full, delivered to your mailbox.`
+        : `Bought ${res.item.name} for ${res.price} stones.`
+    );
+    saveGame(state);
+  } else if (res.reason) {
+    addLog(state, res.reason);
+  }
+  return res;
+}
+
+export function marketList(state, itemId, price) {
+  const res = state.marketProvider.listItem(itemId, price);
+  if (res.ok) {
+    addLog(state, `Listed ${res.listing.item.name} in the Treasure Pavilion for ${res.listing.price} stones.`);
+    saveGame(state);
+  } else if (res.reason) {
+    addLog(state, res.reason);
+  }
+  return res;
+}
+
+export function marketCancel(state, listingId) {
+  const res = state.marketProvider.cancelListing(listingId);
+  if (res.ok) {
+    addLog(state, `Reclaimed ${res.item.name} from the Pavilion.`);
+    saveGame(state);
+  } else if (res.reason) {
+    addLog(state, res.reason);
+  }
+  return res;
+}
+
+export function marketCollect(state) {
+  const res = state.marketProvider.collectMailbox();
+  const bits = [];
+  if (res.stones) bits.push(`${res.stones} spirit stones`);
+  if (res.items.length) bits.push(`${res.items.length} item(s)`);
+  if (bits.length) addLog(state, `Collected ${bits.join(' and ')} from your mailbox.`);
+  if (res.blocked) addLog(state, `${res.blocked} item(s) remain — clear pack space to collect them.`);
+  if (res.stones || res.items.length) saveGame(state);
+  return res;
+}
+
+// =====================================================================
+// TESTING ONLY — debug tools (strip before demo). Remove this whole block,
+// the `applyGodStats` call in attack(), `setDropMultiplier`/
+// `setCardDropMultiplier` in items.js/cards.js, and `js/debug.js` + its
+// wiring in main.js to fully strip the debug tooling.
+// =====================================================================
+
+let DEBUG_GOD = false;
+
+export function setGodMode(on) {
+  DEBUG_GOD = !!on;
+}
+
+export function isGodMode() {
+  return DEBUG_GOD;
+}
+
+// Boosts a combat snapshot so the player one-shots anything and never dies.
+// A no-op unless god mode is on, so it's safe to leave in the attack path.
+function applyGodStats(actor) {
+  if (!DEBUG_GOD) return;
+  actor.stats.attack = 99999;
+  actor.stats.damage = 99999;
+  actor.stats.defense = 99999;
+  actor.stats.armor = 99999;
+  actor.hp = 99999;
+  actor.maxHp = 99999;
+}
+
+export function debugSpawn(state, typeId, level) {
+  const tile = currentTile(state);
+  const lv = Number.isFinite(level) && level > 0 ? level : undefined;
+  const mon = spawnCreature(typeId, lv, state.worldRng);
+  tile.monsters.push(mon);
+  if (tile.clearedAt !== null) tile.clearedAt = null;
+  addLog(state, `[debug] Spawned ${mon.name} (Lv ${mon.level}) on this tile.`);
+  saveGame(state);
+}
+
+export function debugClearTile(state) {
+  currentTile(state).monsters = [];
+  addLog(state, '[debug] Cleared this tile.');
+  saveGame(state);
+}
+
+export function debugGrant(state, what) {
+  const p = state.player;
+  switch (what) {
+    case 'stones':
+      p.spiritStones += 5000;
+      addLog(state, '[debug] +5000 spirit stones.');
+      break;
+    case 'xp':
+      grantXp(state, 500);
+      addLog(state, '[debug] +500 XP.');
+      break;
+    case 'statpts':
+      p.statPoints += 5;
+      addLog(state, '[debug] +5 stat points.');
+      break;
+    case 'techpts':
+      p.skillPoints += 5;
+      addLog(state, '[debug] +5 technique points.');
+      break;
+    case 'qi':
+      state.qi = maxQi(p);
+      addLog(state, '[debug] Qi refilled.');
+      break;
+    case 'breakthrough':
+      grantXp(state, xpForBreakthrough(p.level)); // enough for one breakthrough
+      break;
+    default:
+      return;
+  }
+  saveGame(state);
+}
+
+export function debugGiveItem(state, slot, rarity, level) {
+  const p = state.player;
+  if (p.inventory.length >= INVENTORY_SIZE) {
+    addLog(state, '[debug] Pack full — cannot add item.');
+    return;
+  }
+  const lv = Number.isFinite(level) && level > 0 ? level : 1;
+  const item = generateItem(slot, lv, rarity, state.worldRng);
+  p.inventory.push(item);
+  addLog(state, `[debug] Added ${item.name} (Lv ${item.level}, ${rarity}).`);
+  saveGame(state);
+}
+
+export function debugCards(state, mode) {
+  const p = state.player;
+  if (!p.cards) p.cards = {};
+  if (mode === 'clear') {
+    p.cards = {};
+    addLog(state, '[debug] Cleared all Spirit Cards.');
+  } else {
+    for (const id of Object.keys(CARDS)) {
+      p.cards[id] = mode === 'max' ? CARDS[id].maxLevel : Math.max(1, p.cards[id] ?? 0);
+    }
+    addLog(state, mode === 'max' ? '[debug] All Spirit Cards maxed.' : '[debug] Granted all Spirit Cards.');
+  }
+  saveGame(state);
+}
+
+export function debugRevealCodex(state) {
+  const now = Date.now();
+  for (const typeId of Object.keys(CREATURE_TYPES)) {
+    state.player.bestiary[typeId] = { kills: 100, firstSeenAt: now };
+  }
+  addLog(state, '[debug] Beast Codex fully revealed (100 kills each).');
+  saveGame(state);
+}
+
+export function debugMarket(state, mode) {
+  const m = state.market;
+  if (mode === 'refresh') {
+    m.listings = [];
+    m.lastRefresh = 0;
+    state.marketProvider.tick();
+    addLog(state, '[debug] Rotated Pavilion listings.');
+  } else if (mode === 'resolve') {
+    for (const pl of m.playerListings) {
+      if (pl.willSell) pl.sellAt = 0; // resolve as a sale now
+      else pl.expiresAt = 0; // expire (return) now
+    }
+    tickMarket(state);
+    addLog(state, '[debug] Resolved all your listings.');
+  }
+  saveGame(state);
 }
 
 export { effectiveStats, stageName };

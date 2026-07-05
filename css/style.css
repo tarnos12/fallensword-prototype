@@ -271,7 +271,7 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 
 #inventory-list {
   display: grid;
-  grid-template-columns: repeat(4, 54px);
+  grid-template-columns: repeat(6, 54px);
   gap: 8px;
 }
 

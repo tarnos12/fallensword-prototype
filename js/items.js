@@ -14,7 +14,7 @@ export const RARITIES = {
   mythic: { key: 'mythic', label: 'Mythic', mult: 3.6, attributes: 5, weight: 0, maxDurability: 120, repairPerPoint: 8, sellMult: 180 },
 };
 
-export const INVENTORY_SIZE = 8;
+export const INVENTORY_SIZE = 24; // testing size; 1.0 starts small per GDD §6.2
 export const DROP_CHANCE = 0.22;
 
 // Templates: ordered attribute pools with level-1 roll ranges [stat, min, max].

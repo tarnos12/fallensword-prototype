@@ -16,6 +16,7 @@ import {
 import {
   rollDrop,
   generateItem,
+  RARITIES,
   degradeEquipment,
   equipItem as equip,
   unequipItem as unequip,
@@ -28,7 +29,7 @@ import { saveGame, loadGame, clearSave } from './save.js';
 
 // --- Qi (stamina) tuning. Prototype regen is fast so playtesting isn't
 // gated on a real clock; 1.0 tuning will slow this dramatically (GDD §9.3).
-export const MAX_QI = 100;
+export const MAX_QI = 500; // testing cap; 1.0 tuning will lower this
 export const QI_REGEN_MS = 3_000; // 1 Qi per 3s, wall-clock
 
 // Death penalty (GDD §8.3 starting values). XP loss is progress toward the
@@ -60,7 +61,24 @@ export function createGame() {
   } else {
     addLog(state, 'You step out from the sect gate. The wilds await.');
   }
+  grantTestingKit(state);
   return state;
+}
+
+// TESTING ONLY (remove before demo): one randomized drop of every rarity
+// tier, rolled exactly like an enemy drop, plus a full Qi top-up. Granted
+// once per save via the testingKit flag.
+function grantTestingKit(state) {
+  if (state.player.testingKit) return;
+  state.player.testingKit = true;
+  for (const rarity of Object.keys(RARITIES)) {
+    const slot = state.worldRng() < 0.5 ? 'weapon' : 'robe';
+    const level = 1 + Math.floor(state.worldRng() * 6);
+    state.player.inventory.push(generateItem(slot, level, rarity, state.worldRng));
+  }
+  state.qi = MAX_QI;
+  addLog(state, 'The sect quartermaster issues a testing kit: one artifact of every rarity.');
+  saveGame(state);
 }
 
 export function resetGame() {

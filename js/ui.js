@@ -5,7 +5,7 @@ import { MAP_SIZE } from './map.js';
 import { MAX_QI, effectiveStats, stageName, totalRepairCost } from './game.js';
 import { MAX_TURNS } from './combat.js';
 import { xpForBreakthrough, ALLOC_STATS, POINT_VALUE, MAX_STAGE } from './progression.js';
-import { repairCost, sellValue, RARITIES } from './items.js';
+import { sellValue, RARITIES, INVENTORY_SIZE } from './items.js';
 import { currentQuest, progressText, QUESTS } from './quests.js';
 
 const $ = (id) => document.getElementById(id);
@@ -130,7 +130,71 @@ export function toggleInspect(monster, row) {
   row.appendChild(box);
 }
 
-// --- Character sheet with stat allocation ---
+// --- Tooltip + context-menu overlays (created once, shared by all items) ---
+
+let tipEl = null;
+let menuEl = null;
+
+function ensureOverlays() {
+  if (tipEl) return;
+  tipEl = document.createElement('div');
+  tipEl.id = 'tooltip';
+  document.body.appendChild(tipEl);
+  menuEl = document.createElement('div');
+  menuEl.id = 'ctx-menu';
+  document.body.appendChild(menuEl);
+  document.addEventListener('click', hideMenu);
+  document.addEventListener('scroll', hideMenu, true);
+}
+
+function placeAt(el, x, y) {
+  const pad = 14;
+  el.style.left = Math.min(x + pad, window.innerWidth - el.offsetWidth - 8) + 'px';
+  el.style.top = Math.min(y + pad, window.innerHeight - el.offsetHeight - 8) + 'px';
+}
+
+function attachTooltip(el, htmlFn) {
+  ensureOverlays();
+  el.addEventListener('mouseenter', (e) => {
+    tipEl.innerHTML = htmlFn();
+    tipEl.style.display = 'block';
+    placeAt(tipEl, e.clientX, e.clientY);
+  });
+  el.addEventListener('mousemove', (e) => placeAt(tipEl, e.clientX, e.clientY));
+  el.addEventListener('mouseleave', hideTip);
+}
+
+function hideTip() {
+  if (tipEl) tipEl.style.display = 'none';
+}
+
+function openMenu(e, entries) {
+  ensureOverlays();
+  e.preventDefault();
+  e.stopPropagation();
+  hideTip();
+  menuEl.innerHTML = '';
+  for (const entry of entries) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = entry.label;
+    if (entry.danger) btn.classList.add('danger-btn');
+    if (entry.disabled) btn.disabled = true;
+    btn.addEventListener('click', () => {
+      hideMenu();
+      entry.onClick();
+    });
+    menuEl.appendChild(btn);
+  }
+  menuEl.style.display = 'flex';
+  placeAt(menuEl, e.clientX, e.clientY);
+}
+
+function hideMenu() {
+  if (menuEl) menuEl.style.display = 'none';
+}
+
+// --- Character sheet with stat allocation (two stats per row) ---
 
 const STAT_LABELS = { attack: 'Attack', defense: 'Defense', damage: 'Damage', armor: 'Armor', hp: 'Max HP' };
 
@@ -140,15 +204,21 @@ export function renderCharSheet(state, onAllocate) {
   const box = $('char-stats');
   box.innerHTML = '';
 
+  const grid = document.createElement('div');
+  grid.className = 'stat-grid';
   for (const stat of ALLOC_STATS) {
     const effKey = stat === 'hp' ? 'maxHp' : stat;
-    const baseKey = stat === 'hp' ? 'maxHp' : stat;
-    const row = document.createElement('div');
-    row.className = 'stat-row';
-    const gearPart = eff[effKey] - p.base[baseKey] - p.allocated[stat] * POINT_VALUE[stat];
-    row.innerHTML = `<span class="stat-label">${STAT_LABELS[stat]}</span>
-      <span class="stat-value">${eff[effKey]}</span>
-      <span class="stat-breakdown dim">${p.base[baseKey]} base + ${p.allocated[stat] * POINT_VALUE[stat]} trained + ${gearPart} gear</span>`;
+    const trained = p.allocated[stat] * POINT_VALUE[stat];
+    const gearPart = eff[effKey] - p.base[effKey] - trained;
+    const cell = document.createElement('div');
+    cell.className = 'stat-cell';
+    cell.innerHTML = `<span class="stat-label">${STAT_LABELS[stat]}</span><span class="stat-value">${eff[effKey]}</span>`;
+    attachTooltip(
+      cell,
+      () =>
+        `<div class="tt-name">${STAT_LABELS[stat]}: ${eff[effKey]}</div>
+         <div class="tt-line">${p.base[effKey]} base + ${trained} trained + ${gearPart} gear</div>`
+    );
     if (p.statPoints > 0) {
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -156,30 +226,69 @@ export function renderCharSheet(state, onAllocate) {
       btn.textContent = `+${POINT_VALUE[stat]}`;
       btn.title = `Spend 1 point: +${POINT_VALUE[stat]} ${STAT_LABELS[stat]}`;
       btn.addEventListener('click', () => onAllocate(stat));
-      row.appendChild(btn);
+      cell.appendChild(btn);
     }
-    box.appendChild(row);
+    grid.appendChild(cell);
   }
+  box.appendChild(grid);
 
   const foot = document.createElement('p');
   foot.className = 'empty-note';
   foot.textContent =
     p.statPoints > 0
       ? `${p.statPoints} stat point(s) to spend.`
-      : `Breakthroughs grant ${3} stat points. Technique points banked: ${p.skillPoints} (techniques unlock in Stage 2).`;
+      : `Breakthroughs grant 3 stat points. Technique points banked: ${p.skillPoints} (techniques unlock in Stage 2).`;
   box.appendChild(foot);
 }
 
-// --- Equipment + inventory ---
+// --- Equipment + inventory: FallenSword-style icon grids. Click a pack item
+// to equip (swapping the worn piece back into the pack, GDD §6.2); click an
+// equipped item to unequip; right-click for sell/destroy options. ---
 
-function itemLabel(item) {
-  return `<span class="rarity-${item.rarity}">${item.name}</span> <span class="dim">Lv ${item.level}</span>`;
+const SLOT_ICONS = { weapon: '⚔️', robe: '👘' };
+
+function itemTooltip(item, hint) {
+  const stats = Object.entries(item.bonuses)
+    .map(([s, v]) => `<div class="tt-line">+${v} ${STAT_LABELS[s] ?? s}</div>`)
+    .join('');
+  const dur =
+    item.durability <= 0
+      ? '<div class="tt-line broken">BROKEN — grants no bonuses until repaired</div>'
+      : `<div class="tt-line dim">Durability ${item.durability}/${item.maxDurability}</div>`;
+  return `<div class="tt-name rarity-${item.rarity}">${item.name}</div>
+    <div class="tt-line dim">Lv ${item.level} ${item.slot} · ${RARITIES[item.rarity].label}</div>
+    ${stats}${dur}
+    <div class="tt-hint">${hint}</div>`;
 }
 
-function itemStats(item) {
-  const parts = Object.entries(item.bonuses).map(([s, v]) => `+${v} ${STAT_LABELS[s] ?? s}`);
-  const dur = item.durability <= 0 ? '<span class="broken">BROKEN</span>' : `${item.durability}/${item.maxDurability}`;
-  return `${parts.join(', ')} · dur ${dur}`;
+function makeItemSlot(item, { label, onClick, onMenu, tooltipHint }) {
+  const el = document.createElement('button');
+  el.type = 'button';
+  el.className = 'item-slot';
+  if (item) {
+    el.classList.add(`icon-${item.rarity}`);
+    const pct = Math.round((item.durability / item.maxDurability) * 100);
+    const durClass = item.durability <= 0 ? 'broken' : pct < 25 ? 'low' : '';
+    el.innerHTML = `<span class="item-icon">${SLOT_ICONS[item.slot]}</span>
+      <span class="dur-bar"><span class="dur-fill ${durClass}" style="width:${Math.max(4, pct)}%"></span></span>`;
+    attachTooltip(el, () => itemTooltip(item, tooltipHint));
+    el.addEventListener('click', () => {
+      hideTip();
+      onClick();
+    });
+    if (onMenu) el.addEventListener('contextmenu', onMenu);
+  } else {
+    el.classList.add('empty');
+    el.innerHTML = label ? `<span class="item-icon dim">${SLOT_ICONS[label]}</span>` : '';
+    if (label) attachTooltip(el, () => `<div class="tt-name dim">Empty ${label} slot</div>`);
+  }
+  if (label) {
+    const tag = document.createElement('span');
+    tag.className = 'slot-tag';
+    tag.textContent = label;
+    el.appendChild(tag);
+  }
+  return el;
 }
 
 export function renderGear(state, { onEquip, onUnequip, onSell, onDestroy, atGate }) {
@@ -187,55 +296,46 @@ export function renderGear(state, { onEquip, onUnequip, onSell, onDestroy, atGat
   const slots = $('equipment-slots');
   slots.innerHTML = '';
   for (const slot of ['weapon', 'robe']) {
-    const item = p.equipment[slot];
-    const row = document.createElement('div');
-    row.className = 'item-row';
-    if (item) {
-      row.innerHTML = `<span class="slot-name">${slot}</span><span class="item-main">${itemLabel(item)}<br><span class="item-stats dim">${itemStats(item)}</span></span>`;
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.textContent = 'Unequip';
-      btn.addEventListener('click', () => onUnequip(slot));
-      row.appendChild(btn);
-    } else {
-      row.innerHTML = `<span class="slot-name">${slot}</span><span class="empty-note">— empty —</span>`;
-    }
-    slots.appendChild(row);
+    slots.appendChild(
+      makeItemSlot(p.equipment[slot], {
+        label: slot,
+        tooltipHint: 'Click: unequip',
+        onClick: () => onUnequip(slot),
+      })
+    );
   }
 
-  $('pack-count').textContent = `${p.inventory.length}/8`;
+  $('pack-count').textContent = `${p.inventory.length}/${INVENTORY_SIZE}`;
   const inv = $('inventory-list');
   inv.innerHTML = '';
-  if (p.inventory.length === 0) {
-    inv.innerHTML = '<p class="empty-note">Your pack is empty. Beasts drop artifacts.</p>';
-    return;
-  }
-  for (const item of p.inventory) {
-    const row = document.createElement('div');
-    row.className = 'item-row';
-    row.innerHTML = `<span class="item-main">${itemLabel(item)}<br><span class="item-stats dim">${itemStats(item)}</span></span>`;
-    const equipBtn = document.createElement('button');
-    equipBtn.type = 'button';
-    equipBtn.textContent = 'Equip';
-    equipBtn.addEventListener('click', () => onEquip(item.id));
-    row.appendChild(equipBtn);
-    if (atGate) {
-      const sellBtn = document.createElement('button');
-      sellBtn.type = 'button';
-      sellBtn.textContent = `Sell (${sellValue(item)} ◆)`;
-      sellBtn.addEventListener('click', () => onSell(item.id));
-      row.appendChild(sellBtn);
+  for (let i = 0; i < INVENTORY_SIZE; i++) {
+    const item = p.inventory[i];
+    if (!item) {
+      inv.appendChild(makeItemSlot(null, {}));
+      continue;
     }
-    const destroyBtn = document.createElement('button');
-    destroyBtn.type = 'button';
-    destroyBtn.className = 'danger-btn';
-    destroyBtn.textContent = '✕';
-    destroyBtn.title = 'Destroy (permanent)';
-    destroyBtn.addEventListener('click', () => {
-      if (confirm(`Destroy ${item.name}? This is permanent.`)) onDestroy(item.id);
-    });
-    row.appendChild(destroyBtn);
-    inv.appendChild(row);
+    inv.appendChild(
+      makeItemSlot(item, {
+        tooltipHint: atGate ? 'Click: equip · Right-click: sell / destroy' : 'Click: equip · Right-click: destroy (sell at Sect Gate)',
+        onClick: () => onEquip(item.id),
+        onMenu: (e) =>
+          openMenu(e, [
+            { label: 'Equip', onClick: () => onEquip(item.id) },
+            {
+              label: `Sell for ${sellValue(item)} ◆`,
+              disabled: !atGate,
+              onClick: () => onSell(item.id),
+            },
+            {
+              label: 'Destroy',
+              danger: true,
+              onClick: () => {
+                if (confirm(`Destroy ${item.name}? This is permanent.`)) onDestroy(item.id);
+              },
+            },
+          ]),
+      })
+    );
   }
 }
 

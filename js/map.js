@@ -79,6 +79,16 @@ export function createMap(rng) {
   };
 }
 
+// Rebuild the map object around tiles restored from a save.
+export function rehydrateMap(tiles) {
+  return {
+    tiles,
+    at(x, y) {
+      return tiles[y * MAP_SIZE + x];
+    },
+  };
+}
+
 // Called when the player enters a tile: repopulate if it was cleared long enough ago.
 export function maybeRespawn(tile, rng, now = Date.now()) {
   if (tile.monsters.length === 0 && tile.clearedAt !== null && now - tile.clearedAt >= RESPAWN_MS) {

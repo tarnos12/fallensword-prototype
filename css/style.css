@@ -222,3 +222,80 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 #event-list li { padding: 1px 0; }
 
 .hidden { display: none !important; }
+
+/* --- Stage 1: character sheet, gear, quests --- */
+
+#char-panel {
+  flex: 1 1 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 280px;
+  max-width: 420px;
+}
+
+.panel-box h3 {
+  margin: 12px 0 6px;
+  font-size: 0.85rem;
+  color: var(--gold);
+  font-weight: normal;
+  letter-spacing: 1px;
+}
+
+.stat-chip.attention { color: var(--gold); border-color: var(--gold); }
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--panel-edge);
+}
+
+.stat-row:last-of-type { border-bottom: none; }
+
+.stat-label { width: 64px; }
+
+.stat-value { font-weight: bold; width: 34px; text-align: right; }
+
+.stat-breakdown { flex: 1; font-size: 0.72rem; }
+
+.alloc-btn { color: var(--win); padding: 2px 10px; }
+
+.item-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--panel-edge);
+}
+
+.item-row:last-child { border-bottom: none; }
+
+.slot-name { width: 58px; color: var(--dim); font-size: 0.8rem; text-transform: capitalize; }
+
+.item-main { flex: 1; font-size: 0.88rem; line-height: 1.35; }
+
+.item-stats { font-size: 0.74rem; }
+
+.item-row button { font-size: 0.75rem; padding: 3px 8px; }
+
+.rarity-common { color: #b8b5aa; }
+.rarity-uncommon { color: #7bc67e; }
+.rarity-rare { color: #64b5f6; }
+
+.broken { color: var(--loss); font-weight: bold; }
+
+.danger-btn { color: var(--loss); }
+
+.quest-title { margin: 0 0 4px; color: var(--text); font-weight: bold; }
+
+.quest-text { margin: 0 0 6px; font-size: 0.85rem; color: var(--dim); }
+
+.quest-progress { margin: 0 0 4px; font-size: 0.85rem; }
+
+.quest-reward { margin: 0 0 6px; font-size: 0.8rem; }
+
+.claim-btn { color: var(--gold); border-color: var(--gold); }
+
+#gate-actions { margin-bottom: 8px; }

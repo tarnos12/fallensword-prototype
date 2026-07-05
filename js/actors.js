@@ -49,6 +49,14 @@ export const CREATURE_TYPES = {
 
 let creatureCounter = 0;
 
+export function setCreatureCounter(n) {
+  creatureCounter = n;
+}
+
+export function getCreatureCounter() {
+  return creatureCounter;
+}
+
 export function spawnCreature(typeId, level, rng) {
   const t = CREATURE_TYPES[typeId];
   const lv = level ?? t.levels[Math.floor(rng() * t.levels.length)];
@@ -69,18 +77,22 @@ export function spawnCreature(typeId, level, rng) {
   return actor;
 }
 
+// The player is Actor-shaped for combat via playerCombatActor(), but the
+// persistent object separates base stats from allocated points and gear so
+// effective stats are always derivable (GDD §7.3 aggregation pipeline).
 export function createPlayer() {
-  const p = createActor({
+  return {
     id: 'player',
     name: 'Nameless Cultivator',
     level: 1,
-    attack: 12,
-    defense: 8,
-    damage: 9,
-    armor: 3,
-    maxHp: 34,
-  });
-  p.xp = 0;
-  p.spiritStones = 20;
-  return p;
+    xp: 0,
+    statPoints: 0,
+    skillPoints: 0,
+    spiritStones: 20,
+    base: { attack: 12, defense: 8, damage: 9, armor: 3, maxHp: 34 },
+    allocated: { attack: 0, defense: 0, damage: 0, armor: 0, hp: 0 },
+    equipment: { weapon: null, robe: null },
+    inventory: [],
+    bestiary: {}, // { typeId: { kills, firstSeenAt } } — GDD §7.5 Stage 1 foundations
+  };
 }

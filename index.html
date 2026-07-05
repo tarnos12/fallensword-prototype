@@ -3,30 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fallen Immortal — Stage 0 Prototype</title>
+  <title>Fallen Immortal — Stage 1 MVP</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header id="header">
-    <h1>Fallen Immortal <span class="subtitle">Stage 0 Prototype</span></h1>
+    <h1>Fallen Immortal <span class="subtitle">Stage 1 MVP</span></h1>
     <div id="player-bar">
       <span class="stat-chip" id="chip-level" title="Cultivation stage"></span>
-      <span class="stat-chip" id="chip-xp" title="Cultivation progress"></span>
+      <span class="stat-chip" id="chip-xp" title="Cultivation progress toward next breakthrough"></span>
+      <span class="stat-chip" id="chip-points" title="Unspent stat points"></span>
       <span class="stat-chip" id="chip-stones" title="Spirit stones"></span>
-      <span class="stat-chip" id="chip-hp" title="Health"></span>
-      <span class="stat-chip qi" id="chip-qi" title="Spiritual energy — regenerates over time"></span>
+      <span class="stat-chip" id="chip-hp" title="Health (effective)"></span>
+      <span class="stat-chip qi" id="chip-qi" title="Spiritual energy — regenerates over time, even while away"></span>
     </div>
   </header>
 
   <main id="layout">
     <section id="map-panel">
       <div id="map-grid"></div>
-      <p class="hint">Click an adjacent tile to move — orthogonal costs 1 Qi, diagonal costs 2 Qi. ☯ is you; red dots are demonic beasts.</p>
+      <p class="hint">Click an adjacent tile to move — orthogonal costs 1 Qi, diagonal costs 2 Qi. ☯ is you; red dots are demonic beasts. Return to the Sect Gate to repair and sell.</p>
     </section>
 
     <section id="side-panel">
       <div id="tile-info" class="panel-box">
         <h2 id="tile-title">Location</h2>
+        <div id="gate-actions" class="hidden"></div>
         <div id="monster-list"></div>
       </div>
 
@@ -40,9 +42,32 @@
         </div>
       </div>
 
+      <div id="quest-panel" class="panel-box">
+        <h2>Sect Missions</h2>
+        <div id="quest-body"></div>
+      </div>
+
       <div id="event-log" class="panel-box">
         <h2>Chronicle</h2>
         <ul id="event-list"></ul>
+      </div>
+    </section>
+
+    <section id="char-panel">
+      <div id="char-sheet" class="panel-box">
+        <h2>Cultivator</h2>
+        <div id="char-stats"></div>
+      </div>
+
+      <div id="gear-box" class="panel-box">
+        <h2>Artifacts</h2>
+        <div id="equipment-slots"></div>
+        <h3>Pack <span id="pack-count" class="dim"></span></h3>
+        <div id="inventory-list"></div>
+      </div>
+
+      <div class="panel-box">
+        <button id="btn-reset" type="button" class="danger-btn" title="Wipe the save and start over">Abandon Cultivation (reset)</button>
       </div>
     </section>
   </main>

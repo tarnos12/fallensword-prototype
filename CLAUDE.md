@@ -27,21 +27,21 @@ Done:
 - FallenSword-style icon-grid inventory/equipment with tooltips + right-click menu; 2-stats-per-row character sheet.
 - **Multi-zone world** (`map.js` ZONES): Azuremist Vale → Cindervein Gorge, connected by a stage-gated portal; realm ladder Qi Condensation → Foundation Establishment with a realm-barrier XP spike; 3 Foundation-tier creatures; 9-quest chain across both zones. Save v2 with lossless v1 migration.
 - **Techniques** (`techniques.js`): 8 across Offense/Defense/Special, 2–3 tier prereq tree, learned with banked points, channelled for timed Qi-cost percentage buffs; wall-clock expiry; routed through `effectiveStats`.
+- **Bestiary + Spirit Cards** (`cards.js`): Beast Codex modal (📖 button) over the existing kill data with progressive disclosure (10 kills → combat stats, 50 → drop table, 100 → card drop chance + mastery mark); a codex entry is created on first encounter (inspect **or** fight). Spirit Cards — one `cardId` per creature, a separate-from-loot drop roll, duplicate-upgrade (L1→5, beyond-max → spirit-stone payout). Combat-stat cards (attack/damage/armor/hp) plug into the `effectiveStats` pipeline; meta cards drive the Qi cap (`maxQi`) and passive spirit-stones/hour (`tickStones`, wall-clock/offline like Qi regen). Each codex entry shows the creature's card silhouetted until owned, then with its level. `bonusType` enum is extensible (XP%, repair discount, inv slots… flagged for later). GDD §7.
 
 Next (tracked as tasks; recommended order):
-1. **Bestiary + Spirit Cards UI** — Beast Codex over existing kill data (progressive-disclosure thresholds); Spirit Cards: `cardId` per creature, separate drop roll, always-on passive bonuses via the stat pipeline, duplicate-upgrade levels; card shown in codex entry (silhouette until owned). GDD §7.
-2. **Treasure Pavilion** — fake-multiplayer auction house behind a `MarketProvider` interface (`listItem`/`getListings`/`buyNow`/`collectMailbox`), 60+ persistent NPC personas, rotating listings with price variance, Buy Now only, mailbox, async player selling. GDD §6.7.
-3. **Sect stub (Warband)** behind a `GuildProvider` interface (hireable NPC disciples → passive buffs), **one Legendary boss** (hand-authored Ancient Terror, first Epic named drops), **onboarding/tutorial**, and **strip the testing conveniences** (below).
+1. **Treasure Pavilion** — fake-multiplayer auction house behind a `MarketProvider` interface (`listItem`/`getListings`/`buyNow`/`collectMailbox`), 60+ persistent NPC personas, rotating listings with price variance, Buy Now only, mailbox, async player selling. GDD §6.7.
+2. **Sect stub (Warband)** behind a `GuildProvider` interface (hireable NPC disciples → passive buffs), **one Legendary boss** (hand-authored Ancient Terror, first Epic named drops), **onboarding/tutorial**, and **strip the testing conveniences** (below).
 
 ## Architecture conventions (hold these)
 
 - **`combat.js` is a pure function** `resolveCombat(attacker, defender, seed)` — deterministic, never touches game state/UI/rewards. It's what a future PvP mode calls against a player's stat sheet. Don't leak game logic into it.
 - **One Actor shape** for player/monsters/(future rivals). The persistent player splits `base` / `allocated` / `equipment` / buffs; combat stats come from `playerCombatActor()`.
-- **Single stat-aggregation pipeline** `effectiveStats(player, now)` = base + trained + gear + technique buffs (Spirit Cards plug in here next). Never mutate stats in place on equip/cast/drop.
+- **Single stat-aggregation pipeline** `effectiveStats(player, now)` = base + trained + gear + Spirit Cards (flat) then technique buffs (percentage). Never mutate stats in place on equip/cast/drop. New passive sources (sect buffs, set bonuses) plug in here.
 - **Providers behind interfaces**, NPC-backed now, networkable later (market/guild/events). Build the interface even for the stub.
-- **Modular files**, no monolith: `combat` `actors` `progression` `items` `quests` `techniques` `map` `save` `game` `ui` `main` (+ `rng`).
-- **Save is the only "account"** (`save.js`, localStorage, versioned). Bump `VERSION` and add a migration branch for breaking shape changes — v1→v2 migration is the reference. Persist timestamps (`lastQiTick`, buff `expiresAt`) so wall-clock/offline behavior is free.
-- **Wall-clock timing pattern**: elapsed-time math (`Date.now()` vs stored timestamp) for Qi regen and buff expiry — survives reload/offline identically.
+- **Modular files**, no monolith: `combat` `actors` `progression` `items` `quests` `techniques` `cards` `map` `save` `game` `ui` `main` (+ `rng`).
+- **Save is the only "account"** (`save.js`, localStorage, versioned). Bump `VERSION` and add a migration branch for breaking shape changes — v1→v2 migration is the reference. Persist timestamps (`lastQiTick`, `lastStoneTick`, buff `expiresAt`) so wall-clock/offline behavior is free. New player fields (`cards`, `lastStoneTick`) are back-filled in `createGame` for old saves — no VERSION bump needed for additive shape changes.
+- **Wall-clock timing pattern**: elapsed-time math (`Date.now()` vs stored timestamp) for Qi regen, passive spirit-stone income (`tickStones`), and buff expiry — survives reload/offline identically.
 
 ## TESTING-ONLY — strip before demo
 

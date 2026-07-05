@@ -33,12 +33,20 @@ import {
 } from './items.js';
 import * as Quests from './quests.js';
 import * as Techniques from './techniques.js';
+import { rollCardDrop, acquireCard, cardBonuses, CARDS } from './cards.js';
 import { saveGame, loadGame, clearSave } from './save.js';
 
 // --- Qi (stamina) tuning. Prototype regen is fast so playtesting isn't
 // gated on a real clock; 1.0 tuning will slow this dramatically (GDD §9.3).
 export const MAX_QI = 500; // testing cap; 1.0 tuning will lower this
 export const QI_REGEN_MS = 3_000; // 1 Qi per 3s, wall-clock
+const STONE_ACCRUAL_MS = 3_600_000; // spirit-stones/hour cards accrue per real hour
+
+// Effective Qi cap: base cap + any Qi-cap Spirit Card bonus (GDD §7.2). Always
+// derived so the cap tracks the card collection with no stored duplicate.
+export function maxQi(player) {
+  return MAX_QI + cardBonuses(player).meta.qiCap;
+}
 
 // Death penalty (GDD §8.3 starting values). XP loss is progress toward the
 // next stage only — a death can never undo a breakthrough.
@@ -57,10 +65,12 @@ export function createGame() {
         pos: { ...ZONES.azuremist.start },
         qi: MAX_QI,
         lastQiTick: Date.now(),
+        lastStoneTick: Date.now(),
         quests: Quests.createQuestState(),
         log: [],
         worldRng,
         offlineQi: 0,
+        offlineStones: 0,
       };
 
   // Ensure every defined zone exists (fills gaps for new games, migrated v1
@@ -75,12 +85,16 @@ export function createGame() {
   // Fields added after a save was first written default to empty.
   if (!state.player.learnedTechniques) state.player.learnedTechniques = [];
   if (!state.player.activeBuffs) state.player.activeBuffs = [];
+  if (!state.player.cards) state.player.cards = {};
+  if (state.lastStoneTick == null) state.lastStoneTick = Date.now();
+  state.offlineStones = 0;
 
   state.loadedFromSave = !!loaded;
   if (loaded) {
     const before = state.qi;
     tickQi(state); // apply offline wall-clock regen accrued while away
     state.offlineQi = state.qi - before;
+    state.offlineStones = tickStones(state); // passive spirit-stone income (cards)
   } else {
     addLog(state, 'You step out from the sect gate. The wilds await.');
   }
@@ -108,7 +122,7 @@ function grantTestingKit(state) {
     p.testingKitVersion = TEST_KIT_VERSION;
     p.skillPoints += 8;
     p.statPoints += 6;
-    state.qi = MAX_QI;
+    state.qi = maxQi(p);
     addLog(state, 'Sect insight granted (testing): +8 technique points, +6 stat points.');
   }
   saveGame(state);
@@ -161,15 +175,34 @@ export function addLog(state, msg) {
 
 // Wall-clock Qi regen: accrue whole Qi for elapsed time since the last tick.
 export function tickQi(state, now = Date.now()) {
-  if (state.qi >= MAX_QI) {
+  const cap = maxQi(state.player);
+  if (state.qi >= cap) {
     state.lastQiTick = now;
     return;
   }
   const gained = Math.floor((now - state.lastQiTick) / QI_REGEN_MS);
   if (gained > 0) {
-    state.qi = Math.min(MAX_QI, state.qi + gained);
+    state.qi = Math.min(cap, state.qi + gained);
     state.lastQiTick += gained * QI_REGEN_MS;
   }
+}
+
+// Wall-clock passive income from spirit-stones/hour Spirit Cards (GDD §7.4:
+// the same last-seen-timestamp machinery as Qi regen). Accrues whole stones and
+// advances the timestamp only by the consumed portion, so fractions aren't lost.
+// Returns the number of stones granted this tick.
+export function tickStones(state, now = Date.now()) {
+  const perHour = cardBonuses(state.player).meta.stones;
+  if (perHour <= 0) {
+    state.lastStoneTick = now;
+    return 0;
+  }
+  const gained = Math.floor(((now - state.lastStoneTick) / STONE_ACCRUAL_MS) * perHour);
+  if (gained > 0) {
+    state.player.spiritStones += gained;
+    state.lastStoneTick += Math.floor((gained / perHour) * STONE_ACCRUAL_MS);
+  }
+  return gained;
 }
 
 export function tryMove(state, x, y) {
@@ -194,10 +227,40 @@ function scaleXp(baseXp, playerLevel, creatureLevel) {
   return Math.max(1, Math.round(baseXp * mult));
 }
 
-function trackKill(state, monster) {
+function ensureSeen(state, typeId) {
   const b = state.player.bestiary;
-  if (!b[monster.typeId]) b[monster.typeId] = { kills: 0, firstSeenAt: Date.now() };
-  b[monster.typeId].kills += 1;
+  if (!b[typeId]) b[typeId] = { kills: 0, firstSeenAt: Date.now() };
+  return b[typeId];
+}
+
+// A Beast Codex entry is created on first encounter — inspecting OR fighting
+// (GDD §7.1). Returns true if this was a new entry (for a save + re-render).
+export function markSeen(state, typeId) {
+  const b = state.player.bestiary;
+  if (b[typeId]) return false;
+  b[typeId] = { kills: 0, firstSeenAt: Date.now() };
+  saveGame(state);
+  return true;
+}
+
+function trackKill(state, monster) {
+  ensureSeen(state, monster.typeId).kills += 1;
+}
+
+// Award a dropped Spirit Card: new card, duplicate upgrade, or (beyond max) a
+// spirit-stone payout (GDD §7.2). Returns the acquire result for the banner.
+function grantCard(state, cardId) {
+  const res = acquireCard(state.player, cardId);
+  const c = CARDS[cardId];
+  if (res.kind === 'new') {
+    addLog(state, `Spirit Card obtained: ${c.creatureName} (Lv 1)!`);
+  } else if (res.kind === 'upgrade') {
+    addLog(state, `Spirit Card refined: ${c.creatureName} → Lv ${res.level}.`);
+  } else if (res.kind === 'duplicate') {
+    state.player.spiritStones += res.stones;
+    addLog(state, `Duplicate ${c.creatureName} card dissolves into ${res.stones} spirit stones.`);
+  }
+  return res;
 }
 
 function grantXp(state, xp) {
@@ -228,6 +291,7 @@ export function attack(state, monsterId) {
 
   const p = state.player;
   degradeEquipment(p); // gear wears with use, win or lose
+  ensureSeen(state, monster.typeId); // facing a beast enters it in the codex
   Quests.onFace(state.quests, monster.typeId);
 
   if (result.outcome === 'win') {
@@ -247,6 +311,11 @@ export function attack(state, monsterId) {
         addLog(state, `A ${drop.name} dropped, but your pack is full — it is lost.`);
       }
     }
+    // Spirit Card roll is independent of the loot roll (GDD §7.2) — a card
+    // never replaces an item drop.
+    const cardId = rollCardDrop(monster.typeId, state.worldRng);
+    if (cardId) result.cardDrop = grantCard(state, cardId);
+
     result.rewards = { xp, stones, itemDrop: drop };
     addLog(state, `Slew ${monster.name} (Lv ${monster.level}): +${xp} XP, +${stones} stones.`);
     grantXp(state, xp);

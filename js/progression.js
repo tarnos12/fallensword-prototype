@@ -51,10 +51,13 @@ export const POINT_VALUE = { attack: 1, defense: 1, damage: 1, armor: 1, hp: 4 }
 export const ALLOC_STATS = ['attack', 'defense', 'damage', 'armor', 'hp'];
 
 // --- Stat-modifier aggregation pipeline (GDD §7.3). Effective stats are
-// always derived, never mutated in place: base + allocated points + gear +
-// active technique buffs. Spirit Cards (Stage 2+) will plug in here too.
+// always derived, never mutated in place:
+//   base + allocated points + gear + Spirit Cards + active technique buffs.
+// Gear and cards are flat additions; technique buffs are percentage modifiers
+// applied to that flat subtotal. Every future passive source plugs in here.
 
 import { activeBuffs } from './techniques.js';
+import { cardBonuses } from './cards.js';
 
 export function effectiveStats(player, now = Date.now()) {
   const eff = {
@@ -71,7 +74,14 @@ export function effectiveStats(player, now = Date.now()) {
       else eff[stat] += val;
     }
   }
-  // Technique buffs are percentage modifiers on the gear-inclusive subtotal.
+  // Spirit Cards are the third flat source (GDD §7.3): always-on, no equipping.
+  const cardStat = cardBonuses(player).stat;
+  for (const [stat, val] of Object.entries(cardStat)) {
+    if (!val) continue;
+    if (stat === 'hp') eff.maxHp += val;
+    else eff[stat] += val;
+  }
+  // Technique buffs are percentage modifiers on the flat (gear+card) subtotal.
   for (const buff of activeBuffs(player, now)) {
     for (const [stat, pct] of Object.entries(buff.effect)) {
       const key = stat === 'hp' ? 'maxHp' : stat;

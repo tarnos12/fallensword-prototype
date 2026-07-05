@@ -76,10 +76,25 @@
       </div>
 
       <div class="panel-box">
+        <button id="btn-codex" type="button" class="codex-btn" title="Beast Codex & Spirit Cards">📖 Beast Codex</button>
+      </div>
+
+      <div class="panel-box">
         <button id="btn-reset" type="button" class="danger-btn" title="Wipe the save and start over">Abandon Cultivation (reset)</button>
       </div>
     </section>
   </main>
+
+  <div id="codex-overlay" class="hidden">
+    <div id="codex-panel">
+      <div id="codex-header">
+        <h2>Beast Codex <span id="codex-count" class="dim"></span></h2>
+        <button id="btn-close-codex" type="button" title="Close">✕</button>
+      </div>
+      <div id="codex-summary"></div>
+      <div id="codex-body"></div>
+    </div>
+  </div>
 
   <script type="module" src="js/main.js"></script>
 </body>

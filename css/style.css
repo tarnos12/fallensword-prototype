@@ -469,3 +469,146 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   margin: -4px 0 8px;
   cursor: pointer;
 }
+
+/* --- Stage 2: Beast Codex + Spirit Cards --- */
+
+.codex-btn { width: 100%; color: var(--gold); border-color: var(--gold); }
+
+.banner.card-drop {
+  margin-top: 6px;
+  background: rgba(212, 175, 55, 0.12);
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  font-size: 0.85rem;
+}
+
+#codex-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(8, 9, 13, 0.78);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  overflow-y: auto;
+}
+
+#codex-panel {
+  background: var(--panel);
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 640px;
+  padding: 16px 20px 22px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+}
+
+#codex-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--panel-edge);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+#codex-header h2 { margin: 0; color: var(--gold); font-weight: normal; letter-spacing: 1px; }
+
+#btn-close-codex { padding: 2px 10px; }
+
+#codex-summary {
+  font-size: 0.82rem;
+  margin-bottom: 14px;
+  line-height: 1.7;
+}
+
+.codex-summary-label { color: var(--dim); }
+
+.card-bonus-chip {
+  display: inline-block;
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  border-radius: 4px;
+  padding: 1px 8px;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+#codex-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 560px) {
+  #codex-body { grid-template-columns: 1fr; }
+}
+
+.codex-entry {
+  border: 1px solid var(--panel-edge);
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: var(--bg);
+}
+
+.codex-entry.undiscovered { opacity: 0.7; }
+
+.codex-entry.mastered { border-color: var(--gold); }
+
+.codex-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.codex-title { font-weight: bold; color: var(--text); font-size: 0.92rem; }
+
+.codex-flavor { font-size: 0.78rem; color: var(--dim); font-style: italic; margin: 0 0 6px; line-height: 1.4; }
+
+.codex-kills { font-size: 0.82rem; margin: 0 0 6px; }
+
+.mastery { color: var(--gold); font-size: 0.75rem; }
+
+.codex-line { font-size: 0.78rem; margin: 3px 0; }
+
+.locked-line { color: var(--dim); font-style: italic; }
+
+.card-owned { color: var(--gold); }
+
+/* Spirit Card slot: silhouette until owned (GDD §7.2) */
+.card-slot {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 56px;
+  border-radius: 5px;
+  border: 2px solid var(--panel-edge);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: #262a38;
+}
+
+.card-slot.locked { opacity: 0.4; }
+
+.card-slot.locked .card-mark { color: var(--dim); }
+
+.card-slot.owned {
+  border-color: var(--gold);
+  background: linear-gradient(160deg, #2a2718, #262a38);
+}
+
+.card-slot .card-mark { font-size: 1.3rem; color: var(--gold); line-height: 1; }
+
+.card-slot .card-lvl {
+  font-size: 0.64rem;
+  color: var(--gold);
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums;
+}

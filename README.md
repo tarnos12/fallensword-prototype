@@ -2,7 +2,7 @@
 
 A browser-based, offline-first, stat-math dungeon-crawler RPG with xianxia flavor — FallenSword-inspired, built with a designed path to (fake, then real) multiplayer. See [GDD_Staged_Roadmap.md](GDD_Staged_Roadmap.md) for the full design document and staged roadmap.
 
-**Current status: Stage 2 (in progress)** — building on the Stage 1 MVP. Two connected 10×10 zones (Azuremist Vale → Cindervein Gorge) linked by a stage-gated portal, the cultivation ladder extending across realms (Qi Condensation → Foundation Establishment), six creature types, a 9-quest chain bridging both zones, deterministic stat-math combat (instant or turn-by-turn), wall-clock Qi regen (including offline), localStorage save/load with versioned migration, stat-point allocation, gear with a full rarity ladder (unique named types per tier)/degradation/repair, and bestiary kill tracking. Still to come this stage: techniques, Bestiary/Spirit-Card UI, the Treasure Pavilion market, a sect stub, and a Legendary boss.
+**Current status: Stage 2 (in progress)** — building on the Stage 1 MVP. Two connected 10×10 zones (Azuremist Vale → Cindervein Gorge) linked by a stage-gated portal, the cultivation ladder extending across realms (Qi Condensation → Foundation Establishment), six creature types, a 9-quest chain bridging both zones, deterministic stat-math combat (instant or turn-by-turn), wall-clock Qi regen (including offline), localStorage save/load with versioned migration, stat-point allocation, gear with a full rarity ladder (unique named types per tier)/degradation/repair, learnable techniques, and a Beast Codex with Spirit Card drops (always-on passive bonuses through the stat pipeline, plus wall-clock passive income). Still to come this stage: the Treasure Pavilion market, a sect stub, a Legendary boss, and an onboarding pass.
 
 ## Run it
 
@@ -23,6 +23,7 @@ then open http://localhost:8123.
 - `js/items.js` — item generation (rarity gates stat rolls), equip/unequip, durability, repair and sell values
 - `js/quests.js` — event-driven sequential quest chain
 - `js/techniques.js` — learnable techniques (Offense/Defense/Special) cast as timed, Qi-cost percentage buffs; stored as data and applied through the stat pipeline
+- `js/cards.js` — Spirit Cards: one per creature, separate drop roll, duplicate-upgrade collection; combat-stat cards feed `effectiveStats`, meta cards drive the Qi cap and passive spirit-stone income
 - `js/save.js` — versioned localStorage persistence with migration; persisting `lastQiTick` gives offline Qi regen for free
 - `js/game.js` — game state and rules: Qi, zone travel, rewards, penalties, XP scaling, drops, kill tracking
 - `js/ui.js` — rendering + turn-by-turn combat playback (resolution and presentation are fully decoupled)

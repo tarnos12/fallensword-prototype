@@ -18,6 +18,8 @@ import {
   learnTechnique,
   castTechnique,
   tickBuffs,
+  tickStones,
+  markSeen,
 } from './game.js';
 import {
   renderPlayerBar,
@@ -32,6 +34,7 @@ import {
   toggleInspect,
   playCombat,
   initCombatSettings,
+  initCodex,
 } from './ui.js';
 
 const state = createGame();
@@ -44,6 +47,9 @@ if (state.loadedFromSave) {
       ? `Welcome back. Passive cultivation restored ${state.offlineQi} Qi while you were away.`
       : 'Welcome back.'
   );
+  if (state.offlineStones > 0) {
+    addLog(state, `Your Spirit Cards gathered ${state.offlineStones} spirit stones while you were away.`);
+  }
 }
 
 // Handlers hoisted so the per-second live refresh can reuse them without
@@ -67,7 +73,10 @@ function renderAll() {
   renderPlayerBar(state);
   renderMap(state, onTileClick);
   renderTilePanel(state, {
-    onInspect: toggleInspect,
+    onInspect: (m, row) => {
+      markSeen(state, m.typeId); // inspecting a beast enters it in the codex (GDD §7.1)
+      toggleInspect(m, row);
+    },
     onAttack,
     canAttack: () => canAttack(state) && !inCombat,
     onRepair: () => {
@@ -145,22 +154,25 @@ document.getElementById('btn-reset').addEventListener('click', () => {
 });
 
 initCombatSettings();
+initCodex(state);
 renderAll();
 
-// Wall-clock Qi regen + technique-buff tick (once per second).
+// Wall-clock Qi regen + passive spirit-stone income + technique-buff tick
+// (once per second).
 setInterval(() => {
   const qiBefore = state.qi;
   tickQi(state);
+  const stonesGained = tickStones(state); // spirit-stones/hour Spirit Cards
   const buffExpired = tickBuffs(state);
   const qiChanged = state.qi !== qiBefore;
   const hasBuffs = state.player.activeBuffs.length > 0;
 
   if (inCombat) {
-    if (qiChanged) renderPlayerBar(state);
+    if (qiChanged || stonesGained) renderPlayerBar(state);
     return;
   }
-  if (qiChanged || buffExpired) {
-    renderAll(); // Qi regen or a buff fading changes buttons/stats broadly
+  if (qiChanged || buffExpired || stonesGained) {
+    renderAll(); // Qi regen, passive stones, or a buff fading changes the HUD
   } else if (hasBuffs) {
     refreshLive(); // just tick the countdown + buffed stats
   }

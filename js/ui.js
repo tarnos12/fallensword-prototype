@@ -2,11 +2,13 @@
 // through the action functions passed in from main.js.
 
 import { ZONES, portalAt } from './map.js';
-import { MAX_QI, effectiveStats, stageName, totalRepairCost } from './game.js';
+import { maxQi, effectiveStats, stageName, totalRepairCost } from './game.js';
 import { MAX_TURNS } from './combat.js';
 import { xpForBreakthrough, ALLOC_STATS, POINT_VALUE, MAX_STAGE } from './progression.js';
-import { sellValue, RARITIES, INVENTORY_SIZE } from './items.js';
+import { sellValue, RARITIES, INVENTORY_SIZE, DROP_CHANCE } from './items.js';
 import { currentQuest, progressText, QUESTS } from './quests.js';
+import { CREATURE_TYPES, creatureStatBlock } from './actors.js';
+import { CARDS, cardForCreature, cardBonuses, cardBonusText, ownedCardCount } from './cards.js';
 import { TECHNIQUES, CATEGORIES, get as getTech, isLearned, canLearn, canCast, activeBuffs } from './techniques.js';
 
 const $ = (id) => document.getElementById(id);
@@ -21,7 +23,7 @@ export function renderPlayerBar(state) {
   $('chip-points').classList.toggle('attention', p.statPoints > 0);
   $('chip-stones').textContent = `◆ ${p.spiritStones}`;
   $('chip-hp').textContent = `HP ${eff.maxHp}`;
-  $('chip-qi').textContent = `Qi ${state.qi}/${MAX_QI}`;
+  $('chip-qi').textContent = `Qi ${state.qi}/${maxQi(p)}`;
 }
 
 export function renderMap(state, onTileClick) {
@@ -232,12 +234,15 @@ export function renderCharSheet(state, onAllocate) {
   const box = $('char-stats');
   box.innerHTML = '';
 
+  const cardStat = cardBonuses(p).stat;
   const grid = document.createElement('div');
   grid.className = 'stat-grid';
   for (const stat of ALLOC_STATS) {
     const effKey = stat === 'hp' ? 'maxHp' : stat;
     const trained = p.allocated[stat] * POINT_VALUE[stat];
-    const gearPart = eff[effKey] - p.base[effKey] - trained;
+    const cardPart = cardStat[stat] ?? 0;
+    const gearPart = eff[effKey] - p.base[effKey] - trained - cardPart;
+    const cardBit = cardPart ? ` + ${cardPart} cards` : '';
     const cell = document.createElement('div');
     cell.className = 'stat-cell';
     cell.innerHTML = `<span class="stat-label">${STAT_LABELS[stat]}</span><span class="stat-value">${eff[effKey]}</span>`;
@@ -245,7 +250,7 @@ export function renderCharSheet(state, onAllocate) {
       cell,
       () =>
         `<div class="tt-name">${STAT_LABELS[stat]}: ${eff[effKey]}</div>
-         <div class="tt-line">${p.base[effKey]} base + ${trained} trained + ${gearPart} gear</div>`
+         <div class="tt-line">${p.base[effKey]} base + ${trained} trained + ${gearPart} gear${cardBit}</div>`
     );
     if (p.statPoints > 0) {
       const btn = document.createElement('button');
@@ -595,11 +600,152 @@ function outcomeBanner(result) {
   if (result.outcome === 'win') {
     const r = result.rewards;
     const drop = r.itemDrop ? `, looted <span class="rarity-${r.itemDrop.rarity}">${r.itemDrop.name}</span>` : '';
-    return `<div class="banner win">VICTORY — +${r.xp} XP, +${r.stones} spirit stones${drop} <span class="dim">(${result.staminaSpent} Qi spent)</span></div>`;
+    let banner = `<div class="banner win">VICTORY — +${r.xp} XP, +${r.stones} spirit stones${drop} <span class="dim">(${result.staminaSpent} Qi spent)</span></div>`;
+    if (result.cardDrop) banner += cardDropBanner(result.cardDrop);
+    return banner;
   }
   if (result.outcome === 'loss') {
     const p = result.penalty;
     return `<div class="banner loss">DEFEAT — lost ${p.stonesLost} stones, ${p.xpLost} XP <span class="dim">(${result.staminaSpent} Qi spent)</span></div>`;
   }
   return `<div class="banner draw">UNRESOLVED — ${MAX_TURNS} turns passed; this foe is beyond you for now <span class="dim">(${result.staminaSpent} Qi spent)</span></div>`;
+}
+
+function cardDropBanner(cd) {
+  const c = cd.card;
+  if (cd.kind === 'new') {
+    return `<div class="banner card-drop">✦ SPIRIT CARD — ${c.creatureName} obtained! <span class="dim">${cardBonusText(c, 1)}</span></div>`;
+  }
+  if (cd.kind === 'upgrade') {
+    return `<div class="banner card-drop">✦ SPIRIT CARD refined — ${c.creatureName} → Lv ${cd.level} <span class="dim">${cardBonusText(c, cd.level)}</span></div>`;
+  }
+  if (cd.kind === 'duplicate') {
+    return `<div class="banner card-drop">✦ Duplicate ${c.creatureName} card dissolves into +${cd.stones} spirit stones</div>`;
+  }
+  return '';
+}
+
+// --- Beast Codex (GDD §7.1) + Spirit Card collection (GDD §7.2). A modal over
+// the bestiary kill data with progressive disclosure by kill count; each entry
+// doubles as the card-collection slot (silhouette until owned). ---
+
+const CODEX_STATS_AT = 10; // kills to reveal full combat stats
+const CODEX_DROPS_AT = 50; // kills to reveal the drop table
+const CODEX_CARD_AT = 100; // kills to reveal the Spirit Card drop chance + mastery
+
+function cardBonusSummary(player) {
+  const { stat, meta } = cardBonuses(player);
+  const parts = [];
+  for (const [k, v] of Object.entries(stat)) if (v) parts.push(`+${v} ${STAT_LABELS[k]}`);
+  if (meta.qiCap) parts.push(`+${meta.qiCap} max Qi`);
+  if (meta.stones) parts.push(`+${meta.stones} spirit stones/hr`);
+  return parts;
+}
+
+function codexCardSlot(card, level) {
+  const owned = level > 0;
+  if (!owned) {
+    return `<div class="card-slot locked" title="Spirit Card — undiscovered">
+      <span class="card-mark">✦</span></div>`;
+  }
+  return `<div class="card-slot owned" title="${card.creatureName} Spirit Card">
+    <span class="card-mark">✦</span>
+    <span class="card-lvl">${level}/${card.maxLevel}</span></div>`;
+}
+
+function codexEntry(state, typeId) {
+  const p = state.player;
+  const t = CREATURE_TYPES[typeId];
+  const entry = p.bestiary[typeId];
+  const discovered = !!entry;
+  const kills = entry?.kills ?? 0;
+  const card = cardForCreature(typeId);
+  const cardLevel = p.cards[card.id] ?? 0;
+  const mastered = kills >= CODEX_CARD_AT;
+
+  const el = document.createElement('div');
+  el.className = 'codex-entry';
+  if (!discovered) el.classList.add('undiscovered');
+  if (mastered) el.classList.add('mastered');
+
+  if (!discovered) {
+    el.innerHTML = `
+      <div class="codex-head">
+        <div class="codex-title">??? <span class="dim">— undiscovered</span></div>
+        ${codexCardSlot(card, 0)}
+      </div>
+      <p class="empty-note">Encounter this beast — inspect or fight it — to begin its codex entry.</p>`;
+    return el;
+  }
+
+  const bandLabel = t.levels[0] === t.levels[t.levels.length - 1] ? `Lv ${t.levels[0]}` : `Lv ${t.levels[0]}–${t.levels[t.levels.length - 1]}`;
+
+  let body = `<p class="codex-flavor">${t.flavor}</p>
+    <p class="codex-kills">Kills: <b>${kills}</b>${mastered ? ' <span class="mastery">✦ mastered</span>' : ''}</p>`;
+
+  // 10 kills: full combat stats (GDD §7.1 disclosure thresholds).
+  if (kills >= CODEX_STATS_AT) {
+    const s = creatureStatBlock(typeId);
+    body += `<p class="codex-line">ATK ${s.attack} · DEF ${s.defense} · DMG ${s.damage} · ARM ${s.armor} · HP ${s.maxHp} <span class="dim">(at ${bandLabel === `Lv ${t.levels[0]}` ? bandLabel : `Lv ${t.levels[0]}`})</span></p>
+      <p class="codex-line dim">Rewards ~${s.xp} XP, ~${s.stones} spirit stones</p>`;
+  } else {
+    body += `<p class="codex-line locked-line">Combat stats revealed at ${CODEX_STATS_AT} kills.</p>`;
+  }
+
+  // 50 kills: drop table.
+  if (kills >= CODEX_DROPS_AT) {
+    body += `<p class="codex-line">Drops: artifacts up to <span class="rarity-rare">Rare</span> · ~${Math.round(DROP_CHANCE * 100)}% per kill</p>`;
+  } else {
+    body += `<p class="codex-line locked-line">Drop table revealed at ${CODEX_DROPS_AT} kills.</p>`;
+  }
+
+  // 100 kills: Spirit Card drop chance + mastery mark.
+  const cardChanceLine = kills >= CODEX_CARD_AT
+    ? `<p class="codex-line">Spirit Card: <b>${(card.dropChance * 100).toFixed(1)}%</b> per kill · ${cardBonusText(card, 1)}/level</p>`
+    : `<p class="codex-line locked-line">Spirit Card drop chance revealed at ${CODEX_CARD_AT} kills.</p>`;
+
+  const cardStatusLine = cardLevel > 0
+    ? `<p class="codex-line card-owned">Card held: Lv ${cardLevel}/${card.maxLevel} — <b>${cardBonusText(card, cardLevel)}</b></p>`
+    : `<p class="codex-line dim">Spirit Card not yet obtained.</p>`;
+
+  el.innerHTML = `
+    <div class="codex-head">
+      <div class="codex-title">${t.name} <span class="dim">${bandLabel}</span></div>
+      ${codexCardSlot(card, cardLevel)}
+    </div>
+    ${body}${cardChanceLine}${cardStatusLine}`;
+  return el;
+}
+
+export function renderCodex(state) {
+  const p = state.player;
+  const total = Object.keys(CARDS).length;
+  const discoveredCount = Object.keys(CREATURE_TYPES).filter((id) => p.bestiary[id]).length;
+  $('codex-count').textContent = `— ${discoveredCount}/${Object.keys(CREATURE_TYPES).length} beasts · ${ownedCardCount(p)}/${total} cards`;
+
+  const summaryBox = $('codex-summary');
+  const bonuses = cardBonusSummary(p);
+  summaryBox.innerHTML = bonuses.length
+    ? `<span class="codex-summary-label">Active card bonuses:</span> ${bonuses.map((b) => `<span class="card-bonus-chip">${b}</span>`).join(' ')}`
+    : `<span class="empty-note">No Spirit Cards collected yet. Slain beasts have a small chance to yield their card — always-on bonuses, no equipping.</span>`;
+
+  const body = $('codex-body');
+  body.innerHTML = '';
+  for (const typeId of Object.keys(CREATURE_TYPES)) {
+    body.appendChild(codexEntry(state, typeId));
+  }
+}
+
+export function initCodex(state) {
+  const overlay = $('codex-overlay');
+  const open = () => {
+    renderCodex(state);
+    overlay.classList.remove('hidden');
+  };
+  const close = () => overlay.classList.add('hidden');
+  $('btn-codex').addEventListener('click', open);
+  $('btn-close-codex').addEventListener('click', close);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) close();
+  });
 }

@@ -299,3 +299,11 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 .claim-btn { color: var(--gold); border-color: var(--gold); }
 
 #gate-actions { margin-bottom: 8px; }
+
+.instant-toggle {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--dim);
+  margin: -4px 0 8px;
+  cursor: pointer;
+}

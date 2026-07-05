@@ -296,6 +296,22 @@ export function renderEventLog(state) {
 const TURN_MS = 450;
 let playback = null;
 
+// Instant-resolution preference (GDD §8.6.4) — a display setting, not game
+// state, so it lives outside the save under its own key.
+const INSTANT_KEY = 'fallen-immortal-instant';
+
+function isInstant() {
+  return localStorage.getItem(INSTANT_KEY) !== '0';
+}
+
+export function initCombatSettings() {
+  const chk = $('chk-instant');
+  chk.checked = isInstant();
+  chk.addEventListener('change', () => {
+    localStorage.setItem(INSTANT_KEY, chk.checked ? '1' : '0');
+  });
+}
+
 export function playCombat(state, result, onDone) {
   const panel = $('combat-panel');
   const log = $('combat-log');
@@ -342,7 +358,8 @@ export function playCombat(state, result, onDone) {
   skip.onclick = finish;
   close.onclick = () => panel.classList.add('hidden');
 
-  showNext();
+  if (isInstant()) finish();
+  else showNext();
 }
 
 function swingText(who, swing, targetHp) {

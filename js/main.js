@@ -25,6 +25,7 @@ import {
   renderEventLog,
   toggleInspect,
   playCombat,
+  initCombatSettings,
 } from './ui.js';
 
 const state = createGame();
@@ -107,6 +108,7 @@ document.getElementById('btn-reset').addEventListener('click', () => {
   }
 });
 
+initCombatSettings();
 renderAll();
 
 // Wall-clock Qi regen tick.

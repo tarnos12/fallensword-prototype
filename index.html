@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fallen Immortal — Stage 0 Prototype</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header id="header">
+    <h1>Fallen Immortal <span class="subtitle">Stage 0 Prototype</span></h1>
+    <div id="player-bar">
+      <span class="stat-chip" id="chip-level" title="Cultivation stage"></span>
+      <span class="stat-chip" id="chip-xp" title="Cultivation progress"></span>
+      <span class="stat-chip" id="chip-stones" title="Spirit stones"></span>
+      <span class="stat-chip" id="chip-hp" title="Health"></span>
+      <span class="stat-chip qi" id="chip-qi" title="Spiritual energy — regenerates over time"></span>
+    </div>
+  </header>
+
+  <main id="layout">
+    <section id="map-panel">
+      <div id="map-grid"></div>
+      <p class="hint">Click an adjacent tile to move — orthogonal costs 1 Qi, diagonal costs 2 Qi. ☯ is you; red dots are demonic beasts.</p>
+    </section>
+
+    <section id="side-panel">
+      <div id="tile-info" class="panel-box">
+        <h2 id="tile-title">Location</h2>
+        <div id="monster-list"></div>
+      </div>
+
+      <div id="combat-panel" class="panel-box hidden">
+        <h2 id="combat-title">Combat</h2>
+        <div id="combat-log"></div>
+        <div id="combat-outcome" class="hidden"></div>
+        <div class="combat-buttons">
+          <button id="btn-skip" type="button">Skip ▶▶</button>
+          <button id="btn-close-combat" type="button" class="hidden">Continue</button>
+        </div>
+      </div>
+
+      <div id="event-log" class="panel-box">
+        <h2>Chronicle</h2>
+        <ul id="event-list"></ul>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

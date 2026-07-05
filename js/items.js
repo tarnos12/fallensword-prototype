@@ -19,29 +19,77 @@ export const DROP_CHANCE = 0.22;
 
 // Templates: ordered attribute pools with level-1 roll ranges [stat, min, max].
 // The first attribute is the item's identity (a Common piece rolls only that);
-// higher rarities work down the list.
+// higher rarities work down the list. Item TYPES are unique per rarity — the
+// name itself signals the tier (a Silversteel Dao is always Uncommon), so
+// there are no rarity prefixes.
 const TEMPLATES = {
-  weapon: [
-    { name: 'Bone-Carved Dagger', attrs: [['attack', 1, 2], ['damage', 1, 2], ['defense', 1, 2], ['hp', 2, 4], ['armor', 1, 1]] },
-    { name: 'Iron Sabre', attrs: [['damage', 1, 3], ['attack', 1, 2], ['armor', 1, 1], ['hp', 2, 4], ['defense', 1, 2]] },
-    { name: 'Ashwood Spear', attrs: [['attack', 1, 3], ['damage', 1, 2], ['hp', 2, 4], ['defense', 1, 1], ['armor', 1, 1]] },
-    { name: "Disciple's Jian", attrs: [['damage', 1, 2], ['attack', 1, 3], ['defense', 1, 2], ['armor', 1, 1], ['hp', 2, 4]] },
-  ],
-  robe: [
-    { name: 'Grey Disciple Robe', attrs: [['defense', 1, 3], ['armor', 1, 2], ['hp', 2, 5], ['attack', 1, 1], ['damage', 1, 1]] },
-    { name: 'Beast-Hide Mantle', attrs: [['armor', 1, 2], ['hp', 2, 5], ['defense', 1, 2], ['damage', 1, 1], ['attack', 1, 1]] },
-    { name: 'Woven Reed Vest', attrs: [['hp', 3, 6], ['defense', 1, 2], ['armor', 1, 1], ['attack', 1, 1], ['damage', 1, 1]] },
-    { name: 'Mountain Cotton Garb', attrs: [['defense', 1, 2], ['hp', 2, 5], ['armor', 1, 2], ['damage', 1, 1], ['attack', 1, 1]] },
-  ],
-};
-
-const RARITY_PREFIX = {
-  common: '',
-  uncommon: 'Refined ',
-  rare: 'Spirit-Forged ',
-  epic: 'Ancient ',
-  legendary: 'Immortal ',
-  mythic: 'Celestial ',
+  weapon: {
+    common: [
+      { name: 'Coarse Iron Sabre', attrs: [['damage', 1, 3], ['attack', 1, 2], ['armor', 1, 1], ['hp', 2, 4], ['defense', 1, 2]] },
+      { name: 'Ashwood Spear', attrs: [['attack', 1, 3], ['damage', 1, 2], ['hp', 2, 4], ['defense', 1, 1], ['armor', 1, 1]] },
+      { name: "Novice's Training Jian", attrs: [['damage', 1, 2], ['attack', 1, 3], ['defense', 1, 2], ['armor', 1, 1], ['hp', 2, 4]] },
+      { name: 'Bone-Carved Dagger', attrs: [['attack', 1, 2], ['damage', 1, 2], ['defense', 1, 2], ['hp', 2, 4], ['armor', 1, 1]] },
+    ],
+    uncommon: [
+      { name: 'Silversteel Dao', attrs: [['damage', 1, 3], ['attack', 1, 2], ['armor', 1, 1], ['hp', 2, 4], ['defense', 1, 2]] },
+      { name: 'Windcutter Spear', attrs: [['attack', 1, 3], ['damage', 1, 2], ['hp', 2, 4], ['defense', 1, 1], ['armor', 1, 1]] },
+      { name: 'Flowing Water Jian', attrs: [['damage', 1, 2], ['attack', 1, 3], ['defense', 1, 2], ['armor', 1, 1], ['hp', 2, 4]] },
+      { name: 'Serpent-Fang Dirk', attrs: [['attack', 1, 2], ['damage', 1, 2], ['defense', 1, 2], ['hp', 2, 4], ['armor', 1, 1]] },
+    ],
+    rare: [
+      { name: 'Thunder-Etched Blade', attrs: [['damage', 1, 3], ['attack', 1, 2], ['armor', 1, 1], ['hp', 2, 4], ['defense', 1, 2]] },
+      { name: 'Moonshadow Spear', attrs: [['attack', 1, 3], ['damage', 1, 2], ['hp', 2, 4], ['defense', 1, 1], ['armor', 1, 1]] },
+      { name: 'Cloudpiercer Jian', attrs: [['damage', 1, 2], ['attack', 1, 3], ['defense', 1, 2], ['armor', 1, 1], ['hp', 2, 4]] },
+      { name: 'Beast-Bone Glaive', attrs: [['attack', 1, 2], ['damage', 1, 2], ['defense', 1, 2], ['hp', 2, 4], ['armor', 1, 1]] },
+    ],
+    epic: [
+      { name: 'Dragonvein Sabre', attrs: [['damage', 1, 3], ['attack', 1, 2], ['armor', 1, 1], ['hp', 2, 4], ['defense', 1, 2]] },
+      { name: 'Phoenix-Feather Spear', attrs: [['attack', 1, 3], ['damage', 1, 2], ['hp', 2, 4], ['defense', 1, 1], ['armor', 1, 1]] },
+      { name: 'Starfall Jian', attrs: [['damage', 1, 2], ['attack', 1, 3], ['defense', 1, 2], ['armor', 1, 1], ['hp', 2, 4]] },
+      { name: 'Demon-Subduing Halberd', attrs: [['attack', 1, 2], ['damage', 1, 2], ['defense', 1, 2], ['hp', 2, 4], ['armor', 1, 1]] },
+    ],
+    legendary: [
+      { name: 'Nine Calamities Sabre', attrs: [['damage', 1, 3], ['attack', 1, 2], ['armor', 1, 1], ['hp', 2, 4], ['defense', 1, 2]] },
+      { name: 'Sundering Heavens Spear', attrs: [['attack', 1, 3], ['damage', 1, 2], ['hp', 2, 4], ['defense', 1, 1], ['armor', 1, 1]] },
+      { name: 'Immortal-Slaying Jian', attrs: [['damage', 1, 2], ['attack', 1, 3], ['defense', 1, 2], ['armor', 1, 1], ['hp', 2, 4]] },
+    ],
+    mythic: [
+      { name: 'Dao-Severing Blade', attrs: [['damage', 1, 3], ['attack', 1, 2], ['armor', 1, 1], ['hp', 2, 4], ['defense', 1, 2]] },
+      { name: "Heaven's Wrath Jian", attrs: [['damage', 1, 2], ['attack', 1, 3], ['defense', 1, 2], ['armor', 1, 1], ['hp', 2, 4]] },
+      { name: 'World-Cleaving Sabre', attrs: [['attack', 1, 3], ['damage', 1, 2], ['hp', 2, 4], ['defense', 1, 1], ['armor', 1, 1]] },
+    ],
+  },
+  robe: {
+    common: [
+      { name: 'Grey Disciple Robe', attrs: [['defense', 1, 3], ['armor', 1, 2], ['hp', 2, 5], ['attack', 1, 1], ['damage', 1, 1]] },
+      { name: 'Woven Reed Vest', attrs: [['hp', 3, 6], ['defense', 1, 2], ['armor', 1, 1], ['attack', 1, 1], ['damage', 1, 1]] },
+      { name: 'Mountain Cotton Garb', attrs: [['defense', 1, 2], ['hp', 2, 5], ['armor', 1, 2], ['damage', 1, 1], ['attack', 1, 1]] },
+      { name: 'Coarse Hemp Tunic', attrs: [['armor', 1, 2], ['hp', 2, 5], ['defense', 1, 2], ['damage', 1, 1], ['attack', 1, 1]] },
+    ],
+    uncommon: [
+      { name: 'Beast-Hide Mantle', attrs: [['armor', 1, 2], ['hp', 2, 5], ['defense', 1, 2], ['damage', 1, 1], ['attack', 1, 1]] },
+      { name: 'Silkworm Cloud Robe', attrs: [['defense', 1, 3], ['armor', 1, 2], ['hp', 2, 5], ['attack', 1, 1], ['damage', 1, 1]] },
+      { name: 'River-Silk Vestment', attrs: [['hp', 3, 6], ['defense', 1, 2], ['armor', 1, 1], ['attack', 1, 1], ['damage', 1, 1]] },
+    ],
+    rare: [
+      { name: 'Spirit-Silk Raiment', attrs: [['defense', 1, 3], ['armor', 1, 2], ['hp', 2, 5], ['attack', 1, 1], ['damage', 1, 1]] },
+      { name: 'Crane-Feather Cloak', attrs: [['hp', 3, 6], ['defense', 1, 2], ['armor', 1, 1], ['attack', 1, 1], ['damage', 1, 1]] },
+      { name: 'Jade-Thread Robe', attrs: [['armor', 1, 2], ['hp', 2, 5], ['defense', 1, 2], ['damage', 1, 1], ['attack', 1, 1]] },
+    ],
+    epic: [
+      { name: 'Qilin-Scale Vestment', attrs: [['armor', 1, 2], ['hp', 2, 5], ['defense', 1, 2], ['damage', 1, 1], ['attack', 1, 1]] },
+      { name: 'Phoenix-Down Robe', attrs: [['defense', 1, 3], ['armor', 1, 2], ['hp', 2, 5], ['attack', 1, 1], ['damage', 1, 1]] },
+      { name: 'Black Tortoise Mantle', attrs: [['hp', 3, 6], ['defense', 1, 2], ['armor', 1, 1], ['attack', 1, 1], ['damage', 1, 1]] },
+    ],
+    legendary: [
+      { name: 'Nine-Heavens Cloud Mantle', attrs: [['defense', 1, 3], ['armor', 1, 2], ['hp', 2, 5], ['attack', 1, 1], ['damage', 1, 1]] },
+      { name: 'Dragon-Scale Imperial Robe', attrs: [['armor', 1, 2], ['hp', 2, 5], ['defense', 1, 2], ['damage', 1, 1], ['attack', 1, 1]] },
+    ],
+    mythic: [
+      { name: 'Voidsilk Shroud', attrs: [['defense', 1, 3], ['armor', 1, 2], ['hp', 2, 5], ['attack', 1, 1], ['damage', 1, 1]] },
+      { name: 'Heaven-Patching Raiment', attrs: [['hp', 3, 6], ['defense', 1, 2], ['armor', 1, 1], ['attack', 1, 1], ['damage', 1, 1]] },
+    ],
+  },
 };
 
 let itemCounter = 0;
@@ -77,7 +125,7 @@ function rollAttr([stat, min, max], level, mult, rng) {
 
 export function generateItem(slot, level, rarityKey, rng) {
   const rarity = rarityKey ? RARITIES[rarityKey] : rollRarity(rng);
-  const templates = TEMPLATES[slot];
+  const templates = TEMPLATES[slot][rarity.key];
   const template = templates[Math.floor(rng() * templates.length)];
   const bonuses = {};
   for (const attr of template.attrs.slice(0, rarity.attributes)) {
@@ -87,7 +135,7 @@ export function generateItem(slot, level, rarityKey, rng) {
   return {
     id: `item-${++itemCounter}`,
     slot,
-    name: RARITY_PREFIX[rarity.key] + template.name,
+    name: template.name,
     rarity: rarity.key,
     level,
     bonuses,

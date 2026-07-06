@@ -1032,3 +1032,63 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 .backup-ok { color: var(--win); }
 
 .backup-error { color: var(--loss); }
+
+/* --- Stage 2: Legendary boss — the Ancient Terror (GDD §9.1) --- */
+
+/* Lair tile: a menacing ember glow; the ☠ marker is dim until the calamity
+   is actually manifested, then it flares and pulses. */
+.lair-tile { box-shadow: inset 0 0 0 2px var(--loss); }
+.boss-marker { font-size: 0.9rem; color: var(--loss); opacity: 0.45; line-height: 1; }
+.tile.boss-here { box-shadow: inset 0 0 0 2px var(--loss), 0 0 10px rgba(229, 115, 115, 0.6); }
+.tile.boss-here .boss-marker { opacity: 1; animation: boss-pulse 1.6s ease-in-out infinite; }
+@keyframes boss-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.28); } }
+
+/* Boss monster row in the tile panel. */
+.monster-row.boss-row {
+  border: 1px solid var(--loss);
+  border-radius: 6px;
+  padding: 8px;
+  margin: 4px 0;
+  background: rgba(229, 115, 115, 0.08);
+}
+.boss-tag {
+  color: var(--loss);
+  font-size: 0.7rem;
+  font-weight: bold;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+.boss-attack-btn { color: var(--loss); border-color: var(--loss); font-weight: bold; }
+.boss-attack-btn:hover:not(:disabled) { border-color: var(--loss); color: #fff; background: rgba(229, 115, 115, 0.25); }
+
+/* The lair readout shown when the boss isn't manifested (locked / cooldown). */
+.boss-lair-note {
+  border: 1px dashed var(--loss);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin: 4px 0 8px;
+  background: rgba(229, 115, 115, 0.06);
+}
+.boss-lair-note p { font-size: 0.82rem; margin: 4px 0 0; line-height: 1.4; }
+
+/* Legendary victory banner — gold-on-ember, weightier than a normal win. */
+.banner.boss-win {
+  background: linear-gradient(90deg, rgba(229, 115, 115, 0.16), rgba(212, 175, 55, 0.16));
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  font-weight: bold;
+}
+
+/* Codex legendary entry. */
+.codex-section-head {
+  color: var(--loss);
+  font-size: 0.9rem;
+  margin: 14px 0 6px;
+  border-top: 1px solid var(--panel-edge);
+  padding-top: 10px;
+}
+.codex-entry.codex-legendary {
+  border: 1px solid var(--loss);
+  box-shadow: inset 0 0 22px rgba(229, 115, 115, 0.08);
+}

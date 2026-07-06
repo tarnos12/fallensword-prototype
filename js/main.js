@@ -51,6 +51,7 @@ import {
 } from './ui.js';
 import { initTutorial } from './tutorial.js';
 import { initLoadouts, renderLoadouts } from './loadouts.js';
+import { exportSave, importSave } from './save.js';
 import { initDebug } from './debug.js'; // TESTING ONLY (strip before demo)
 
 const state = createGame();
@@ -175,6 +176,90 @@ document.getElementById('btn-reset').addEventListener('click', () => {
   }
 });
 
+// Backup / Restore modal (save export/import, GDD §4.4).
+function initBackup() {
+  const overlay = document.getElementById('backup-overlay');
+  const exportText = document.getElementById('backup-export-text');
+  const importText = document.getElementById('backup-import-text');
+  const status = document.getElementById('backup-status');
+  const fileInput = document.getElementById('backup-file-input');
+
+  const setStatus = (msg, kind) => {
+    status.textContent = msg || '';
+    status.className = 'backup-status' + (kind ? ` backup-${kind}` : '');
+  };
+
+  const open = () => {
+    const blob = exportSave();
+    exportText.value = blob ?? '';
+    exportText.placeholder = blob ? '' : 'No save to export yet.';
+    importText.value = '';
+    setStatus('');
+    overlay.classList.remove('hidden');
+  };
+  const close = () => overlay.classList.add('hidden');
+
+  document.getElementById('btn-backup').addEventListener('click', open);
+  document.getElementById('btn-close-backup').addEventListener('click', close);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+  document.getElementById('btn-backup-copy').addEventListener('click', async () => {
+    const blob = exportText.value;
+    if (!blob) { setStatus('Nothing to copy yet.', 'error'); return; }
+    try {
+      await navigator.clipboard.writeText(blob);
+      setStatus('Backup copied to clipboard.', 'ok');
+    } catch {
+      // Clipboard API can be blocked (no HTTPS / permissions) — fall back to select.
+      exportText.focus();
+      exportText.select();
+      setStatus('Copy blocked — text selected, press Ctrl/Cmd+C.', 'error');
+    }
+  });
+
+  document.getElementById('btn-backup-download').addEventListener('click', () => {
+    const blob = exportText.value;
+    if (!blob) { setStatus('Nothing to download yet.', 'error'); return; }
+    const file = new Blob([blob], { type: 'text/plain' });
+    const url = URL.createObjectURL(file);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'fallen-immortal-save.txt';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    setStatus('Backup file downloaded.', 'ok');
+  });
+
+  const doImport = (raw) => {
+    const res = importSave(raw);
+    if (!res.ok) { setStatus(res.error, 'error'); return; }
+    setStatus('Save restored — reloading…', 'ok');
+    setTimeout(() => location.reload(), 600);
+  };
+
+  document.getElementById('btn-backup-import').addEventListener('click', () => {
+    const raw = importText.value;
+    if (!raw.trim()) { setStatus('Paste a backup string first.', 'error'); return; }
+    if (!confirm('Restore this save? Your current progress will be replaced.')) return;
+    doImport(raw);
+  });
+
+  fileInput.addEventListener('change', () => {
+    const f = fileInput.files && fileInput.files[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      importText.value = String(reader.result || '');
+      setStatus('File loaded — review, then Restore.', 'ok');
+    };
+    reader.onerror = () => setStatus('Could not read that file.', 'error');
+    reader.readAsText(f);
+    fileInput.value = ''; // allow re-selecting the same file
+  });
+}
+
 initCombatSettings();
 initCodex(state);
 initPavilion(state, {
@@ -192,6 +277,7 @@ initLoadouts(state, {
   apply: (i) => { applyLoadoutAction(state, i); renderAll(); },
   remove: (i) => { deleteLoadoutAction(state, i); renderAll(); },
 });
+initBackup();
 initDebug(state, renderAll); // TESTING ONLY (strip before demo)
 renderAll();
 initTutorial(); // first-run onboarding overlay (+ ❔ Help button); after renderAll so targets exist

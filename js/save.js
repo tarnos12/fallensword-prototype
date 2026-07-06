@@ -84,3 +84,80 @@ export function loadGame() {
 export function clearSave() {
   localStorage.removeItem(KEY);
 }
+
+// --- Save export / import (GDD §4.4) -------------------------------------
+// Back up / restore a save without an account. The exported string is the raw
+// localStorage blob (the same JSON the game already persists), base64-wrapped
+// behind a short marker so it survives copy-paste and we can sanity-check it on
+// the way back in. Kept DOM-free: file download / clipboard lives in the caller.
+
+const EXPORT_PREFIX = 'FIMMORTAL-SAVE-v1:'; // envelope version, independent of the save VERSION
+
+// UTF-8-safe base64 (creature/persona names can be non-ASCII).
+function b64encode(str) {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+function b64decode(b64) {
+  return decodeURIComponent(escape(atob(b64)));
+}
+
+// Returns the current save as a portable string, or null if there's nothing to
+// export. The wrapped payload is exactly what lives in localStorage.
+export function exportSave() {
+  let raw;
+  try {
+    raw = localStorage.getItem(KEY);
+  } catch {
+    return null;
+  }
+  if (!raw) return null;
+  return EXPORT_PREFIX + b64encode(raw);
+}
+
+// Validate + install an exported string into localStorage. Does NOT reload —
+// the caller decides when to restart the game (createGame reads localStorage
+// and runs the normal v1→v2 migration on next boot). Returns {ok} / {ok,error}.
+export function importSave(input) {
+  if (typeof input !== 'string') return { ok: false, error: 'No save string provided.' };
+  let text = input.trim();
+  if (!text) return { ok: false, error: 'No save string provided.' };
+
+  // Accept a bare JSON blob too, but the wrapped form is what we hand out.
+  let json;
+  if (text.startsWith(EXPORT_PREFIX)) {
+    try {
+      json = b64decode(text.slice(EXPORT_PREFIX.length));
+    } catch {
+      return { ok: false, error: 'Save string is corrupted (bad encoding).' };
+    }
+  } else if (text.startsWith('{')) {
+    json = text;
+  } else {
+    return { ok: false, error: 'Unrecognized save string.' };
+  }
+
+  let blob;
+  try {
+    blob = JSON.parse(json);
+  } catch {
+    return { ok: false, error: 'Save string is corrupted (not valid save data).' };
+  }
+  if (!blob || typeof blob !== 'object' || Array.isArray(blob)) {
+    return { ok: false, error: 'Save string is not a valid save.' };
+  }
+  // Only versions loadGame() understands; newer/unknown formats are rejected
+  // rather than silently written and then dropped on load.
+  if (blob.version !== 1 && blob.version !== 2) {
+    return { ok: false, error: `Unsupported save version (${blob.version ?? 'none'}).` };
+  }
+  if (!blob.player || typeof blob.player !== 'object') {
+    return { ok: false, error: 'Save is missing player data.' };
+  }
+
+  try {
+    localStorage.setItem(KEY, JSON.stringify(blob));
+  } catch (e) {
+    return { ok: false, error: 'Could not write save to this browser.' };
+  }
+  return { ok: true };
+}

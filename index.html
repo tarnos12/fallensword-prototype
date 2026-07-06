@@ -82,6 +82,7 @@
       </div>
 
       <div class="panel-box">
+        <button id="btn-backup" type="button" class="backup-btn" title="Back up or restore your save without an account">💾 Backup / Restore Save</button>
         <button id="btn-reset" type="button" class="danger-btn" title="Wipe the save and start over">Abandon Cultivation (reset)</button>
       </div>
     </section>
@@ -122,6 +123,45 @@
       </div>
       <div id="sect-summary"></div>
       <div id="sect-body"></div>
+    </div>
+  </div>
+
+  <div id="backup-overlay" class="hidden">
+    <div id="backup-panel">
+      <div id="backup-header">
+        <h2>Backup / Restore Save</h2>
+        <button id="btn-close-backup" type="button" title="Close">✕</button>
+      </div>
+      <div id="backup-body">
+        <p class="backup-note">
+          Your progress lives only in this browser. Export a backup string (or
+          file) to keep it safe, then import it here — or on another device — to
+          restore. Importing <strong>replaces</strong> your current save.
+        </p>
+
+        <div class="backup-section">
+          <h3>Export</h3>
+          <textarea id="backup-export-text" readonly rows="4" spellcheck="false"
+                    placeholder="No save to export yet."></textarea>
+          <div class="backup-actions">
+            <button id="btn-backup-copy" type="button">Copy to clipboard</button>
+            <button id="btn-backup-download" type="button">Download file</button>
+          </div>
+        </div>
+
+        <div class="backup-section">
+          <h3>Import</h3>
+          <textarea id="backup-import-text" rows="4" spellcheck="false"
+                    placeholder="Paste a backup string here…"></textarea>
+          <div class="backup-actions">
+            <button id="btn-backup-import" type="button">Restore from string</button>
+            <label for="backup-file-input" class="backup-file-label">Load from file…</label>
+            <input id="backup-file-input" type="file" accept=".txt,text/plain" class="hidden">
+          </div>
+        </div>
+
+        <p id="backup-status" class="backup-status"></p>
+      </div>
     </div>
   </div>
 

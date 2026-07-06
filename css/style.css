@@ -946,3 +946,89 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 .ld-missing { color: var(--loss); }
 
 .ld-apply-btn { color: var(--qi); border-color: var(--qi); }
+
+/* --- Backup / Restore save (export/import, GDD §4.4) --- */
+
+.backup-btn { width: 100%; margin-bottom: 8px; color: var(--gold); border-color: var(--gold); }
+
+#backup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(8, 9, 13, 0.78);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  overflow-y: auto;
+}
+
+#backup-panel {
+  background: var(--panel);
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 560px;
+  padding: 16px 20px 22px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+}
+
+#backup-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--panel-edge);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+#backup-header h2 { margin: 0; color: var(--gold); font-weight: normal; letter-spacing: 1px; }
+
+#btn-close-backup { padding: 2px 10px; }
+
+.backup-note { font-size: 0.82rem; color: var(--dim); line-height: 1.6; margin: 0 0 14px; }
+
+.backup-section { margin-bottom: 16px; }
+
+.backup-section h3 { margin: 0 0 6px; color: var(--gold); font-size: 0.9rem; font-weight: normal; }
+
+.backup-section textarea {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--panel-edge);
+  border-radius: 4px;
+  padding: 8px;
+  font-family: monospace;
+  font-size: 0.75rem;
+  resize: vertical;
+  word-break: break-all;
+}
+
+.backup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  align-items: center;
+}
+
+.backup-file-label {
+  background: #262a38;
+  color: var(--text);
+  border: 1px solid var(--panel-edge);
+  border-radius: 4px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-size: inherit;
+}
+
+.backup-file-label:hover { border-color: var(--gold); color: var(--gold); }
+
+.backup-status { min-height: 1.2em; margin: 4px 0 0; font-size: 0.82rem; }
+
+.backup-ok { color: var(--win); }
+
+.backup-error { color: var(--loss); }

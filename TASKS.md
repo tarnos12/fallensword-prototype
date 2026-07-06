@@ -89,6 +89,19 @@ should rebase around. Format: `- [YYYY-MM-DD · session <id>] <comment>`.
   except a trailing CSS block + two main.js lines.
 
 ### Task 3 — Profile & Rivals feed
+- [2026-07-06 · session pick-your-task-aj14ny] Implementation complete and
+  pushed to `claude/pick-your-task-aj14ny` (commit "Add Profile & Rivals feed").
+  New `js/profile.js` owns everything incl. its own rendering (`initProfile`/
+  `renderProfile`) — did NOT touch `js/ui.js`, so no collision with the boss
+  session. Shared-file touches (rebase around these): `index.html` (👤 button in
+  the button panel-box + `#profile-overlay` modal at end of body), `css` (new
+  "Profile & Rivals" section immediately before the TESTING-ONLY debug block),
+  `js/main.js` (`initProfile` import + call after `initSect`). New additive field
+  `player.rivals` (persona ids) round-trips through the existing save — lazily
+  back-filled, no VERSION bump. Verified headless (Node provider sim: all three
+  buff sources + rivals + deterministic feed) and in real Chromium (modal opens,
+  summary/feed render, rival add/unmark round-trips, no console errors). Status
+  left CLAIMED — PR not yet opened; flip to IN REVIEW when the PR lands.
 - [2026-07-06 · session pick-your-task-aj14ny] Claimed. Building the Profile &
   Rivals feed in new module `js/profile.js` — a read-only modal (👤 button) with:
   the player's summary + active buffs (technique buffs, Spirit Card bonuses, sect

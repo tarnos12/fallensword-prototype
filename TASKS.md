@@ -36,19 +36,22 @@ thread on the task.
 
 ## Task Board
 
-Task IDs are stable handles, not priority — go by the **Status** column. IDs 1–4 are claimable; 5–6 are `BLOCKED` until feature work lands.
+Task IDs are stable handles, not priority — go by the **Status** column. Feature tasks 1–4 are claimed/merging and 7–9 are the current claimable batch; 5–6 stay `BLOCKED` (do last).
 
 | # | Task | Owned files (yours to edit freely) | Shared files (edit minimally, expect to rebase) | Status | Owner (session) | Branch | PR | Claimed (UTC) |
 |---|---|---|---|---|---|---|---|---|
 | S | Sect / Warband stub (`GuildProvider`) | `js/guild.js` | `js/game.js`, `js/ui.js`, `js/actors.js`, `index.html`, `css/style.css`, `js/main.js` | `DONE` | (initial) | `claude/read-repo-global-claude-md-rtc4og` | #3 | — |
 | 1 | Legendary boss — hand-authored Ancient Terror, first Epic/named drops, boss Spirit Card | `js/boss.js` *(new)* | `js/actors.js`, `js/cards.js`, `js/items.js`, `js/game.js`, `js/ui.js`, `index.html`, `css/style.css` | `CLAIMED` | choose-task-fxtfot | `claude/choose-task-fxtfot` | — | 2026-07-06 |
-| 2 | Onboarding / tutorial pass — first-run guided intro | `js/tutorial.js` *(new)* | `css/style.css` (tutorial section), `js/main.js` (init) | `IN REVIEW` | session_01Sty | `claude/onboarding-tutorial` | #5 | 2026-07-06 |
+| 2 | Onboarding / tutorial pass — first-run guided intro | `js/tutorial.js` *(new)* | `css/style.css` (tutorial section), `js/main.js` (init) | `DONE` | session_01Sty | `claude/onboarding-tutorial` | #5 | 2026-07-06 |
 | 3 | Profile & Rivals feed (GDD §6.5) — profile panel with active buffs, a "Rivals" list and a "Recently Active" feed, populated from the shared `personas.js` roster | `js/profile.js` *(new)* | `index.html` (button + modal), `css/style.css` (profile section), `js/main.js` (init), `js/ui.js` (optional) | `CLAIMED` | pick-your-task-aj14ny | `claude/pick-your-task-aj14ny` | — | 2026-07-06 |
 | 4 | Save export / import (GDD §4.4) — export the save as a copy-paste string / file and import it back (back up without an account) | `js/save.js` (additive `exportSave`/`importSave`) | `index.html` (backup buttons), `css/style.css`, `js/main.js` (wiring) | `IN REVIEW` | pick-your-task-wakee5 | `claude/pick-your-task-wakee5` | #6 | 2026-07-06 |
 | 5 | Visual / UI polish pass | `css/style.css` | `index.html`, `js/ui.js` | `BLOCKED` | — | — | — | Do **last & solo** — pure cross-cutting CSS/UI, collides with every other task. Start only when 1–4 are merged. |
 | 6 | Strip testing conveniences (pre-demo) | `js/debug.js` *(delete)* | `js/game.js`, `js/items.js`, `js/cards.js`, `js/main.js`, `index.html`, `css/style.css` | `BLOCKED` | — | — | — | Demo-prep only. Do **absolutely last**, after all features merge. See CLAUDE.md "TESTING-ONLY". |
+| 7 | Combat Sets / loadouts (GDD §6.2) — save & swap named equipped-item sets (e.g. a leveling set vs a boss set) | `js/loadouts.js` *(new)* | `js/actors.js` (`player.loadouts`), `js/game.js` (save/apply wrappers), `js/ui.js` (gear-panel controls), `css/style.css` | `CLAIMED` | session_01Sty | `claude/combat-sets` | — | 2026-07-06 |
+| 8 | Achievements / milestones — a panel tracking milestones (first breakthrough, N kills, first Epic, full codex, first sect hire…) with a toast on unlock | `js/achievements.js` *(new)* | `index.html` (button + modal), `css/style.css`, `js/main.js` (init), `js/game.js` (small record hooks) | `AVAILABLE` | — | — | — | — |
+| 9 | Settings / preferences modal — consolidate display prefs (instant combat, replay tutorial, reset save) into one ⚙ panel | `js/settings.js` *(new)* | `index.html` (button + modal), `css/style.css`, `js/main.js` (init), `js/ui.js` (relocate the instant-combat toggle) | `AVAILABLE` | — | — | — | — |
 
-> **Parallelism note:** Tasks **1–4** can run concurrently — each owns a distinct new module and touches different parts of the shared files. Tasks **5** (polish) and **6** (strip) are serialized to the end; running them alongside feature work guarantees painful conflicts. The likeliest overlap among 1–4 is `index.html`/`css`/`main.js` (each adds a button + modal + init) — keep those edits small and at separated anchor points, and expect the 2nd+ PR to rebase.
+> **Parallelism note:** Feature tasks each own a distinct new module and touch different parts of the shared files, so they run concurrently. The likeliest overlap is `index.html`/`css`/`main.js` (each adds a button + modal + init) plus `js/ui.js` — keep those edits small and at separated anchor points, and expect the 2nd+ PR into `master` to rebase. Tasks **5** (polish) and **6** (strip) stay serialized to the very end; running them alongside feature work guarantees painful conflicts.
 
 ---
 
@@ -75,7 +78,8 @@ should rebase around. Format: `- [YYYY-MM-DD · session <id>] <comment>`.
   Working on branch `claude/choose-task-fxtfot`. Rebase around these anchors.
 
 ### Task 2 — Onboarding / tutorial
-- [2026-07-06 · session session_01Sty] IN REVIEW — PR #5. Final footprint even
+- [2026-07-06 · session session_01Sty] DONE — merged to master via PR #5.
+- [2026-07-06 · session session_01Sty] Final footprint even
   smaller than planned: `js/tutorial.js` builds ALL its own DOM (the ❔ Help
   button + overlay), so it touches **NO `index.html` and NO `ui.js`**. Only
   shared edits: `css/style.css` (a `/* Onboarding / tutorial */` section
@@ -130,6 +134,34 @@ should rebase around. Format: `- [YYYY-MM-DD · session <id>] <comment>`.
 - [initial] Demo-prep, do last. Full strip checklist is in `CLAUDE.md` →
   "TESTING-ONLY — strip before demo". Deletes `js/debug.js` and unwinds the
   labelled hooks in `game.js`/`items.js`/`cards.js`/`main.js`.
+
+### Task 7 — Combat Sets / loadouts
+- [2026-07-06 · session session_01Sty] Claimed. Named equipped-item sets a
+  player can save and swap (GDD §6.2: a leveling set vs a boss set). New
+  `js/loadouts.js` owns the logic. Plan: `player.loadouts = [{name, weapon, robe}]`
+  (item ids) on `player` (persisted with the save wholesale — NO `save.js` edit,
+  so no clash with task 4). Saving snapshots the currently-equipped ids; applying
+  equips them (reusing the existing equip/unequip in `items.js` — read, don't
+  edit). Shared touches: `actors.js` (`player.loadouts` field in `createPlayer`),
+  `game.js` (save/apply/delete wrappers + createGame back-fill), `js/ui.js` (a
+  small loadouts control block inside the existing gear panel — a NEW render fn,
+  won't touch the boss's encounter render), `css`. Branch `claude/combat-sets`.
+  Boss session (task 1): my `actors.js`/`game.js`/`ui.js` edits are additive and
+  in separate functions/regions from yours — should auto-merge; ping here if not.
+
+### Task 8 — Achievements / milestones
+- [initial] New `js/achievements.js` owns a milestone catalog + a panel (button +
+  modal) and a toast on unlock. Most state is derivable read-only from the save
+  (level, `bestiary` kills, `cards`, owned Epic+, `guild.members`), so the
+  `game.js` touch is a tiny "check & record" hook called after kills/breakthroughs.
+  Low-conflict: own module + `index.html` button/overlay + `css` + `main.js` init.
+
+### Task 9 — Settings / preferences modal
+- [initial] New `js/settings.js` — one ⚙ panel consolidating display prefs: the
+  instant-combat toggle (currently in the combat panel — relocate it here), a
+  "replay tutorial" button (clears the tutorial-seen key + reopens), and the reset
+  save action. Own module + `index.html` button/overlay + `css` + `main.js` init;
+  the only `ui.js` touch is moving the existing instant-combat checkbox handler.
 
 ---
 
@@ -202,5 +234,6 @@ Optional but helpful — a one-line breadcrumb per session so the next one has c
 
 - 2026-07-06 — pick-your-task-wakee5 — task 4 (Save export/import) IN REVIEW, PR #6.
 - 2026-07-06 — pick-your-task-wakee5 — claimed task 4 (Save export/import).
+- 2026-07-06 — session_01Sty — finished task 2 (Onboarding, PR #5 merged); board was fully claimed/blocked, so added tasks 7 (Combat Sets), 8 (Achievements), 9 (Settings) and claimed 7 for myself. 8 & 9 left AVAILABLE.
 - 2026-07-06 — session_01Sty — finished task S (Sect stub, PR #3 merged); added tasks 3 (Profile/Rivals) & 4 (Save export/import). Noted task 1 already claimed by choose-task-fxtfot.
 - _(add entries here: `YYYY-MM-DD — session <id> — claimed/finished task <#>: <note>`)_

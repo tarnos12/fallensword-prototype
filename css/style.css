@@ -844,3 +844,65 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 .dbg-btn { font-size: 0.74rem; padding: 3px 8px; }
 
 .dbg-btn:hover:not(:disabled) { border-color: #b388ff; color: #b388ff; }
+
+/* --- Stage 2: Onboarding / tutorial overlay --- */
+
+.help-btn { color: var(--gold); border-color: var(--gold); align-self: center; }
+
+#tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(8, 9, 13, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.tut-card {
+  background: var(--panel);
+  border: 1px solid var(--gold);
+  border-radius: 10px;
+  width: 100%;
+  max-width: 460px;
+  padding: 20px 24px 18px;
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.75);
+}
+
+.tut-step-count { font-size: 0.72rem; color: var(--dim); letter-spacing: 1px; text-transform: uppercase; }
+
+.tut-title { margin: 6px 0 10px; color: var(--gold); font-weight: normal; font-size: 1.25rem; letter-spacing: 1px; }
+
+.tut-body { font-size: 0.9rem; line-height: 1.55; margin: 0 0 16px; }
+
+.tut-body b { color: var(--text); }
+
+.tut-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 16px; }
+
+.tut-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--panel-edge); }
+
+.tut-dot.active { background: var(--gold); }
+
+.tut-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+.tut-nav { display: flex; gap: 8px; }
+
+.tut-skip { color: var(--dim); }
+
+.tut-next { color: var(--gold); border-color: var(--gold); }
+
+/* Spotlight on the element a step is describing */
+.tut-highlight {
+  position: relative;
+  outline: 2px solid var(--gold) !important;
+  outline-offset: 2px;
+  border-radius: 4px;
+  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.25);
+  animation: tut-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes tut-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.22); }
+  50% { box-shadow: 0 0 0 7px rgba(212, 175, 55, 0.10); }
+}

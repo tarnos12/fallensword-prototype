@@ -46,6 +46,7 @@ import {
   updatePavilionBadge,
   initSect,
 } from './ui.js';
+import { initTutorial } from './tutorial.js';
 import { initDebug } from './debug.js'; // TESTING ONLY (strip before demo)
 
 const state = createGame();
@@ -183,6 +184,7 @@ initSect(state, {
 });
 initDebug(state, renderAll); // TESTING ONLY (strip before demo)
 renderAll();
+initTutorial(); // first-run onboarding overlay (+ ❔ Help button); after renderAll so targets exist
 
 // Wall-clock Qi regen + passive spirit-stone income + technique-buff tick
 // (once per second).

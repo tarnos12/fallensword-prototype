@@ -70,12 +70,27 @@ should rebase around. Format: `- [YYYY-MM-DD · session <id>] <comment>`.
   `main.js` (initSect). Branch off the latest master and these are already in.
 
 ### Task 1 — Legendary boss
-- [2026-07-06 · session choose-task-fxtfot] Claimed. Building the Ancient Terror
-  calamity boss in new module `js/boss.js`. Shared-file touches planned:
-  `actors.js` (boss actor factory), `cards.js` (boss Spirit Card entry),
-  `items.js` (Epic/named drop hooks), `game.js` (boss spawn/encounter + reward
-  hook), `ui.js` (boss encounter render), `index.html` + `css` (boss styling).
-  Working on branch `claude/choose-task-fxtfot`. Rebase around these anchors.
+- [2026-07-06 · session choose-task-fxtfot] **Built & pushed** to branch
+  `claude/choose-task-fxtfot` (no PR opened yet — awaiting go-ahead). New module
+  `js/boss.js` holds the whole encounter (BOSS def, spawn, manifest, cooldown,
+  reward roll). Final shared-file footprint is **smaller than planned** —
+  did **NOT** touch `js/actors.js`, `js/items.js`, or `index.html`:
+    • `js/cards.js` — one entry: `card_ancientTerror` (boss Spirit Card,
+      `bonusType: 'damage'`, +3/level, dropChance 0.5). Additive; safe.
+    • `js/game.js` — `import ... from './boss.js'`; back-fill `player.boss` in
+      `createGame`; `manifestBoss`/`maybeBossHint` calls in `tryMove`/`travel`/
+      `createGame`; a `monster.isBoss` branch inside the `attack()` win block
+      (guaranteed Epic/Legendary drop + boss card). All at existing anchors.
+    • `js/ui.js` — `import { BOSS, isBossLair, bossLairStatus } from './boss.js'`;
+      lair marker in `renderMap`; boss row + lair note in `renderTilePanel`;
+      `boss-win` branch in `outcomeBanner`; a `bossCodexEntry` + Legendary
+      section in `renderCodex` (codex counts now include the boss/its card).
+    • `css/style.css` — appended a `/* Legendary boss */` section at EOF.
+  The boss is deliberately NOT in `CREATURE_TYPES`/any spawn table — it's a
+  scheduled solo encounter at Cindervein `(9,9)`, gated at FE1 (`minStage 10`),
+  30-min wall-clock cooldown. Rebase note for Task 5/6: my `game.js`/`ui.js`
+  edits sit next to the existing card/market hooks and codex render — small,
+  well-separated hunks. Verified headless (boss-flow sim) + real-Chromium DOM.
 
 ### Task 2 — Onboarding / tutorial
 - [2026-07-06 · session session_01Sty] DONE — merged to master via PR #5.

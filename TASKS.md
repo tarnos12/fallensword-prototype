@@ -42,7 +42,7 @@ Task IDs are stable handles, not priority — go by the **Status** column. IDs 1
 |---|---|---|---|---|---|---|---|---|
 | S | Sect / Warband stub (`GuildProvider`) | `js/guild.js` | `js/game.js`, `js/ui.js`, `js/actors.js`, `index.html`, `css/style.css`, `js/main.js` | `DONE` | (initial) | `claude/read-repo-global-claude-md-rtc4og` | #3 | — |
 | 1 | Legendary boss — hand-authored Ancient Terror, first Epic/named drops, boss Spirit Card | `js/boss.js` *(new)* | `js/actors.js`, `js/cards.js`, `js/items.js`, `js/game.js`, `js/ui.js`, `index.html`, `css/style.css` | `CLAIMED` | choose-task-fxtfot | `claude/choose-task-fxtfot` | — | 2026-07-06 |
-| 2 | Onboarding / tutorial pass — first-run guided intro | `js/tutorial.js` *(new)* | `index.html` (tutorial overlay), `css/style.css` (tutorial section), `js/main.js` (init) | `CLAIMED` | session_01Sty | `claude/onboarding-tutorial` | — | 2026-07-06 |
+| 2 | Onboarding / tutorial pass — first-run guided intro | `js/tutorial.js` *(new)* | `css/style.css` (tutorial section), `js/main.js` (init) | `IN REVIEW` | session_01Sty | `claude/onboarding-tutorial` | #5 | 2026-07-06 |
 | 3 | Profile & Rivals feed (GDD §6.5) — profile panel with active buffs, a "Rivals" list and a "Recently Active" feed, populated from the shared `personas.js` roster | `js/profile.js` *(new)* | `index.html` (button + modal), `css/style.css` (profile section), `js/main.js` (init), `js/ui.js` (optional) | `CLAIMED` | pick-your-task-aj14ny | `claude/pick-your-task-aj14ny` | — | 2026-07-06 |
 | 4 | Save export / import (GDD §4.4) — export the save as a copy-paste string / file and import it back (back up without an account) | `js/save.js` (additive `exportSave`/`importSave`) | `index.html` (backup buttons), `css/style.css`, `js/main.js` (wiring) | `CLAIMED` | pick-your-task-wakee5 | `claude/pick-your-task-wakee5` | — | 2026-07-06 |
 | 5 | Visual / UI polish pass | `css/style.css` | `index.html`, `js/ui.js` | `BLOCKED` | — | — | — | Do **last & solo** — pure cross-cutting CSS/UI, collides with every other task. Start only when 1–4 are merged. |
@@ -75,15 +75,14 @@ should rebase around. Format: `- [YYYY-MM-DD · session <id>] <comment>`.
   Working on branch `claude/choose-task-fxtfot`. Rebase around these anchors.
 
 ### Task 2 — Onboarding / tutorial
-- [2026-07-06 · session session_01Sty] Claimed. Building a first-run guided
-  tutorial in new module `js/tutorial.js` — a dismissible, step-by-step overlay
-  that points at the real UI (move, inspect/attack, character sheet, gear,
-  Codex/Pavilion/Sect buttons) and only shows on a fresh save (a `tutorialSeen`
-  flag; re-openable from a "?" help button). Shared touches kept minimal:
-  `index.html` (one overlay div + a help button), `css` (tutorial section),
-  `js/main.js` (init + first-run trigger). Deliberately NOT touching `ui.js`
-  so I don't collide with the boss session (task 1). Branch
-  `claude/onboarding-tutorial`.
+- [2026-07-06 · session session_01Sty] IN REVIEW — PR #5. Final footprint even
+  smaller than planned: `js/tutorial.js` builds ALL its own DOM (the ❔ Help
+  button + overlay), so it touches **NO `index.html` and NO `ui.js`**. Only
+  shared edits: `css/style.css` (a `/* Onboarding / tutorial */` section
+  appended at the very end) and `js/main.js` (one import + one `initTutorial()`
+  line right after `renderAll()`). "Seen" state is its own localStorage key, not
+  the save schema. Boss/Profile/Save sessions: nothing of mine to rebase around
+  except a trailing CSS block + two main.js lines.
 
 ### Task 3 — Profile & Rivals feed
 - [2026-07-06 · session pick-your-task-aj14ny] Claimed. Building the Profile &

@@ -1339,3 +1339,61 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 .ach-toast-body { font-size: 0.82rem; line-height: 1.4; }
 
 .ach-toast-body strong { color: var(--gold); font-weight: normal; letter-spacing: 0.5px; font-size: 0.72rem; text-transform: uppercase; }
+
+/* --- Stage 2: Settings / preferences modal --- */
+
+.settings-btn { width: 100%; margin-top: 8px; color: var(--gold); border-color: var(--gold); }
+
+#settings-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(8, 9, 13, 0.78);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  overflow-y: auto;
+}
+
+#settings-panel {
+  background: var(--panel);
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 460px;
+  padding: 16px 20px 22px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+}
+
+#settings-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--panel-edge);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+#settings-header h2 { margin: 0; color: var(--gold); font-weight: normal; letter-spacing: 1px; }
+
+.settings-section {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--panel-edge);
+}
+
+.settings-section:last-child { border-bottom: none; }
+
+.settings-section h3 {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  color: var(--gold);
+  font-weight: normal;
+  letter-spacing: 1px;
+}
+
+/* The relocated instant-combat toggle sits flush inside its section here. */
+#settings-body .instant-toggle { margin: 0 0 4px; }
+
+.settings-hint { color: var(--dim); font-size: 0.78rem; margin: 4px 0 0; line-height: 1.5; }

@@ -43,7 +43,7 @@ Task IDs are stable handles, not priority — go by the **Status** column. IDs 1
 | S | Sect / Warband stub (`GuildProvider`) | `js/guild.js` | `js/game.js`, `js/ui.js`, `js/actors.js`, `index.html`, `css/style.css`, `js/main.js` | `DONE` | (initial) | `claude/read-repo-global-claude-md-rtc4og` | #3 | — |
 | 1 | Legendary boss — hand-authored Ancient Terror, first Epic/named drops, boss Spirit Card | `js/boss.js` *(new)* | `js/actors.js`, `js/cards.js`, `js/items.js`, `js/game.js`, `js/ui.js`, `index.html`, `css/style.css` | `CLAIMED` | choose-task-fxtfot | `claude/choose-task-fxtfot` | — | 2026-07-06 |
 | 2 | Onboarding / tutorial pass — first-run guided intro | `js/tutorial.js` *(new)* | `index.html` (tutorial overlay), `css/style.css` (tutorial section), `js/main.js` (init) | `CLAIMED` | session_01Sty | `claude/onboarding-tutorial` | — | 2026-07-06 |
-| 3 | Profile & Rivals feed (GDD §6.5) — profile panel with active buffs, a "Rivals" list and a "Recently Active" feed, populated from the shared `personas.js` roster | `js/profile.js` *(new)* | `index.html` (button + modal), `css/style.css` (profile section), `js/main.js` (init), `js/ui.js` (optional) | `AVAILABLE` | — | — | — | — |
+| 3 | Profile & Rivals feed (GDD §6.5) — profile panel with active buffs, a "Rivals" list and a "Recently Active" feed, populated from the shared `personas.js` roster | `js/profile.js` *(new)* | `index.html` (button + modal), `css/style.css` (profile section), `js/main.js` (init), `js/ui.js` (optional) | `CLAIMED` | pick-your-task-aj14ny | `claude/pick-your-task-aj14ny` | — | 2026-07-06 |
 | 4 | Save export / import (GDD §4.4) — export the save as a copy-paste string / file and import it back (back up without an account) | `js/save.js` (additive `exportSave`/`importSave`) | `index.html` (backup buttons), `css/style.css`, `js/main.js` (wiring) | `CLAIMED` | pick-your-task-wakee5 | `claude/pick-your-task-wakee5` | — | 2026-07-06 |
 | 5 | Visual / UI polish pass | `css/style.css` | `index.html`, `js/ui.js` | `BLOCKED` | — | — | — | Do **last & solo** — pure cross-cutting CSS/UI, collides with every other task. Start only when 1–4 are merged. |
 | 6 | Strip testing conveniences (pre-demo) | `js/debug.js` *(delete)* | `js/game.js`, `js/items.js`, `js/cards.js`, `js/main.js`, `index.html`, `css/style.css` | `BLOCKED` | — | — | — | Demo-prep only. Do **absolutely last**, after all features merge. See CLAUDE.md "TESTING-ONLY". |
@@ -86,6 +86,14 @@ should rebase around. Format: `- [YYYY-MM-DD · session <id>] <comment>`.
   `claude/onboarding-tutorial`.
 
 ### Task 3 — Profile & Rivals feed
+- [2026-07-06 · session pick-your-task-aj14ny] Claimed. Building the Profile &
+  Rivals feed in new module `js/profile.js` — a read-only modal (👤 button) with:
+  the player's summary + active buffs (technique buffs, Spirit Card bonuses, sect
+  buffs — read off the same pipelines), a "Rivals" list and a "Recently Active"
+  feed both drawn from the shared `personas.js` roster (deterministic, no second
+  pool). Shared touches kept minimal: `index.html` (one button + overlay), `css`
+  (profile section), `js/main.js` (initProfile). NOT touching `js/ui.js` to avoid
+  colliding with the boss session (task 1). Branch `claude/pick-your-task-aj14ny`.
 - [initial] Reuse the `personas.js` roster (same cast as market + sect) so the
   world feels consistent — do NOT invent a second persona pool. New `js/profile.js`
   owns it. Surface the player's active buffs (technique buffs + sect/card

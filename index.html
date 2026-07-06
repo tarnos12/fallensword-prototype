@@ -34,9 +34,6 @@
 
       <div id="combat-panel" class="panel-box hidden">
         <h2 id="combat-title">Combat</h2>
-        <label class="instant-toggle" title="Resolve fights instantly instead of turn-by-turn playback">
-          <input type="checkbox" id="chk-instant"> Instant resolution
-        </label>
         <div id="combat-log"></div>
         <div id="combat-outcome" class="hidden"></div>
         <div class="combat-buttons">
@@ -81,11 +78,11 @@
         <button id="btn-sect" type="button" class="sect-btn" title="Your Sect — recruit disciples for passive buffs">⛩ Sect</button>
         <button id="btn-profile" type="button" class="profile-btn" title="Your Profile — active buffs, rivals & recently-active cultivators">👤 Profile & Rivals</button>
         <button id="btn-achievements" type="button" class="achievements-btn" title="Achievements — cultivation milestones">🏆 Achievements <span id="achievements-badge" class="dim"></span></button>
+        <button id="btn-settings" type="button" class="settings-btn" title="Settings — display preferences, tutorial & save">⚙ Settings</button>
       </div>
 
       <div class="panel-box">
         <button id="btn-backup" type="button" class="backup-btn" title="Back up or restore your save without an account">💾 Backup / Restore Save</button>
-        <button id="btn-reset" type="button" class="danger-btn" title="Wipe the save and start over">Abandon Cultivation (reset)</button>
       </div>
     </section>
   </main>
@@ -196,6 +193,36 @@
         <button id="btn-close-achievements" type="button" title="Close">✕</button>
       </div>
       <div id="achievements-body"></div>
+    </div>
+  </div>
+
+  <div id="settings-overlay" class="hidden">
+    <div id="settings-panel">
+      <div id="settings-header">
+        <h2>Settings</h2>
+        <button id="btn-close-settings" type="button" title="Close">✕</button>
+      </div>
+      <div id="settings-body">
+        <div class="settings-section">
+          <h3>Combat</h3>
+          <label class="instant-toggle" title="Resolve fights instantly instead of turn-by-turn playback">
+            <input type="checkbox" id="chk-instant"> Instant resolution
+          </label>
+          <p class="settings-hint">Skip the turn-by-turn playback and jump straight to the outcome.</p>
+        </div>
+
+        <div class="settings-section">
+          <h3>Guidance</h3>
+          <button id="btn-replay-tutorial" type="button">Replay tutorial</button>
+          <p class="settings-hint">Walk through the first-run guided introduction again.</p>
+        </div>
+
+        <div class="settings-section">
+          <h3>Save</h3>
+          <button id="btn-reset" type="button" class="danger-btn" title="Wipe the save and start over">Abandon Cultivation (reset)</button>
+          <p class="settings-hint">Wipe this browser's save and begin a new life. This cannot be undone — export a backup first if you want to keep it.</p>
+        </div>
+      </div>
     </div>
   </div>
 

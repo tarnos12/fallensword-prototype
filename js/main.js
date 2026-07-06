@@ -51,6 +51,7 @@ import {
   initSect,
 } from './ui.js';
 import { initTutorial } from './tutorial.js';
+import { initSettings } from './settings.js';
 import { initLoadouts, renderLoadouts } from './loadouts.js';
 import { exportSave, importSave } from './save.js';
 import { initProfile } from './profile.js';
@@ -291,6 +292,7 @@ initAchievements(state);
 initDebug(state, renderAll); // TESTING ONLY (strip before demo)
 renderAll();
 initTutorial(); // first-run onboarding overlay (+ ❔ Help button); after renderAll so targets exist
+initSettings(); // ⚙ settings modal — after initTutorial so its "replay tutorial" can reach ❔ Help
 
 // Wall-clock Qi regen + passive spirit-stone income + technique-buff tick
 // (once per second).

@@ -43,13 +43,13 @@ Task IDs are stable handles, not priority — go by the **Status** column. Featu
 | S | Sect / Warband stub (`GuildProvider`) | `js/guild.js` | `js/game.js`, `js/ui.js`, `js/actors.js`, `index.html`, `css/style.css`, `js/main.js` | `DONE` | (initial) | `claude/read-repo-global-claude-md-rtc4og` | #3 | — |
 | 1 | Legendary boss — hand-authored Ancient Terror, first Epic/named drops, boss Spirit Card | `js/boss.js` *(new)* | `js/cards.js`, `js/game.js`, `js/ui.js`, `css/style.css` | `IN REVIEW` | choose-task-fxtfot | `claude/choose-task-fxtfot` | #9 | 2026-07-06 |
 | 2 | Onboarding / tutorial pass — first-run guided intro | `js/tutorial.js` *(new)* | `css/style.css` (tutorial section), `js/main.js` (init) | `DONE` | session_01Sty | `claude/onboarding-tutorial` | #5 | 2026-07-06 |
-| 3 | Profile & Rivals feed (GDD §6.5) — profile panel with active buffs, a "Rivals" list and a "Recently Active" feed, populated from the shared `personas.js` roster | `js/profile.js` *(new)* | `index.html` (button + modal), `css/style.css` (profile section), `js/main.js` (init), `js/ui.js` (optional) | `CLAIMED` | pick-your-task-aj14ny | `claude/pick-your-task-aj14ny` | — | 2026-07-06 |
+| 3 | Profile & Rivals feed (GDD §6.5) — profile panel with active buffs, a "Rivals" list and a "Recently Active" feed, populated from the shared `personas.js` roster | `js/profile.js` *(new)* | `index.html` (button + modal), `css/style.css` (profile section), `js/main.js` (init), `js/ui.js` (optional) | `IN REVIEW` | pick-your-task-aj14ny | `claude/pick-your-task-aj14ny` | #8 | 2026-07-06 |
 | 4 | Save export / import (GDD §4.4) — export the save as a copy-paste string / file and import it back (back up without an account) | `js/save.js` (additive `exportSave`/`importSave`) | `index.html` (backup buttons), `css/style.css`, `js/main.js` (wiring) | `IN REVIEW` | pick-your-task-wakee5 | `claude/pick-your-task-wakee5` | #6 | 2026-07-06 |
 | 5 | Visual / UI polish pass | `css/style.css` | `index.html`, `js/ui.js` | `BLOCKED` | — | — | — | Do **last & solo** — pure cross-cutting CSS/UI, collides with every other task. Start only when 1–4 are merged. |
 | 6 | Strip testing conveniences (pre-demo) | `js/debug.js` *(delete)* | `js/game.js`, `js/items.js`, `js/cards.js`, `js/main.js`, `index.html`, `css/style.css` | `BLOCKED` | — | — | — | Demo-prep only. Do **absolutely last**, after all features merge. See CLAUDE.md "TESTING-ONLY". |
 | 7 | Combat Sets / loadouts (GDD §6.2) — save & swap named equipped-item sets (e.g. a leveling set vs a boss set) | `js/loadouts.js` *(new)* | `js/actors.js` (`player.loadouts`), `js/game.js` (save/apply wrappers), `js/main.js` (init + render call), `css/style.css` | `IN REVIEW` | session_01Sty | `claude/combat-sets` | #7 | 2026-07-06 |
 | 8 | Achievements / milestones — a panel tracking milestones (first breakthrough, N kills, first Epic, full codex, first sect hire…) with a toast on unlock | `js/achievements.js` *(new)* | `index.html` (button + modal), `css/style.css`, `js/main.js` (init), `js/game.js` (small record hooks) | `CLAIMED` | pick-your-task-wakee5 | `claude/achievements-milestones` | — | 2026-07-06 |
-| 9 | Settings / preferences modal — consolidate display prefs (instant combat, replay tutorial, reset save) into one ⚙ panel | `js/settings.js` *(new)* | `index.html` (button + modal), `css/style.css`, `js/main.js` (init), `js/ui.js` (relocate the instant-combat toggle) | `AVAILABLE` | — | — | — | — |
+| 9 | Settings / preferences modal — consolidate display prefs (instant combat, replay tutorial, reset save) into one ⚙ panel | `js/settings.js` *(new)* | `index.html` (button + modal), `css/style.css`, `js/main.js` (init), `js/ui.js` (relocate the instant-combat toggle) | `CLAIMED` | pick-your-task-aj14ny | `claude/settings-modal` | — | 2026-07-06 |
 
 > **Parallelism note:** Feature tasks each own a distinct new module and touch different parts of the shared files, so they run concurrently. The likeliest overlap is `index.html`/`css`/`main.js` (each adds a button + modal + init) plus `js/ui.js` — keep those edits small and at separated anchor points, and expect the 2nd+ PR into `master` to rebase. Tasks **5** (polish) and **6** (strip) stay serialized to the very end; running them alongside feature work guarantees painful conflicts.
 
@@ -106,6 +106,11 @@ should rebase around. Format: `- [YYYY-MM-DD · session <id>] <comment>`.
   except a trailing CSS block + two main.js lines.
 
 ### Task 3 — Profile & Rivals feed
+- [2026-07-06 · session pick-your-task-aj14ny] IN REVIEW — PR #8 opened into
+  master from `claude/pick-your-task-aj14ny`. Rebase note: shared touches are the
+  👤 button + `#profile-overlay` in `index.html`, a "Profile & Rivals" `css`
+  section just before the TESTING-ONLY block, and two `js/main.js` lines (import
+  + `initProfile(state)` after `initSect`) — all well-separated hunks.
 - [2026-07-06 · session pick-your-task-aj14ny] Implementation complete and
   pushed to `claude/pick-your-task-aj14ny` (commit "Add Profile & Rivals feed").
   New `js/profile.js` owns everything incl. its own rendering (`initProfile`/
@@ -203,6 +208,19 @@ should rebase around. Format: `- [YYYY-MM-DD · session <id>] <comment>`.
   Low-conflict: own module + `index.html` button/overlay + `css` + `main.js` init.
 
 ### Task 9 — Settings / preferences modal
+- [2026-07-06 · session pick-your-task-aj14ny] Claimed. Branch
+  `claude/settings-modal` off latest master. Plan: `js/settings.js` owns a ⚙
+  panel (own button + overlay, self-rendered) consolidating: the instant-combat
+  toggle, a "replay tutorial" button (clears task 2's tutorial-seen localStorage
+  key + reopens the tutorial), and the reset-save action (reuse the existing
+  `resetGame` flow). Minimal-touch approach to the shared `js/ui.js`: rather than
+  ripping the instant-combat checkbox out of the combat panel (which the boss
+  session touched — task 1, now IN REVIEW PR #9), I'll keep `initCombatSettings`
+  intact and have Settings drive the SAME `#chk-instant` state, plus mirror the
+  toggle in the panel — so no fight over the combat-panel markup. Will finalize
+  the exact `ui.js` footprint after boss (task 1) merges and re-checking master.
+  Shared: `index.html` (⚙ button + overlay), `css` (settings section),
+  `js/main.js` (initSettings).
 - [initial] New `js/settings.js` — one ⚙ panel consolidating display prefs: the
   instant-combat toggle (currently in the combat panel — relocate it here), a
   "replay tutorial" button (clears the tutorial-seen key + reopens), and the reset

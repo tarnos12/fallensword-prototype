@@ -51,7 +51,7 @@ Task IDs are stable handles, not priority — go by the **Status** column. Featu
 | 5 | Visual / UI polish pass | `css/style.css` | `index.html`, `js/ui.js` | `BLOCKED` | — | — | — | Do **last & solo** — pure cross-cutting CSS/UI, collides with every other task. Start only when 1–4 are merged. |
 | 6 | Strip testing conveniences (pre-demo) | `js/debug.js` *(delete)* | `js/game.js`, `js/items.js`, `js/cards.js`, `js/main.js`, `index.html`, `css/style.css` | `BLOCKED` | — | — | — | Demo-prep only. Do **absolutely last**, after all features merge. See CLAUDE.md "TESTING-ONLY". |
 | 7 | Combat Sets / loadouts (GDD §6.2) — save & swap named equipped-item sets (e.g. a leveling set vs a boss set) | `js/loadouts.js` *(new)* | `js/actors.js` (`player.loadouts`), `js/game.js` (save/apply wrappers), `js/main.js` (init + render call), `css/style.css` | `DONE` | session_01Sty | `claude/combat-sets` | #7 | 2026-07-06 |
-| 8 | Achievements / milestones — a panel tracking milestones (first breakthrough, N kills, first Epic, full codex, first sect hire…) with a toast on unlock | `js/achievements.js` *(new)* | `index.html` (button + modal), `css/style.css`, `js/main.js` (init), `js/game.js` (small record hooks) | `CLAIMED` | pick-your-task-wakee5 | `claude/achievements-milestones` | — | 2026-07-06 |
+| 8 | Achievements / milestones — a panel tracking milestones (first breakthrough, N kills, first Epic, full codex, first sect hire…) with a toast on unlock | `js/achievements.js` *(new)* | `index.html` (button + modal), `css/style.css`, `js/main.js` (init), `js/game.js` (small record hooks) | `IN REVIEW` | pick-your-task-wakee5 | `claude/achievements-milestones` | #10 | 2026-07-06 |
 | 9 | Settings / preferences modal — consolidate display prefs (instant combat, replay tutorial, reset save) into one ⚙ panel | `js/settings.js` *(new)* | `index.html` (button + modal), `css/style.css`, `js/main.js` (init), `js/ui.js` (relocate the instant-combat toggle) | `CLAIMED` | pick-your-task-aj14ny | `claude/settings-modal` | — | 2026-07-06 |
 
 > **Parallelism note:** Feature tasks each own a distinct new module and touch different parts of the shared files, so they run concurrently. The likeliest overlap is `index.html`/`css`/`main.js` (each adds a button + modal + init) plus `js/ui.js` — keep those edits small and at separated anchor points, and expect the 2nd+ PR into `master` to rebase. Tasks **5** (polish) and **6** (strip) stay serialized to the very end; running them alongside feature work guarantees painful conflicts.
@@ -195,6 +195,17 @@ should rebase around. Format: `- [YYYY-MM-DD · session <id>] <comment>`.
   in separate functions/regions from yours — should auto-merge; ping here if not.
 
 ### Task 8 — Achievements / milestones
+- [2026-07-06 · session pick-your-task-wakee5] IN REVIEW — PR #10. 13 read-only
+  milestones in `js/achievements.js` + 🏆 modal/toasts. Shared-file touches now
+  on the branch (built off latest master, so tutorial+loadouts+backup are in):
+  `game.js` (`player.achievements` back-fill in createGame + `checkAchievements`
+  wrapper), `main.js` (`checkAchievements` at top of `renderAll` + init + import),
+  `index.html` (🏆 button in the codex/pavilion/sect panel-box + `#achievements-overlay`
+  before `<script>`), `css` (appended at EOF). Never touches `ui.js` or `actors.js`.
+  Heads-up for the integrator: the `index.html` button-block + pre-`<script>`
+  overlay anchors are the same neighbourhood task 3 (Profile) touches — trivial
+  both-add merge. Tested headless (23/23) + real Chromium (Playwright, 10/10, 0
+  JS errors; verified toast-once + no-re-toast-on-reload persistence).
 - [2026-07-06 · session pick-your-task-wakee5] Claimed (after finishing task 4,
   PR #6). Building `js/achievements.js`: a milestone catalog evaluated read-only
   over the save (level/realm, bestiary kills, cards, owned Epic+, guild members,
@@ -301,6 +312,7 @@ The claim board stops two sessions doing the *same* task. These rules stop their
 Optional but helpful — a one-line breadcrumb per session so the next one has context.
 
 - 2026-07-06 — session_01Sty (integrator) — merged PR #7 (Combat Sets) + PR #6 (Save export, rebased & conflicts resolved); tasks 4 & 7 → DONE. Verified all features coexist in-browser, 0 errors. PR #9 (boss) is next in the merge queue.
+- 2026-07-06 — pick-your-task-wakee5 — task 8 (Achievements/milestones) IN REVIEW, PR #10. Task 4 (PR #6) merged to master by integrator.
 - 2026-07-06 — pick-your-task-wakee5 — claimed task 8 (Achievements/milestones).
 - 2026-07-06 — pick-your-task-wakee5 — task 4 (Save export/import) IN REVIEW, PR #6.
 - 2026-07-06 — pick-your-task-wakee5 — claimed task 4 (Save export/import).

@@ -36,15 +36,19 @@ thread on the task.
 
 ## Task Board
 
+Task IDs are stable handles, not priority — go by the **Status** column. IDs 1–4 are claimable; 5–6 are `BLOCKED` until feature work lands.
+
 | # | Task | Owned files (yours to edit freely) | Shared files (edit minimally, expect to rebase) | Status | Owner (session) | Branch | PR | Claimed (UTC) |
 |---|---|---|---|---|---|---|---|---|
-| S | Sect / Warband stub (`GuildProvider`) | `js/guild.js` | `js/game.js`, `js/ui.js`, `js/actors.js`, `index.html`, `css/style.css`, `js/main.js` | `IN REVIEW` | (initial) | `claude/read-repo-global-claude-md-rtc4og` | #3 | — |
+| S | Sect / Warband stub (`GuildProvider`) | `js/guild.js` | `js/game.js`, `js/ui.js`, `js/actors.js`, `index.html`, `css/style.css`, `js/main.js` | `DONE` | (initial) | `claude/read-repo-global-claude-md-rtc4og` | #3 | — |
 | 1 | Legendary boss — hand-authored Ancient Terror, first Epic/named drops, boss Spirit Card | `js/boss.js` *(new)* | `js/actors.js`, `js/cards.js`, `js/items.js`, `js/game.js`, `js/ui.js`, `index.html`, `css/style.css` | `CLAIMED` | choose-task-fxtfot | `claude/choose-task-fxtfot` | — | 2026-07-06 |
 | 2 | Onboarding / tutorial pass — first-run guided intro | `js/tutorial.js` *(new)* | `index.html` (tutorial overlay), `css/style.css` (tutorial section), `js/main.js` (init) | `AVAILABLE` | — | — | — | — |
-| 3 | Visual / UI polish pass | `css/style.css` | `index.html`, `js/ui.js` | `BLOCKED` | — | — | — | Do **last & solo** — pure cross-cutting CSS/UI, collides with every other task. Start only when 1 & 2 are merged. |
-| 4 | Strip testing conveniences (pre-demo) | `js/debug.js` *(delete)* | `js/game.js`, `js/items.js`, `js/cards.js`, `js/main.js`, `index.html`, `css/style.css` | `BLOCKED` | — | — | — | Demo-prep only. Do **absolutely last**, after all features merge. See CLAUDE.md "TESTING-ONLY". |
+| 3 | Profile & Rivals feed (GDD §6.5) — profile panel with active buffs, a "Rivals" list and a "Recently Active" feed, populated from the shared `personas.js` roster | `js/profile.js` *(new)* | `index.html` (button + modal), `css/style.css` (profile section), `js/main.js` (init), `js/ui.js` (optional) | `AVAILABLE` | — | — | — | — |
+| 4 | Save export / import (GDD §4.4) — export the save as a copy-paste string / file and import it back (back up without an account) | `js/save.js` (additive `exportSave`/`importSave`) | `index.html` (backup buttons), `css/style.css`, `js/main.js` (wiring) | `AVAILABLE` | — | — | — | — |
+| 5 | Visual / UI polish pass | `css/style.css` | `index.html`, `js/ui.js` | `BLOCKED` | — | — | — | Do **last & solo** — pure cross-cutting CSS/UI, collides with every other task. Start only when 1–4 are merged. |
+| 6 | Strip testing conveniences (pre-demo) | `js/debug.js` *(delete)* | `js/game.js`, `js/items.js`, `js/cards.js`, `js/main.js`, `index.html`, `css/style.css` | `BLOCKED` | — | — | — | Demo-prep only. Do **absolutely last**, after all features merge. See CLAUDE.md "TESTING-ONLY". |
 
-> **Parallelism note:** Tasks **1** and **2** can run concurrently — their owned files are disjoint and they touch different parts of the shared files. Task **3** (polish) and **4** (strip) are deliberately serialized to the end; running them alongside feature work guarantees painful conflicts.
+> **Parallelism note:** Tasks **1–4** can run concurrently — each owns a distinct new module and touches different parts of the shared files. Tasks **5** (polish) and **6** (strip) are serialized to the end; running them alongside feature work guarantees painful conflicts. The likeliest overlap among 1–4 is `index.html`/`css`/`main.js` (each adds a button + modal + init) — keep those edits small and at separated anchor points, and expect the 2nd+ PR to rebase.
 
 ---
 
@@ -56,11 +60,11 @@ when you leave work half-done, or when you touch a shared file in a way others
 should rebase around. Format: `- [YYYY-MM-DD · session <id>] <comment>`.
 
 ### Task S — Sect / Warband stub
-- [initial] Built and in review as PR #3. Adds `js/guild.js` + a `⛩ Sect`
-  button/modal. Shared-file touches: `game.js` (maxQi/tickStones/attack hooks +
-  hire/dismiss wrappers), `ui.js` (Sect modal render), `actors.js`
+- [2026-07-06] DONE — merged to master via PR #3. `js/guild.js` + `⛩ Sect`
+  modal. Shared-file touches now on master: `game.js` (maxQi/tickStones/attack
+  hooks + hire/dismiss wrappers), `ui.js` (Sect modal render), `actors.js`
   (`player.guild`), `index.html` (button+overlay), `css` (sect styles),
-  `main.js` (initSect). Rebase around these if your task also edits them.
+  `main.js` (initSect). Branch off the latest master and these are already in.
 
 ### Task 1 — Legendary boss
 - [2026-07-06 · session choose-task-fxtfot] Claimed. Building the Ancient Terror
@@ -73,12 +77,26 @@ should rebase around. Format: `- [YYYY-MM-DD · session <id>] <comment>`.
 ### Task 2 — Onboarding / tutorial
 - _(no notes yet — add yours when you claim)_
 
-### Task 3 — Visual / UI polish
-- [initial] Blocked on purpose. This is a `css/style.css` + `index.html` +
-  `ui.js` sweep that overlaps everything; running it during feature work
-  guarantees conflicts. Start only after tasks 1 & 2 are merged.
+### Task 3 — Profile & Rivals feed
+- [initial] Reuse the `personas.js` roster (same cast as market + sect) so the
+  world feels consistent — do NOT invent a second persona pool. New `js/profile.js`
+  owns it. Surface the player's active buffs (technique buffs + sect/card
+  bonuses), a "Rivals" list, and a "Recently Active" feed drawn from personas.
+  Read-only over existing data + a modal, so it's low-conflict. GDD §6.5.
 
-### Task 4 — Strip testing conveniences
+### Task 4 — Save export / import
+- [initial] Additive to `js/save.js`: `exportSave()` returns the JSON blob as a
+  base64/string (and/or a downloadable file); `importSave(str)` validates, writes
+  to localStorage, and reloads. Reuse the existing `KEY`/`VERSION` + migration
+  path so imported old saves still migrate. Guard against malformed input.
+  GDD §4.4 / Stage 3 pulled forward — also handy for sharing test saves.
+
+### Task 5 — Visual / UI polish
+- [initial] Blocked on purpose. A `css/style.css` + `index.html` + `ui.js` sweep
+  that overlaps everything; running it during feature work guarantees conflicts.
+  Start only after tasks 1–4 are merged.
+
+### Task 6 — Strip testing conveniences
 - [initial] Demo-prep, do last. Full strip checklist is in `CLAUDE.md` →
   "TESTING-ONLY — strip before demo". Deletes `js/debug.js` and unwinds the
   labelled hooks in `game.js`/`items.js`/`cards.js`/`main.js`.
@@ -152,4 +170,5 @@ The claim board stops two sessions doing the *same* task. These rules stop their
 
 Optional but helpful — a one-line breadcrumb per session so the next one has context.
 
+- 2026-07-06 — session_01Sty — finished task S (Sect stub, PR #3 merged); added tasks 3 (Profile/Rivals) & 4 (Save export/import). Noted task 1 already claimed by choose-task-fxtfot.
 - _(add entries here: `YYYY-MM-DD — session <id> — claimed/finished task <#>: <note>`)_

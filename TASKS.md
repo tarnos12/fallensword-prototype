@@ -44,7 +44,7 @@ Task IDs are stable handles, not priority — go by the **Status** column. IDs 1
 | 1 | Legendary boss — hand-authored Ancient Terror, first Epic/named drops, boss Spirit Card | `js/boss.js` *(new)* | `js/actors.js`, `js/cards.js`, `js/items.js`, `js/game.js`, `js/ui.js`, `index.html`, `css/style.css` | `CLAIMED` | choose-task-fxtfot | `claude/choose-task-fxtfot` | — | 2026-07-06 |
 | 2 | Onboarding / tutorial pass — first-run guided intro | `js/tutorial.js` *(new)* | `index.html` (tutorial overlay), `css/style.css` (tutorial section), `js/main.js` (init) | `CLAIMED` | session_01Sty | `claude/onboarding-tutorial` | — | 2026-07-06 |
 | 3 | Profile & Rivals feed (GDD §6.5) — profile panel with active buffs, a "Rivals" list and a "Recently Active" feed, populated from the shared `personas.js` roster | `js/profile.js` *(new)* | `index.html` (button + modal), `css/style.css` (profile section), `js/main.js` (init), `js/ui.js` (optional) | `AVAILABLE` | — | — | — | — |
-| 4 | Save export / import (GDD §4.4) — export the save as a copy-paste string / file and import it back (back up without an account) | `js/save.js` (additive `exportSave`/`importSave`) | `index.html` (backup buttons), `css/style.css`, `js/main.js` (wiring) | `AVAILABLE` | — | — | — | — |
+| 4 | Save export / import (GDD §4.4) — export the save as a copy-paste string / file and import it back (back up without an account) | `js/save.js` (additive `exportSave`/`importSave`) | `index.html` (backup buttons), `css/style.css`, `js/main.js` (wiring) | `CLAIMED` | pick-your-task-wakee5 | `claude/pick-your-task-wakee5` | — | 2026-07-06 |
 | 5 | Visual / UI polish pass | `css/style.css` | `index.html`, `js/ui.js` | `BLOCKED` | — | — | — | Do **last & solo** — pure cross-cutting CSS/UI, collides with every other task. Start only when 1–4 are merged. |
 | 6 | Strip testing conveniences (pre-demo) | `js/debug.js` *(delete)* | `js/game.js`, `js/items.js`, `js/cards.js`, `js/main.js`, `index.html`, `css/style.css` | `BLOCKED` | — | — | — | Demo-prep only. Do **absolutely last**, after all features merge. See CLAUDE.md "TESTING-ONLY". |
 
@@ -93,6 +93,11 @@ should rebase around. Format: `- [YYYY-MM-DD · session <id>] <comment>`.
   Read-only over existing data + a modal, so it's low-conflict. GDD §6.5.
 
 ### Task 4 — Save export / import
+- [2026-07-06 · session pick-your-task-wakee5] Claimed. Building additive
+  `exportSave`/`importSave` in `js/save.js` + Export/Import backup buttons.
+  Shared touches kept minimal: `index.html` (two buttons, likely near save
+  controls), `css` (backup section), `js/main.js` (wiring). Branch
+  `claude/pick-your-task-wakee5`. Rebase around these anchors.
 - [initial] Additive to `js/save.js`: `exportSave()` returns the JSON blob as a
   base64/string (and/or a downloadable file); `importSave(str)` validates, writes
   to localStorage, and reloads. Reuse the existing `KEY`/`VERSION` + migration
@@ -178,5 +183,6 @@ The claim board stops two sessions doing the *same* task. These rules stop their
 
 Optional but helpful — a one-line breadcrumb per session so the next one has context.
 
+- 2026-07-06 — pick-your-task-wakee5 — claimed task 4 (Save export/import).
 - 2026-07-06 — session_01Sty — finished task S (Sect stub, PR #3 merged); added tasks 3 (Profile/Rivals) & 4 (Save export/import). Noted task 1 already claimed by choose-task-fxtfot.
 - _(add entries here: `YYYY-MM-DD — session <id> — claimed/finished task <#>: <note>`)_

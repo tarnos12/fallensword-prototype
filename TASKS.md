@@ -10,7 +10,10 @@ New session? Do this **before writing any code**:
    Pick a row marked `AVAILABLE`.
 3. Claim it (see **Claim protocol**). If your claim push is rejected, someone
    beat you — re-fetch, and either pick another task or redo the claim.
-4. Build on a fresh feature branch off `master`. Open a PR into `master`.
+4. **Always make a new branch for a new feature, and name the branch to match
+   the feature** — e.g. `claude/legendary-boss`, `claude/settings-modal` — never
+   a generic session id like `claude/pick-your-task-xxxx`. Branch off `master`,
+   then open a PR into `master`.
 5. Keep your row's status current: `CLAIMED` → `IN REVIEW` → `DONE`, **and jot
    any decisions/gotchas/handoff context in that task's Notes** (see below).
 
@@ -44,10 +47,10 @@ Task IDs are stable handles, not priority — go by the **Status** column. Featu
 | 1 | Legendary boss — hand-authored Ancient Terror, first Epic/named drops, boss Spirit Card | `js/boss.js` *(new)* | `js/cards.js`, `js/game.js`, `js/ui.js`, `css/style.css` | `IN REVIEW` | choose-task-fxtfot | `claude/choose-task-fxtfot` | #9 | 2026-07-06 |
 | 2 | Onboarding / tutorial pass — first-run guided intro | `js/tutorial.js` *(new)* | `css/style.css` (tutorial section), `js/main.js` (init) | `DONE` | session_01Sty | `claude/onboarding-tutorial` | #5 | 2026-07-06 |
 | 3 | Profile & Rivals feed (GDD §6.5) — profile panel with active buffs, a "Rivals" list and a "Recently Active" feed, populated from the shared `personas.js` roster | `js/profile.js` *(new)* | `index.html` (button + modal), `css/style.css` (profile section), `js/main.js` (init), `js/ui.js` (optional) | `IN REVIEW` | pick-your-task-aj14ny | `claude/pick-your-task-aj14ny` | #8 | 2026-07-06 |
-| 4 | Save export / import (GDD §4.4) — export the save as a copy-paste string / file and import it back (back up without an account) | `js/save.js` (additive `exportSave`/`importSave`) | `index.html` (backup buttons), `css/style.css`, `js/main.js` (wiring) | `IN REVIEW` | pick-your-task-wakee5 | `claude/pick-your-task-wakee5` | #6 | 2026-07-06 |
+| 4 | Save export / import (GDD §4.4) — export the save as a copy-paste string / file and import it back (back up without an account) | `js/save.js` (additive `exportSave`/`importSave`) | `index.html` (backup buttons), `css/style.css`, `js/main.js` (wiring) | `DONE` | pick-your-task-wakee5 | `claude/pick-your-task-wakee5` | #6 | 2026-07-06 |
 | 5 | Visual / UI polish pass | `css/style.css` | `index.html`, `js/ui.js` | `BLOCKED` | — | — | — | Do **last & solo** — pure cross-cutting CSS/UI, collides with every other task. Start only when 1–4 are merged. |
 | 6 | Strip testing conveniences (pre-demo) | `js/debug.js` *(delete)* | `js/game.js`, `js/items.js`, `js/cards.js`, `js/main.js`, `index.html`, `css/style.css` | `BLOCKED` | — | — | — | Demo-prep only. Do **absolutely last**, after all features merge. See CLAUDE.md "TESTING-ONLY". |
-| 7 | Combat Sets / loadouts (GDD §6.2) — save & swap named equipped-item sets (e.g. a leveling set vs a boss set) | `js/loadouts.js` *(new)* | `js/actors.js` (`player.loadouts`), `js/game.js` (save/apply wrappers), `js/main.js` (init + render call), `css/style.css` | `IN REVIEW` | session_01Sty | `claude/combat-sets` | #7 | 2026-07-06 |
+| 7 | Combat Sets / loadouts (GDD §6.2) — save & swap named equipped-item sets (e.g. a leveling set vs a boss set) | `js/loadouts.js` *(new)* | `js/actors.js` (`player.loadouts`), `js/game.js` (save/apply wrappers), `js/main.js` (init + render call), `css/style.css` | `DONE` | session_01Sty | `claude/combat-sets` | #7 | 2026-07-06 |
 | 8 | Achievements / milestones — a panel tracking milestones (first breakthrough, N kills, first Epic, full codex, first sect hire…) with a toast on unlock | `js/achievements.js` *(new)* | `index.html` (button + modal), `css/style.css`, `js/main.js` (init), `js/game.js` (small record hooks) | `CLAIMED` | pick-your-task-wakee5 | `claude/achievements-milestones` | — | 2026-07-06 |
 | 9 | Settings / preferences modal — consolidate display prefs (instant combat, replay tutorial, reset save) into one ⚙ panel | `js/settings.js` *(new)* | `index.html` (button + modal), `css/style.css`, `js/main.js` (init), `js/ui.js` (relocate the instant-combat toggle) | `CLAIMED` | pick-your-task-aj14ny | `claude/settings-modal` | — | 2026-07-06 |
 
@@ -258,7 +261,8 @@ Then build the actual feature on a **separate** branch off `master`:
 
 ```bash
 git fetch origin master
-git checkout -B claude/<short-task-name> origin/master
+# Name the branch after the FEATURE, not the session (e.g. claude/legendary-boss).
+git checkout -B claude/<feature-name> origin/master
 # ... implement, commit, push, open a PR into master ...
 ```
 
@@ -296,6 +300,7 @@ The claim board stops two sessions doing the *same* task. These rules stop their
 
 Optional but helpful — a one-line breadcrumb per session so the next one has context.
 
+- 2026-07-06 — session_01Sty (integrator) — merged PR #7 (Combat Sets) + PR #6 (Save export, rebased & conflicts resolved); tasks 4 & 7 → DONE. Verified all features coexist in-browser, 0 errors. PR #9 (boss) is next in the merge queue.
 - 2026-07-06 — pick-your-task-wakee5 — claimed task 8 (Achievements/milestones).
 - 2026-07-06 — pick-your-task-wakee5 — task 4 (Save export/import) IN REVIEW, PR #6.
 - 2026-07-06 — pick-your-task-wakee5 — claimed task 4 (Save export/import).

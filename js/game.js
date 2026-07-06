@@ -39,6 +39,7 @@ import { createMarketProvider, emptyMarket } from './market.js';
 import { createGuildProvider, guildBuffs } from './guild.js';
 import { saveLoadout, applyLoadout, deleteLoadout } from './loadouts.js';
 import { BOSS, emptyBossState, maybeManifestBoss, onBossDefeated } from './boss.js';
+import { recordAchievements } from './achievements.js';
 import { saveGame, loadGame, clearSave } from './save.js';
 
 // --- Qi (stamina) tuning. Prototype regen is fast so playtesting isn't
@@ -95,6 +96,7 @@ export function createGame() {
   if (!state.player.guild) state.player.guild = { members: [] };
   if (!state.player.loadouts) state.player.loadouts = [];
   if (!state.player.boss) state.player.boss = emptyBossState();
+  if (!state.player.achievements) state.player.achievements = [];
   if (state.lastStoneTick == null) state.lastStoneTick = Date.now();
   if (!state.market) state.market = emptyMarket();
   state.offlineStones = 0;
@@ -152,6 +154,19 @@ function grantTestingKit(state) {
 
 export function resetGame() {
   clearSave();
+}
+
+// Achievements (GDD §6.5): a light idempotent "check & record" hook. Milestones
+// are derived read-only from player state, so calling this after any state
+// change is safe and cheap; it only persists when something new is unlocked.
+// Returns the newly-unlocked achievements so the caller can toast them.
+export function checkAchievements(state) {
+  const fresh = recordAchievements(state);
+  if (fresh.length) {
+    for (const a of fresh) addLog(state, `Achievement unlocked: ${a.name}.`);
+    saveGame(state);
+  }
+  return fresh;
 }
 
 export function currentTile(state) {

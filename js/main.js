@@ -30,6 +30,7 @@ import {
   saveLoadoutAction,
   applyLoadoutAction,
   deleteLoadoutAction,
+  checkAchievements,
 } from './game.js';
 import {
   renderPlayerBar,
@@ -53,6 +54,7 @@ import { initTutorial } from './tutorial.js';
 import { initLoadouts, renderLoadouts } from './loadouts.js';
 import { exportSave, importSave } from './save.js';
 import { initProfile } from './profile.js';
+import { initAchievements, updateAchievementBadge, showAchievementToasts } from './achievements.js';
 import { initDebug } from './debug.js'; // TESTING ONLY (strip before demo)
 
 const state = createGame();
@@ -92,6 +94,9 @@ const techHandlers = {
 };
 
 function renderAll() {
+  // Evaluate milestones first so a fresh unlock's log line renders this pass and
+  // its toast fires alongside the UI update (GDD §6.5).
+  const unlocked = checkAchievements(state);
   renderPlayerBar(state);
   renderMap(state, onTileClick);
   renderTilePanel(state, {
@@ -140,6 +145,8 @@ function renderAll() {
   renderEventLog(state);
   updatePavilionBadge(state);
   renderLoadouts(state);
+  updateAchievementBadge(state);
+  showAchievementToasts(unlocked);
 }
 
 // Lightweight refresh for the per-second buff countdown: updates only the
@@ -280,6 +287,7 @@ initLoadouts(state, {
 });
 initBackup();
 initProfile(state);
+initAchievements(state);
 initDebug(state, renderAll); // TESTING ONLY (strip before demo)
 renderAll();
 initTutorial(); // first-run onboarding overlay (+ ❔ Help button); after renderAll so targets exist

@@ -52,7 +52,7 @@ Task IDs are stable handles, not priority — go by the **Status** column. Featu
 | 6 | Strip testing conveniences (pre-demo) | `js/debug.js` *(delete)* | `js/game.js`, `js/items.js`, `js/cards.js`, `js/main.js`, `index.html`, `css/style.css` | `BLOCKED` | — | — | — | Demo-prep only. Do **absolutely last**, after all features merge. See CLAUDE.md "TESTING-ONLY". |
 | 7 | Combat Sets / loadouts (GDD §6.2) — save & swap named equipped-item sets (e.g. a leveling set vs a boss set) | `js/loadouts.js` *(new)* | `js/actors.js` (`player.loadouts`), `js/game.js` (save/apply wrappers), `js/main.js` (init + render call), `css/style.css` | `DONE` | session_01Sty | `claude/combat-sets` | #7 | 2026-07-06 |
 | 8 | Achievements / milestones — a panel tracking milestones (first breakthrough, N kills, first Epic, full codex, first sect hire…) with a toast on unlock | `js/achievements.js` *(new)* | `index.html` (button + modal), `css/style.css`, `js/main.js` (init), `js/game.js` (small record hooks) | `IN REVIEW` | pick-your-task-wakee5 | `claude/achievements-milestones` | #10 | 2026-07-06 |
-| 9 | Settings / preferences modal — consolidate display prefs (instant combat, replay tutorial, reset save) into one ⚙ panel | `js/settings.js` *(new)* | `index.html` (button + modal), `css/style.css`, `js/main.js` (init), `js/ui.js` (relocate the instant-combat toggle) | `CLAIMED` | pick-your-task-aj14ny | `claude/settings-modal` | — | 2026-07-06 |
+| 9 | Settings / preferences modal — consolidate display prefs (instant combat, replay tutorial, reset save) into one ⚙ panel | `js/settings.js` *(new)* | `index.html` (button + modal), `css/style.css`, `js/main.js` (init), `js/ui.js` (relocate the instant-combat toggle) | `IN REVIEW` | pick-your-task-aj14ny | `claude/settings-modal` | #11 | 2026-07-06 |
 
 > **Parallelism note:** Feature tasks each own a distinct new module and touch different parts of the shared files, so they run concurrently. The likeliest overlap is `index.html`/`css`/`main.js` (each adds a button + modal + init) plus `js/ui.js` — keep those edits small and at separated anchor points, and expect the 2nd+ PR into `master` to rebase. Tasks **5** (polish) and **6** (strip) stay serialized to the very end; running them alongside feature work guarantees painful conflicts.
 
@@ -222,6 +222,20 @@ should rebase around. Format: `- [YYYY-MM-DD · session <id>] <comment>`.
   Low-conflict: own module + `index.html` button/overlay + `css` + `main.js` init.
 
 ### Task 9 — Settings / preferences modal
+- [2026-07-06 · session pick-your-task-aj14ny] IN REVIEW — **PR #11** into master
+  from `claude/settings-modal`. Final footprint is **smaller than planned — NO
+  `js/ui.js` edit at all.** Key trick: the instant toggle and reset button are
+  *relocated* in `index.html` but keep their ids (`#chk-instant`, `#btn-reset`),
+  so `ui.js`'s `initCombatSettings()` and `main.js`'s reset handler still bind
+  them unchanged; `playCombat`'s `isInstant()` reads the same localStorage key.
+  Replay-tutorial just triggers the tutorial's own `#btn-help` (created by
+  `initTutorial`) — no tutorial.js touch either. So `js/settings.js` owns only
+  modal open/close + the replay action. Shared touches to rebase around:
+  `index.html` (⚙ `#btn-settings` in the button panel-box; new
+  `#settings-overlay` before `</body>`; the instant-toggle `<label>` removed from
+  `#combat-panel`; `#btn-reset` moved out of the bottom panel-box into the modal),
+  `css` (appended "Settings / preferences" section at EOF), `js/main.js` (import
+  + `initSettings()` right after `initTutorial()`). Verified in real Chromium.
 - [2026-07-06 · session pick-your-task-aj14ny] Claimed. Branch
   `claude/settings-modal` off latest master. Plan: `js/settings.js` owns a ⚙
   panel (own button + overlay, self-rendered) consolidating: the instant-combat

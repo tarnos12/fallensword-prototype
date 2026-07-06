@@ -2,6 +2,8 @@
 
 This file is the handoff/status doc. **Keep it current: update it in the same commit as every completed task**, so any Claude Code (or the author) can resume cold. Author is Mariusz (GitHub `tarnos12`).
 
+> **⚑ Working in parallel? Read this first.** Multiple Claude Code sessions may run at once. Before writing any code, `git fetch origin coordination` and read **`TASKS.md`** on the `coordination` branch — it's the shared task board. Claim an `AVAILABLE` task there (follow its Claim protocol — the claim is an atomic push race, first push wins) so two sessions never build the same thing or stomp each other's files. Leave handoff notes for other sessions in that file too. `master` stays code-only; `coordination` is the meeting point.
+
 ## What this is
 
 A browser-based, offline-first, FallenSword-inspired stat-math dungeon-crawler RPG with **xianxia** flavor (cultivators, realms, spirit stones, sects), built with a designed path to (fake, then real) multiplayer. Pure HTML/JS/CSS, no build step, no framework. Full design in [GDD_Staged_Roadmap.md](GDD_Staged_Roadmap.md) — it is the source of truth for scope and staged roadmap.

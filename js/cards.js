@@ -24,6 +24,13 @@ export const CARDS = {
   card_emberHound: { id: 'card_emberHound', creatureId: 'emberHound', creatureName: 'Ember Hound', bonusType: 'qiCap', perLevel: 20, maxLevel: 5, dropChance: 0.02 },
   card_cinderGolem: { id: 'card_cinderGolem', creatureId: 'cinderGolem', creatureName: 'Cinder Golem', bonusType: 'stones', perLevel: 10, maxLevel: 5, dropChance: 0.02 },
   card_ashenRevenant: { id: 'card_ashenRevenant', creatureId: 'ashenRevenant', creatureName: 'Ashen Revenant', bonusType: 'hp', perLevel: 4, maxLevel: 5, dropChance: 0.02 },
+  // Boss card (GDD §7.2, §9.1): dropped by the Ancient Terror (js/boss.js — its
+  // own encounter, not a zone spawn). A deliberately potent combat-stat card
+  // (+3 Damage/level vs a common beast's +1) to make the legendary kill feel
+  // like a power spike. Its high dropChance is the boss's own roll, not a tile
+  // roll; it's held here so the codex/collection totals and cardForCreature stay
+  // uniform with every other card.
+  card_ancientTerror: { id: 'card_ancientTerror', creatureId: 'ancientTerror', creatureName: 'Xuanming, the Ancient Terror', bonusType: 'damage', perLevel: 3, maxLevel: 5, dropChance: 0.5 },
 };
 
 const BY_CREATURE = {};

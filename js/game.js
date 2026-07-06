@@ -38,6 +38,7 @@ import { rollCardDrop, acquireCard, cardBonuses, CARDS } from './cards.js';
 import { createMarketProvider, emptyMarket } from './market.js';
 import { createGuildProvider, guildBuffs } from './guild.js';
 import { saveLoadout, applyLoadout, deleteLoadout } from './loadouts.js';
+import { BOSS, emptyBossState, maybeManifestBoss, onBossDefeated } from './boss.js';
 import { saveGame, loadGame, clearSave } from './save.js';
 
 // --- Qi (stamina) tuning. Prototype regen is fast so playtesting isn't
@@ -93,6 +94,7 @@ export function createGame() {
   if (!state.player.cards) state.player.cards = {};
   if (!state.player.guild) state.player.guild = { members: [] };
   if (!state.player.loadouts) state.player.loadouts = [];
+  if (!state.player.boss) state.player.boss = emptyBossState();
   if (state.lastStoneTick == null) state.lastStoneTick = Date.now();
   if (!state.market) state.market = emptyMarket();
   state.offlineStones = 0;
@@ -115,6 +117,9 @@ export function createGame() {
   }
   // Rotate listings and resolve any player sales that completed while away.
   state.offlineMarket = state.marketProvider.tick();
+  // Re-manifest the Ancient Terror if the player reloaded standing on its lair.
+  maybeBossHint(state);
+  manifestBoss(state);
   grantTestingKit(state);
   return state;
 }
@@ -181,6 +186,8 @@ export function travel(state, portal) {
   maybeRespawn(state.map, currentTile(state), state.worldRng);
   Quests.onMove(state.quests, state.zoneId, state.pos.x, state.pos.y);
   addLog(state, `You travel to ${ZONES[dest.to].name}.`);
+  maybeBossHint(state);
+  manifestBoss(state);
   saveGame(state);
   return { ok: true };
 }
@@ -188,6 +195,26 @@ export function travel(state, portal) {
 export function addLog(state, msg) {
   state.log.unshift({ msg, at: Date.now() });
   if (state.log.length > 30) state.log.pop();
+}
+
+// Manifest the Ancient Terror when the player has just arrived at (or loaded
+// onto) its lair and the calamity is ready (stage-gated + off cooldown).
+// Announces the manifestation once. Called from move/travel/load.
+export function manifestBoss(state, now = Date.now()) {
+  if (maybeManifestBoss(state, now)) {
+    addLog(state, `The air curdles cold. ${BOSS.name} uncoils from beneath the Gorge — a calamity has manifested.`);
+    return true;
+  }
+  return false;
+}
+
+// One-time breadcrumb pointing an eligible cultivator toward the lair, so the
+// endgame encounter is discoverable without a dedicated quest.
+function maybeBossHint(state) {
+  const rec = state.player.boss;
+  if (rec.hintShown || state.zoneId !== BOSS.lair.zoneId || state.player.level < BOSS.minStage) return;
+  rec.hintShown = true;
+  addLog(state, `A dread pressure bleeds from the deepest reach of the Gorge, near (${BOSS.lair.x}, ${BOSS.lair.y}). Something ancient has taken notice of you.`);
 }
 
 // Wall-clock Qi regen: accrue whole Qi for elapsed time since the last tick.
@@ -233,6 +260,8 @@ export function tryMove(state, x, y) {
   const tile = currentTile(state);
   maybeRespawn(state.map, tile, state.worldRng);
   Quests.onMove(state.quests, state.zoneId, x, y);
+  maybeBossHint(state);
+  manifestBoss(state);
   saveGame(state);
   return { ok: true, cost };
 }
@@ -316,14 +345,29 @@ export function attack(state, monsterId) {
   if (result.outcome === 'win') {
     // Sect disciples buff battle rewards (GDD §4.3): XP and spirit-stone gain.
     const gb = guildBuffs(p);
-    const xp = Math.round(scaleXp(monster.xpReward, p.level, monster.level) * (1 + gb.xpPct));
-    const stones = Math.round(monster.stoneReward * (1 + gb.stonePct));
+    let xp, stones, drop, cardId;
+    if (monster.isBoss) {
+      // The Ancient Terror (GDD §9.1): hand-authored calamity rewards plus the
+      // game's first Epic/Legendary drop and the boss Spirit Card, all resolved
+      // (and the wall-clock cooldown armed) in boss.js.
+      const br = onBossDefeated(state, monster, state.worldRng);
+      xp = Math.round(br.xp * (1 + gb.xpPct));
+      stones = Math.round(br.stones * (1 + gb.stonePct));
+      drop = br.drop;
+      cardId = br.cardId;
+    } else {
+      xp = Math.round(scaleXp(monster.xpReward, p.level, monster.level) * (1 + gb.xpPct));
+      stones = Math.round(monster.stoneReward * (1 + gb.stonePct));
+      drop = rollDrop(monster.level, state.worldRng);
+      // Spirit Card roll is independent of the loot roll (GDD §7.2) — a card
+      // never replaces an item drop.
+      cardId = rollCardDrop(monster.typeId, state.worldRng);
+    }
     p.spiritStones += stones;
     trackKill(state, monster);
     Quests.onKill(state.quests, monster.typeId);
     removeMonster(tile, monster.id);
 
-    const drop = rollDrop(monster.level, state.worldRng);
     if (drop) {
       if (p.inventory.length < INVENTORY_SIZE) {
         p.inventory.push(drop);
@@ -332,13 +376,16 @@ export function attack(state, monsterId) {
         addLog(state, `A ${drop.name} dropped, but your pack is full — it is lost.`);
       }
     }
-    // Spirit Card roll is independent of the loot roll (GDD §7.2) — a card
-    // never replaces an item drop.
-    const cardId = rollCardDrop(monster.typeId, state.worldRng);
     if (cardId) result.cardDrop = grantCard(state, cardId);
 
     result.rewards = { xp, stones, itemDrop: drop };
-    addLog(state, `Slew ${monster.name} (Lv ${monster.level}): +${xp} XP, +${stones} stones.`);
+    result.bossKill = monster.isBoss || undefined;
+    addLog(
+      state,
+      monster.isBoss
+        ? `${monster.name} is vanquished! +${xp} XP, +${stones} spirit stones. The calamity recedes into the deep.`
+        : `Slew ${monster.name} (Lv ${monster.level}): +${xp} XP, +${stones} stones.`
+    );
     grantXp(state, xp);
   } else if (result.outcome === 'loss') {
     const stonesLost = Math.floor(p.spiritStones * DEATH_STONE_LOSS);

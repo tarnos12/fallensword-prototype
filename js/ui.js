@@ -13,6 +13,7 @@ import { marketValue } from './market.js';
 import { personaById, personaLabel } from './personas.js';
 import { SECT_CAPACITY } from './guild.js';
 import { TECHNIQUES, CATEGORIES, get as getTech, isLearned, canLearn, canCast, activeBuffs } from './techniques.js';
+import { BOSS, isBossLair, bossLairStatus } from './boss.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -44,21 +45,44 @@ export function renderMap(state, onTileClick) {
       el.dataset.x = x;
       el.dataset.y = y;
       const here = state.pos.x === x && state.pos.y === y;
+      const isLair = isBossLair(state.zoneId, x, y);
+      const hasBoss = tile.monsters.some((m) => m.isBoss);
+      const dots = tile.monsters.filter((m) => !m.isBoss).length; // boss shown as ☠, not a dot
       if (here) el.classList.add('player-here');
       if (tile.isStart) el.classList.add('start-tile');
       if (portal) el.classList.add('portal-tile');
+      if (isLair) el.classList.add('lair-tile');
+      if (hasBoss) el.classList.add('boss-here');
       el.innerHTML =
         (here ? '<span class="player-marker">☯</span>' : '') +
         (portal ? '<span class="portal-marker">⟠</span>' : '') +
-        (tile.monsters.length > 0
-          ? `<span class="monster-dots">${'●'.repeat(tile.monsters.length)}</span>`
-          : '');
+        (isLair ? '<span class="boss-marker">☠</span>' : '') +
+        (dots > 0 ? `<span class="monster-dots">${'●'.repeat(dots)}</span>` : '');
       const portalNote = portal ? `, portal to ${ZONES[portal.to].name}` : '';
-      el.title = `(${x},${y}) — danger band ${tile.band}${tile.monsters.length ? `, ${tile.monsters.length} creature(s)` : ''}${portalNote}`;
+      const lairNote = isLair ? (hasBoss ? `, ${BOSS.name} lurks here` : ', an ancient lair') : '';
+      el.title = `(${x},${y}) — danger band ${tile.band}${dots ? `, ${dots} creature(s)` : ''}${lairNote}${portalNote}`;
       el.addEventListener('click', () => onTileClick(x, y));
       grid.appendChild(el);
     }
   }
+}
+
+// The lair readout shown when the player stands on the Ancient Terror's tile
+// but it isn't currently manifested — explains why (unworthy / on cooldown).
+function bossLairNote(status) {
+  const box = document.createElement('div');
+  box.className = 'boss-lair-note';
+  if (!status.eligible) {
+    box.innerHTML = `<span class="boss-tag">☠ ${BOSS.name}</span>
+      <p>A crushing presence slumbers beneath the stone. It will not deign to notice one who has not yet reached <b>${stageName(status.minStage)}</b>.</p>`;
+  } else if (status.cooldownLeftMs > 0) {
+    const defeats = status.defeats ? ` <span class="dim">(felled ${status.defeats}×)</span>` : '';
+    box.innerHTML = `<span class="boss-tag">☠ ${BOSS.name}</span>
+      <p>The calamity has receded into the deep to gather its strength. It re-manifests in <b>${fmtLeft(status.cooldownLeftMs).replace(' left', '')}</b>.${defeats}</p>`;
+  } else {
+    box.innerHTML = `<span class="boss-tag">☠ ${BOSS.name}</span><p>The lair stirs…</p>`;
+  }
+  return box;
 }
 
 export function renderTilePanel(state, { onInspect, onAttack, canAttack, onRepair, onTravel }) {
@@ -111,11 +135,18 @@ export function renderTilePanel(state, { onInspect, onAttack, canAttack, onRepai
   const list = $('monster-list');
   list.innerHTML = '';
 
+  // Ancient Terror lair (GDD §9.1): when the calamity isn't currently manifested,
+  // explain why (not yet worthy / receded on cooldown) instead of a blank tile.
+  const boss = bossLairStatus(state);
+  if (boss.atLair && !boss.present) list.appendChild(bossLairNote(boss));
+
   if (tile.monsters.length === 0) {
     const p = document.createElement('p');
     p.className = 'empty-note';
     p.textContent = tile.isStart
       ? 'A place of safety. Nothing hunts you here.'
+      : boss.atLair
+      ? 'The lair lies quiet — for now.'
       : 'Nothing stirs here. Cleared tiles repopulate after a while.';
     list.appendChild(p);
     return;
@@ -124,10 +155,15 @@ export function renderTilePanel(state, { onInspect, onAttack, canAttack, onRepai
   for (const m of tile.monsters) {
     const row = document.createElement('div');
     row.className = 'monster-row';
+    if (m.isBoss) row.classList.add('boss-row');
 
     const label = document.createElement('span');
     label.className = 'monster-name';
-    label.textContent = `${m.name} (Lv ${m.level})`;
+    if (m.isBoss) {
+      label.innerHTML = `<span class="boss-tag">☠ Legendary</span> ${m.name} <span class="dim">(Lv ${m.level})</span>`;
+    } else {
+      label.textContent = `${m.name} (Lv ${m.level})`;
+    }
 
     const inspect = document.createElement('button');
     inspect.type = 'button';
@@ -137,8 +173,8 @@ export function renderTilePanel(state, { onInspect, onAttack, canAttack, onRepai
 
     const atk = document.createElement('button');
     atk.type = 'button';
-    atk.className = 'attack-btn';
-    atk.textContent = 'Attack';
+    atk.className = m.isBoss ? 'attack-btn boss-attack-btn' : 'attack-btn';
+    atk.textContent = m.isBoss ? 'Challenge' : 'Attack';
     if (!canAttack()) {
       atk.disabled = true;
       atk.title = `Need ${MAX_TURNS} Qi to attack`;
@@ -603,7 +639,9 @@ function outcomeBanner(result) {
   if (result.outcome === 'win') {
     const r = result.rewards;
     const drop = r.itemDrop ? `, looted <span class="rarity-${r.itemDrop.rarity}">${r.itemDrop.name}</span>` : '';
-    let banner = `<div class="banner win">VICTORY — +${r.xp} XP, +${r.stones} spirit stones${drop} <span class="dim">(${result.staminaSpent} Qi spent)</span></div>`;
+    let banner = result.bossKill
+      ? `<div class="banner boss-win">☠ CALAMITY FELLED — ${result.monster.name} is vanquished! +${r.xp} XP, +${r.stones} spirit stones${drop} <span class="dim">(${result.staminaSpent} Qi spent)</span></div>`
+      : `<div class="banner win">VICTORY — +${r.xp} XP, +${r.stones} spirit stones${drop} <span class="dim">(${result.staminaSpent} Qi spent)</span></div>`;
     if (result.cardDrop) banner += cardDropBanner(result.cardDrop);
     return banner;
   }
@@ -720,11 +758,55 @@ function codexEntry(state, typeId) {
   return el;
 }
 
+// The Ancient Terror's codex entry (GDD §9.1) — hand-authored, separate from the
+// random-spawn beast roster. Full lore + stats once discovered (inspected or
+// fought); a teasing locked entry beforehand. Doubles as the boss card slot.
+function bossCodexEntry(state) {
+  const p = state.player;
+  const discovered = !!p.bestiary[BOSS.typeId];
+  const card = cardForCreature(BOSS.typeId);
+  const cardLevel = p.cards[card.id] ?? 0;
+  const defeats = p.boss?.defeats ?? 0;
+
+  const el = document.createElement('div');
+  el.className = 'codex-entry codex-legendary';
+  if (!discovered) el.classList.add('undiscovered');
+
+  if (!discovered) {
+    el.innerHTML = `
+      <div class="codex-head">
+        <div class="codex-title">☠ ??? <span class="dim">— a calamity said to sleep beneath the Gorge</span></div>
+        ${codexCardSlot(card, 0)}
+      </div>
+      <p class="empty-note">Cross into Foundation Establishment and seek the deepest reach of Cindervein Gorge. Something ancient waits there.</p>`;
+    return el;
+  }
+
+  const s = BOSS.stats;
+  const cardStatusLine = cardLevel > 0
+    ? `<p class="codex-line card-owned">Card held: Lv ${cardLevel}/${card.maxLevel} — <b>${cardBonusText(card, cardLevel)}</b></p>`
+    : `<p class="codex-line dim">Spirit Card not yet obtained — the calamity guards it well.</p>`;
+
+  el.innerHTML = `
+    <div class="codex-head">
+      <div class="codex-title">☠ ${BOSS.name} <span class="dim">Lv ${BOSS.level} · ${BOSS.title}</span></div>
+      ${codexCardSlot(card, cardLevel)}
+    </div>
+    <p class="codex-flavor">${BOSS.flavor}</p>
+    <p class="codex-kills">Vanquished: <b>${defeats}</b>${defeats ? ' <span class="mastery">☠ calamity-breaker</span>' : ''}</p>
+    <p class="codex-line">ATK ${s.attack} · DEF ${s.defense} · DMG ${s.damage} · ARM ${s.armor} · HP ${BOSS.maxHp}</p>
+    <p class="codex-line">Drops: a guaranteed <span class="rarity-epic">Epic</span> artifact (a chance at <span class="rarity-legendary">Legendary</span>) · <b>${Math.round(BOSS.cardDropChance * 100)}%</b> Spirit Card</p>
+    ${cardStatusLine}`;
+  return el;
+}
+
 export function renderCodex(state) {
   const p = state.player;
-  const total = Object.keys(CARDS).length;
-  const discoveredCount = Object.keys(CREATURE_TYPES).filter((id) => p.bestiary[id]).length;
-  $('codex-count').textContent = `— ${discoveredCount}/${Object.keys(CREATURE_TYPES).length} beasts · ${ownedCardCount(p)}/${total} cards`;
+  const total = Object.keys(CARDS).length; // includes the Ancient Terror's card
+  const beastTotal = Object.keys(CREATURE_TYPES).length + 1; // + the Ancient Terror
+  const discoveredCount =
+    Object.keys(CREATURE_TYPES).filter((id) => p.bestiary[id]).length + (p.bestiary[BOSS.typeId] ? 1 : 0);
+  $('codex-count').textContent = `— ${discoveredCount}/${beastTotal} beasts · ${ownedCardCount(p)}/${total} cards`;
 
   const summaryBox = $('codex-summary');
   const bonuses = cardBonusSummary(p);
@@ -737,6 +819,12 @@ export function renderCodex(state) {
   for (const typeId of Object.keys(CREATURE_TYPES)) {
     body.appendChild(codexEntry(state, typeId));
   }
+  // Legendary section: the Ancient Terror sits apart from the random beast roster.
+  const legHead = document.createElement('h3');
+  legHead.className = 'codex-section-head';
+  legHead.textContent = '☠ Legendary Calamity';
+  body.appendChild(legHead);
+  body.appendChild(bossCodexEntry(state));
 }
 
 export function initCodex(state) {

@@ -36,6 +36,7 @@ import * as Quests from './quests.js';
 import * as Techniques from './techniques.js';
 import { rollCardDrop, acquireCard, cardBonuses, CARDS } from './cards.js';
 import { createMarketProvider, emptyMarket } from './market.js';
+import { createGuildProvider, guildBuffs } from './guild.js';
 import { saveGame, loadGame, clearSave } from './save.js';
 
 // --- Qi (stamina) tuning. Prototype regen is fast so playtesting isn't
@@ -44,10 +45,10 @@ export const MAX_QI = 500; // testing cap; 1.0 tuning will lower this
 export const QI_REGEN_MS = 3_000; // 1 Qi per 3s, wall-clock
 const STONE_ACCRUAL_MS = 3_600_000; // spirit-stones/hour cards accrue per real hour
 
-// Effective Qi cap: base cap + any Qi-cap Spirit Card bonus (GDD §7.2). Always
-// derived so the cap tracks the card collection with no stored duplicate.
+// Effective Qi cap: base cap + Qi-cap bonuses from Spirit Cards (GDD §7.2) and
+// sect disciples (GDD §4.3). Always derived so the cap tracks owned sources.
 export function maxQi(player) {
-  return MAX_QI + cardBonuses(player).meta.qiCap;
+  return MAX_QI + cardBonuses(player).meta.qiCap + guildBuffs(player).qiCap;
 }
 
 // Death penalty (GDD §8.3 starting values). XP loss is progress toward the
@@ -89,6 +90,7 @@ export function createGame() {
   if (!state.player.learnedTechniques) state.player.learnedTechniques = [];
   if (!state.player.activeBuffs) state.player.activeBuffs = [];
   if (!state.player.cards) state.player.cards = {};
+  if (!state.player.guild) state.player.guild = { members: [] };
   if (state.lastStoneTick == null) state.lastStoneTick = Date.now();
   if (!state.market) state.market = emptyMarket();
   state.offlineStones = 0;
@@ -96,6 +98,9 @@ export function createGame() {
   // The Treasure Pavilion provider (GDD §6.7) is created fresh each load over
   // the persisted market state; normalize() inside back-fills legacy blobs.
   state.marketProvider = createMarketProvider(state);
+  // The Sect / Warband provider (GDD §4.3) — hired disciples live on the player,
+  // so it just wraps that persisted membership list.
+  state.guildProvider = createGuildProvider(state);
 
   state.loadedFromSave = !!loaded;
   if (loaded) {
@@ -202,7 +207,7 @@ export function tickQi(state, now = Date.now()) {
 // advances the timestamp only by the consumed portion, so fractions aren't lost.
 // Returns the number of stones granted this tick.
 export function tickStones(state, now = Date.now()) {
-  const perHour = cardBonuses(state.player).meta.stones;
+  const perHour = cardBonuses(state.player).meta.stones + guildBuffs(state.player).stonesPerHour;
   if (perHour <= 0) {
     state.lastStoneTick = now;
     return 0;
@@ -307,8 +312,10 @@ export function attack(state, monsterId) {
   Quests.onFace(state.quests, monster.typeId);
 
   if (result.outcome === 'win') {
-    const xp = scaleXp(monster.xpReward, p.level, monster.level);
-    const stones = monster.stoneReward;
+    // Sect disciples buff battle rewards (GDD §4.3): XP and spirit-stone gain.
+    const gb = guildBuffs(p);
+    const xp = Math.round(scaleXp(monster.xpReward, p.level, monster.level) * (1 + gb.xpPct));
+    const stones = Math.round(monster.stoneReward * (1 + gb.stonePct));
     p.spiritStones += stones;
     trackKill(state, monster);
     Quests.onKill(state.quests, monster.typeId);
@@ -535,6 +542,43 @@ export function marketCollect(state) {
   if (bits.length) addLog(state, `Collected ${bits.join(' and ')} from your mailbox.`);
   if (res.blocked) addLog(state, `${res.blocked} item(s) remain — clear pack space to collect them.`);
   if (res.stones || res.items.length) saveGame(state);
+  return res;
+}
+
+// --- Sect / Warband (guild stub, GDD §4.3). Thin wrappers over the
+// GuildProvider that log outcomes and persist on success. ---
+
+export function guildRecruits(state) {
+  return state.guildProvider.getRecruits();
+}
+
+export function guildMembers(state) {
+  return state.guildProvider.getMembers();
+}
+
+export function guildBuffSummary(state) {
+  return state.guildProvider.buffs();
+}
+
+export function hireDisciple(state, personaId) {
+  const res = state.guildProvider.hire(personaId);
+  if (res.ok) {
+    addLog(state, `${res.persona.name} joins your sect as a ${res.specialty.name} (−${res.cost} stones).`);
+    saveGame(state);
+  } else if (res.reason) {
+    addLog(state, res.reason);
+  }
+  return res;
+}
+
+export function dismissDisciple(state, personaId) {
+  const res = state.guildProvider.dismiss(personaId);
+  if (res.ok) {
+    addLog(state, `${res.persona?.name ?? 'A disciple'} departs your sect.`);
+    saveGame(state);
+  } else if (res.reason) {
+    addLog(state, res.reason);
+  }
   return res;
 }
 

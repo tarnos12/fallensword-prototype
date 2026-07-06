@@ -25,6 +25,8 @@ import {
   marketList,
   marketCancel,
   marketCollect,
+  hireDisciple,
+  dismissDisciple,
 } from './game.js';
 import {
   renderPlayerBar,
@@ -42,6 +44,7 @@ import {
   initCodex,
   initPavilion,
   updatePavilionBadge,
+  initSect,
 } from './ui.js';
 import { initDebug } from './debug.js'; // TESTING ONLY (strip before demo)
 
@@ -173,6 +176,10 @@ initPavilion(state, {
   list: (itemId, price) => { marketList(state, itemId, price); renderAll(); },
   cancel: (id) => { marketCancel(state, id); renderAll(); },
   collect: () => { marketCollect(state); renderAll(); },
+});
+initSect(state, {
+  hire: (id) => { hireDisciple(state, id); renderAll(); },
+  dismiss: (id) => { dismissDisciple(state, id); renderAll(); },
 });
 initDebug(state, renderAll); // TESTING ONLY (strip before demo)
 renderAll();

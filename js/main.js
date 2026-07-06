@@ -27,6 +27,9 @@ import {
   marketCollect,
   hireDisciple,
   dismissDisciple,
+  saveLoadoutAction,
+  applyLoadoutAction,
+  deleteLoadoutAction,
 } from './game.js';
 import {
   renderPlayerBar,
@@ -47,6 +50,7 @@ import {
   initSect,
 } from './ui.js';
 import { initTutorial } from './tutorial.js';
+import { initLoadouts, renderLoadouts } from './loadouts.js';
 import { initDebug } from './debug.js'; // TESTING ONLY (strip before demo)
 
 const state = createGame();
@@ -133,6 +137,7 @@ function renderAll() {
   renderActiveBuffs(state);
   renderEventLog(state);
   updatePavilionBadge(state);
+  renderLoadouts(state);
 }
 
 // Lightweight refresh for the per-second buff countdown: updates only the
@@ -181,6 +186,11 @@ initPavilion(state, {
 initSect(state, {
   hire: (id) => { hireDisciple(state, id); renderAll(); },
   dismiss: (id) => { dismissDisciple(state, id); renderAll(); },
+});
+initLoadouts(state, {
+  save: (name) => { saveLoadoutAction(state, name); renderAll(); },
+  apply: (i) => { applyLoadoutAction(state, i); renderAll(); },
+  remove: (i) => { deleteLoadoutAction(state, i); renderAll(); },
 });
 initDebug(state, renderAll); // TESTING ONLY (strip before demo)
 renderAll();

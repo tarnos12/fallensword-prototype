@@ -47,7 +47,7 @@ Task IDs are stable handles, not priority — go by the **Status** column. Featu
 | 4 | Save export / import (GDD §4.4) — export the save as a copy-paste string / file and import it back (back up without an account) | `js/save.js` (additive `exportSave`/`importSave`) | `index.html` (backup buttons), `css/style.css`, `js/main.js` (wiring) | `IN REVIEW` | pick-your-task-wakee5 | `claude/pick-your-task-wakee5` | #6 | 2026-07-06 |
 | 5 | Visual / UI polish pass | `css/style.css` | `index.html`, `js/ui.js` | `BLOCKED` | — | — | — | Do **last & solo** — pure cross-cutting CSS/UI, collides with every other task. Start only when 1–4 are merged. |
 | 6 | Strip testing conveniences (pre-demo) | `js/debug.js` *(delete)* | `js/game.js`, `js/items.js`, `js/cards.js`, `js/main.js`, `index.html`, `css/style.css` | `BLOCKED` | — | — | — | Demo-prep only. Do **absolutely last**, after all features merge. See CLAUDE.md "TESTING-ONLY". |
-| 7 | Combat Sets / loadouts (GDD §6.2) — save & swap named equipped-item sets (e.g. a leveling set vs a boss set) | `js/loadouts.js` *(new)* | `js/actors.js` (`player.loadouts`), `js/game.js` (save/apply wrappers), `js/ui.js` (gear-panel controls), `css/style.css` | `CLAIMED` | session_01Sty | `claude/combat-sets` | — | 2026-07-06 |
+| 7 | Combat Sets / loadouts (GDD §6.2) — save & swap named equipped-item sets (e.g. a leveling set vs a boss set) | `js/loadouts.js` *(new)* | `js/actors.js` (`player.loadouts`), `js/game.js` (save/apply wrappers), `js/main.js` (init + render call), `css/style.css` | `IN REVIEW` | session_01Sty | `claude/combat-sets` | #7 | 2026-07-06 |
 | 8 | Achievements / milestones — a panel tracking milestones (first breakthrough, N kills, first Epic, full codex, first sect hire…) with a toast on unlock | `js/achievements.js` *(new)* | `index.html` (button + modal), `css/style.css`, `js/main.js` (init), `js/game.js` (small record hooks) | `AVAILABLE` | — | — | — | — |
 | 9 | Settings / preferences modal — consolidate display prefs (instant combat, replay tutorial, reset save) into one ⚙ panel | `js/settings.js` *(new)* | `index.html` (button + modal), `css/style.css`, `js/main.js` (init), `js/ui.js` (relocate the instant-combat toggle) | `AVAILABLE` | — | — | — | — |
 
@@ -164,6 +164,13 @@ should rebase around. Format: `- [YYYY-MM-DD · session <id>] <comment>`.
   labelled hooks in `game.js`/`items.js`/`cards.js`/`main.js`.
 
 ### Task 7 — Combat Sets / loadouts
+- [2026-07-06 · session session_01Sty] IN REVIEW — PR #7. Ended up touching
+  **NO `js/ui.js` and NO `index.html`**: `loadouts.js` builds its own "Combat
+  Sets" panel (inserted after the gear box) like `tutorial.js`/`debug.js` do.
+  Final shared footprint: `actors.js` (`player.loadouts` field), `game.js`
+  (3 wrappers + createGame back-fill), `js/main.js` (import + `initLoadouts` +
+  one `renderLoadouts()` line in `renderAll`), `css` (section appended at EOF).
+  Boss session (task 1): nothing of mine in ui.js to rebase around after all.
 - [2026-07-06 · session session_01Sty] Claimed. Named equipped-item sets a
   player can save and swap (GDD §6.2: a leveling set vs a boss set). New
   `js/loadouts.js` owns the logic. Plan: `player.loadouts = [{name, weapon, robe}]`

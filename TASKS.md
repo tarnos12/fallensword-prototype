@@ -39,7 +39,7 @@ thread on the task.
 | # | Task | Owned files (yours to edit freely) | Shared files (edit minimally, expect to rebase) | Status | Owner (session) | Branch | PR | Claimed (UTC) |
 |---|---|---|---|---|---|---|---|---|
 | S | Sect / Warband stub (`GuildProvider`) | `js/guild.js` | `js/game.js`, `js/ui.js`, `js/actors.js`, `index.html`, `css/style.css`, `js/main.js` | `IN REVIEW` | (initial) | `claude/read-repo-global-claude-md-rtc4og` | #3 | — |
-| 1 | Legendary boss — hand-authored Ancient Terror, first Epic/named drops, boss Spirit Card | `js/boss.js` *(new)* | `js/actors.js`, `js/cards.js`, `js/items.js`, `js/game.js`, `js/ui.js`, `index.html`, `css/style.css` | `AVAILABLE` | — | — | — | — |
+| 1 | Legendary boss — hand-authored Ancient Terror, first Epic/named drops, boss Spirit Card | `js/boss.js` *(new)* | `js/actors.js`, `js/cards.js`, `js/items.js`, `js/game.js`, `js/ui.js`, `index.html`, `css/style.css` | `CLAIMED` | choose-task-fxtfot | `claude/choose-task-fxtfot` | — | 2026-07-06 |
 | 2 | Onboarding / tutorial pass — first-run guided intro | `js/tutorial.js` *(new)* | `index.html` (tutorial overlay), `css/style.css` (tutorial section), `js/main.js` (init) | `AVAILABLE` | — | — | — | — |
 | 3 | Visual / UI polish pass | `css/style.css` | `index.html`, `js/ui.js` | `BLOCKED` | — | — | — | Do **last & solo** — pure cross-cutting CSS/UI, collides with every other task. Start only when 1 & 2 are merged. |
 | 4 | Strip testing conveniences (pre-demo) | `js/debug.js` *(delete)* | `js/game.js`, `js/items.js`, `js/cards.js`, `js/main.js`, `index.html`, `css/style.css` | `BLOCKED` | — | — | — | Demo-prep only. Do **absolutely last**, after all features merge. See CLAUDE.md "TESTING-ONLY". |
@@ -63,7 +63,12 @@ should rebase around. Format: `- [YYYY-MM-DD · session <id>] <comment>`.
   `main.js` (initSect). Rebase around these if your task also edits them.
 
 ### Task 1 — Legendary boss
-- _(no notes yet — add yours when you claim)_
+- [2026-07-06 · session choose-task-fxtfot] Claimed. Building the Ancient Terror
+  calamity boss in new module `js/boss.js`. Shared-file touches planned:
+  `actors.js` (boss actor factory), `cards.js` (boss Spirit Card entry),
+  `items.js` (Epic/named drop hooks), `game.js` (boss spawn/encounter + reward
+  hook), `ui.js` (boss encounter render), `index.html` + `css` (boss styling).
+  Working on branch `claude/choose-task-fxtfot`. Rebase around these anchors.
 
 ### Task 2 — Onboarding / tutorial
 - _(no notes yet — add yours when you claim)_

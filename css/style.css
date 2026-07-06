@@ -814,6 +814,140 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 .cat-alchemist { color: #7bc67e; }
 .cat-warden { color: var(--qi); }
 
+/* --- Stage 2: Profile & Rivals feed (GDD §6.5) --- */
+
+.profile-btn { width: 100%; margin-top: 8px; color: var(--gold); border-color: var(--gold); }
+
+#profile-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(8, 9, 13, 0.78);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  overflow-y: auto;
+}
+
+#profile-panel {
+  background: var(--panel);
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 600px;
+  padding: 16px 20px 22px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+}
+
+#profile-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--panel-edge);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+#profile-header h2 { margin: 0; color: var(--gold); font-weight: normal; letter-spacing: 1px; }
+
+.profile-section-head {
+  margin: 16px 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid var(--panel-edge);
+  padding-bottom: 4px;
+}
+
+/* Summary card */
+#profile-summary {
+  background: var(--bg);
+  border: 1px solid var(--panel-edge);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.prof-identity { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.prof-name { font-size: 1.05rem; color: var(--text); }
+.prof-realm { font-size: 0.82rem; color: var(--gold); }
+
+.prof-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 16px;
+  font-size: 0.85rem;
+}
+.prof-stat { display: flex; justify-content: space-between; }
+.prof-stat-label { color: var(--dim); }
+.prof-meta { margin-top: 8px; font-size: 0.78rem; }
+
+/* Active buffs */
+.prof-buff-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--panel-edge);
+  border-radius: 6px;
+  background: var(--bg);
+  margin-bottom: 6px;
+  font-size: 0.82rem;
+}
+.prof-buff-src {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--panel-edge);
+  white-space: nowrap;
+  color: var(--dim);
+}
+.prof-buff-src.src-technique { color: var(--qi); border-color: var(--qi); }
+.prof-buff-src.src-spiritcard { color: #b388ff; border-color: #b388ff; }
+.prof-buff-src.src-sect { color: var(--gold); border-color: var(--gold); }
+.prof-buff-name { flex-shrink: 0; }
+.prof-buff-eff { flex: 1; text-align: right; }
+.prof-buff-time { color: var(--qi); white-space: nowrap; min-width: 34px; text-align: right; }
+.prof-buff-perm { color: var(--dim); font-size: 0.72rem; white-space: nowrap; }
+
+/* Rivals + feed shared rows */
+.prof-social-row,
+.prof-feed-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--panel-edge);
+  font-size: 0.82rem;
+}
+.prof-social-row { justify-content: space-between; }
+.prof-social-name { flex: 1; min-width: 0; }
+.prof-mini-btn { font-size: 0.72rem; padding: 2px 8px; }
+
+#profile-rival-picker {
+  margin-top: 6px;
+  border: 1px dashed var(--panel-edge);
+  border-radius: 6px;
+  padding: 4px 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.prof-feed-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--win);
+  box-shadow: 0 0 5px var(--win);
+  flex-shrink: 0;
+}
+.prof-feed-text { flex: 1; min-width: 0; }
+.prof-feed-name { color: var(--text); }
+.prof-feed-time { white-space: nowrap; font-size: 0.74rem; }
+.prof-rival-mark { color: var(--loss); }
+
 /* --- TESTING ONLY: debug panel (strip before demo) --- */
 
 .debug-box { border-color: #7e57c2; border-style: dashed; }

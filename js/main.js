@@ -52,6 +52,7 @@ import {
 import { initTutorial } from './tutorial.js';
 import { initLoadouts, renderLoadouts } from './loadouts.js';
 import { exportSave, importSave } from './save.js';
+import { initProfile } from './profile.js';
 import { initDebug } from './debug.js'; // TESTING ONLY (strip before demo)
 
 const state = createGame();
@@ -278,6 +279,7 @@ initLoadouts(state, {
   remove: (i) => { deleteLoadoutAction(state, i); renderAll(); },
 });
 initBackup();
+initProfile(state);
 initDebug(state, renderAll); // TESTING ONLY (strip before demo)
 renderAll();
 initTutorial(); // first-run onboarding overlay (+ ❔ Help button); after renderAll so targets exist

@@ -2,7 +2,7 @@
 // through the action functions passed in from main.js.
 
 import { ZONES, portalAt } from './map.js';
-import { maxQi, effectiveStats, stageName, totalRepairCost, marketListings, marketPlayerListings, marketMailbox } from './game.js';
+import { maxQi, effectiveStats, stageName, totalRepairCost, marketListings, marketPlayerListings, marketMailbox, guildMembers, guildRecruits, guildBuffSummary } from './game.js';
 import { MAX_TURNS } from './combat.js';
 import { xpForBreakthrough, ALLOC_STATS, POINT_VALUE, MAX_STAGE } from './progression.js';
 import { sellValue, RARITIES, INVENTORY_SIZE, DROP_CHANCE } from './items.js';
@@ -11,6 +11,7 @@ import { CREATURE_TYPES, creatureStatBlock } from './actors.js';
 import { CARDS, cardForCreature, cardBonuses, cardBonusText, ownedCardCount } from './cards.js';
 import { marketValue } from './market.js';
 import { personaById, personaLabel } from './personas.js';
+import { SECT_CAPACITY } from './guild.js';
 import { TECHNIQUES, CATEGORIES, get as getTech, isLearned, canLearn, canCast, activeBuffs } from './techniques.js';
 
 const $ = (id) => document.getElementById(id);
@@ -998,4 +999,99 @@ export function initPavilion(state, actions) {
     });
   }
   updatePavilionBadge(state);
+}
+
+// --- Sect / Warband (GDD §4.3). A modal listing your hired disciples (with
+// dismiss) and a recruit board (hire for spirit stones). Each disciple grants a
+// passive economy buff scaled by their level; the header sums the active total.
+
+let sect = null; // { state, actions }
+
+const GUILD_BUFF_LABELS = {
+  xpPct: (v) => `+${Math.round(v * 100)}% battle XP`,
+  stonePct: (v) => `+${Math.round(v * 100)}% battle spirit stones`,
+  stonesPerHour: (v) => `+${v} spirit stones/hr`,
+  qiCap: (v) => `+${v} max Qi`,
+};
+
+function guildBuffSummaryChips(buffs) {
+  const parts = [];
+  for (const [k, v] of Object.entries(buffs)) if (v) parts.push(GUILD_BUFF_LABELS[k](v));
+  return parts;
+}
+
+function discipleRow(view, { actionLabel, onAction, actionCls = '' }) {
+  const row = document.createElement('div');
+  row.className = 'sect-row';
+  const spec = view.specialty;
+  const info = document.createElement('div');
+  info.className = 'sect-info';
+  info.innerHTML = `<div class="sect-name">${view.persona.name} <span class="dim">[${view.persona.guildTag}] · Lv ${view.persona.level}</span></div>
+    <div class="sect-role cat-${spec.id}">${spec.icon} ${spec.name} — <span class="sect-buff">${view.buffText}</span></div>
+    <div class="sect-desc dim">${spec.desc}</div>`;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = actionCls;
+  btn.textContent = actionLabel;
+  if (view.disabled) {
+    btn.disabled = true;
+    if (view.disabledReason) btn.title = view.disabledReason;
+  }
+  btn.addEventListener('click', () => onAction(view.personaId));
+  row.append(info, btn);
+  return row;
+}
+
+export function renderSect(state) {
+  const members = guildMembers(state);
+  const recruits = guildRecruits(state);
+  const buffs = guildBuffSummary(state);
+
+  $('sect-count').textContent = `— ${members.length}/${SECT_CAPACITY} disciples`;
+
+  const summary = $('sect-summary');
+  const chips = guildBuffSummaryChips(buffs);
+  summary.innerHTML = chips.length
+    ? `<span class="codex-summary-label">Active sect buffs:</span> ${chips.map((c) => `<span class="card-bonus-chip">${c}</span>`).join(' ')}`
+    : '<span class="empty-note">No disciples yet. Recruit fellow cultivators below for always-on buffs.</span>';
+
+  const body = $('sect-body');
+  body.innerHTML = '';
+
+  const memHead = document.createElement('h3');
+  memHead.textContent = 'Your Disciples';
+  body.appendChild(memHead);
+  if (members.length === 0) {
+    const p = document.createElement('p');
+    p.className = 'empty-note';
+    p.textContent = 'Your sect halls stand empty.';
+    body.appendChild(p);
+  } else {
+    for (const m of members) {
+      body.appendChild(discipleRow(m, { actionLabel: 'Dismiss', actionCls: 'danger-btn', onAction: (id) => { sect.actions.dismiss(id); renderSect(state); } }));
+    }
+  }
+
+  const recHead = document.createElement('h3');
+  recHead.textContent = 'Disciples Seeking a Sect';
+  body.appendChild(recHead);
+  const full = members.length >= SECT_CAPACITY;
+  for (const r of recruits) {
+    r.disabled = full || state.player.spiritStones < r.cost;
+    r.disabledReason = full ? 'Sect is full' : state.player.spiritStones < r.cost ? 'Not enough spirit stones' : '';
+    body.appendChild(discipleRow(r, { actionLabel: `Recruit · ${r.cost} ◆`, actionCls: 'claim-btn', onAction: (id) => { sect.actions.hire(id); renderSect(state); } }));
+  }
+}
+
+export function initSect(state, actions) {
+  sect = { state, actions };
+  const overlay = $('sect-overlay');
+  $('btn-sect').addEventListener('click', () => {
+    renderSect(state);
+    overlay.classList.remove('hidden');
+  });
+  $('btn-close-sect').addEventListener('click', () => overlay.classList.add('hidden'));
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.classList.add('hidden');
+  });
 }

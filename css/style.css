@@ -906,3 +906,43 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
   0%, 100% { box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.22); }
   50% { box-shadow: 0 0 0 7px rgba(212, 175, 55, 0.10); }
 }
+
+/* --- Stage 2: Combat Sets / loadouts --- */
+
+.ld-savebar { display: flex; gap: 6px; margin-bottom: 8px; }
+
+.ld-name {
+  flex: 1;
+  min-width: 0;
+  background: #262a38;
+  color: var(--text);
+  border: 1px solid var(--panel-edge);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-family: inherit;
+  font-size: 0.82rem;
+}
+
+.ld-save-btn { color: var(--win); border-color: var(--win); white-space: nowrap; }
+
+.ld-list { display: flex; flex-direction: column; gap: 6px; }
+
+.ld-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--panel-edge);
+  border-radius: 5px;
+  background: var(--bg);
+}
+
+.ld-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+
+.ld-set-name { font-size: 0.85rem; font-weight: bold; }
+
+.ld-set-gear { font-size: 0.74rem; }
+
+.ld-missing { color: var(--loss); }
+
+.ld-apply-btn { color: var(--qi); border-color: var(--qi); }

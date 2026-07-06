@@ -37,6 +37,7 @@ import * as Techniques from './techniques.js';
 import { rollCardDrop, acquireCard, cardBonuses, CARDS } from './cards.js';
 import { createMarketProvider, emptyMarket } from './market.js';
 import { createGuildProvider, guildBuffs } from './guild.js';
+import { saveLoadout, applyLoadout, deleteLoadout } from './loadouts.js';
 import { saveGame, loadGame, clearSave } from './save.js';
 
 // --- Qi (stamina) tuning. Prototype regen is fast so playtesting isn't
@@ -91,6 +92,7 @@ export function createGame() {
   if (!state.player.activeBuffs) state.player.activeBuffs = [];
   if (!state.player.cards) state.player.cards = {};
   if (!state.player.guild) state.player.guild = { members: [] };
+  if (!state.player.loadouts) state.player.loadouts = [];
   if (state.lastStoneTick == null) state.lastStoneTick = Date.now();
   if (!state.market) state.market = emptyMarket();
   state.offlineStones = 0;
@@ -712,6 +714,42 @@ export function debugMarket(state, mode) {
     addLog(state, '[debug] Resolved all your listings.');
   }
   saveGame(state);
+}
+
+// --- Combat Sets / loadouts (GDD §6.2). Thin wrappers over loadouts.js that
+// log outcomes and persist. ---
+
+export function saveLoadoutAction(state, name) {
+  const res = saveLoadout(state.player, name);
+  if (res.ok) {
+    addLog(state, res.overwrote ? `Updated combat set "${res.set.name}".` : `Saved combat set "${res.set.name}".`);
+    saveGame(state);
+  } else if (res.reason) {
+    addLog(state, res.reason);
+  }
+  return res;
+}
+
+export function applyLoadoutAction(state, index) {
+  const res = applyLoadout(state.player, index);
+  if (res.ok) {
+    const set = state.player.loadouts[index];
+    addLog(state, `Equipped combat set "${set.name}".`);
+    if (res.missing.length) addLog(state, `Some pieces were missing: ${res.missing.join(', ')}.`);
+    saveGame(state);
+  } else if (res.reason) {
+    addLog(state, res.reason);
+  }
+  return res;
+}
+
+export function deleteLoadoutAction(state, index) {
+  const res = deleteLoadout(state.player, index);
+  if (res.ok) {
+    addLog(state, `Deleted combat set "${res.removed.name}".`);
+    saveGame(state);
+  }
+  return res;
 }
 
 export { effectiveStats, stageName };

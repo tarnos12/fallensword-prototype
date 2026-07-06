@@ -79,6 +79,7 @@
         <button id="btn-codex" type="button" class="codex-btn" title="Beast Codex & Spirit Cards">📖 Beast Codex</button>
         <button id="btn-pavilion" type="button" class="pavilion-btn" title="Treasure Pavilion — buy & sell artifacts">🏛 Treasure Pavilion <span id="pavilion-mail-count" class="mail-badge hidden"></span></button>
         <button id="btn-sect" type="button" class="sect-btn" title="Your Sect — recruit disciples for passive buffs">⛩ Sect</button>
+        <button id="btn-profile" type="button" class="profile-btn" title="Your Profile — active buffs, rivals & recently-active cultivators">👤 Profile & Rivals</button>
       </div>
 
       <div class="panel-box">
@@ -162,6 +163,28 @@
 
         <p id="backup-status" class="backup-status"></p>
       </div>
+    </div>
+  </div>
+
+  <div id="profile-overlay" class="hidden">
+    <div id="profile-panel">
+      <div id="profile-header">
+        <h2>Profile &amp; Rivals</h2>
+        <button id="btn-close-profile" type="button" title="Close">✕</button>
+      </div>
+      <div id="profile-summary"></div>
+
+      <h3 class="profile-section-head">Active Buffs</h3>
+      <div id="profile-buffs"></div>
+
+      <h3 class="profile-section-head">Rivals
+        <button id="profile-add-rival" type="button" class="prof-mini-btn">+ Add rival</button>
+      </h3>
+      <div id="profile-rivals"></div>
+      <div id="profile-rival-picker" class="hidden"></div>
+
+      <h3 class="profile-section-head">Recently Active</h3>
+      <div id="profile-feed"></div>
     </div>
   </div>
 

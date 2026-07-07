@@ -167,6 +167,7 @@ export function createPlayer() {
     bestiary: {}, // { typeId: { kills, firstSeenAt } } — GDD §7.5 Stage 1 foundations
     cards: {}, // { cardId: level } — Spirit Card collection (GDD §7.4)
     guild: { members: [] }, // hired sect disciples (persona ids) — GDD §4.3 stub
+    meridians: { nodes: {} }, // opened meridian ranks (GDD §5): { nodeId: rank }; points derive from level
     loadouts: [], // saved equipment sets (GDD §6.2): [{ name, weapon, robe }]
     learnedTechniques: [], // technique ids (GDD §6.4)
     activeBuffs: [], // { techniqueId, effect, expiresAt } — timed technique buffs

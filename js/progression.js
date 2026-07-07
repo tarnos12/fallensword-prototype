@@ -58,6 +58,7 @@ export const ALLOC_STATS = ['attack', 'defense', 'damage', 'armor', 'hp'];
 
 import { activeBuffs } from './techniques.js';
 import { cardBonuses } from './cards.js';
+import { meridianBonuses } from './meridians.js';
 
 export function effectiveStats(player, now = Date.now()) {
   const eff = {
@@ -81,7 +82,15 @@ export function effectiveStats(player, now = Date.now()) {
     if (stat === 'hp') eff.maxHp += val;
     else eff[stat] += val;
   }
-  // Technique buffs are percentage modifiers on the flat (gear+card) subtotal.
+  // Meridian talent tree — the fourth flat source (GDD §5): permanent passives
+  // opened one point per breakthrough.
+  const merStat = meridianBonuses(player);
+  for (const [stat, val] of Object.entries(merStat)) {
+    if (!val) continue;
+    if (stat === 'hp') eff.maxHp += val;
+    else eff[stat] += val;
+  }
+  // Technique buffs are percentage modifiers on the flat (gear+card+meridian) subtotal.
   for (const buff of activeBuffs(player, now)) {
     for (const [stat, pct] of Object.entries(buff.effect)) {
       const key = stat === 'hp' ? 'maxHp' : stat;

@@ -11,47 +11,47 @@
 
 ---
 
-## ▶ ACTIVE TASK — (queue empty — awaiting #1 refill)
+## ▶ ACTIVE TASK — S3 · Statistics / lifetime summary
 
-Both assigned tasks are done and in review (W → PR #21, T → PR #23). **@#1:
-requesting a refill** — no board row grabbed per the dispatch protocol.
+**#1 refill (2026-07-07):** great work on W + T — both merged (#21, #22... W=#21, T=#23 pending merge). New assignment below.
+
+- **Status:** `ASSIGNED` → set to `IN REVIEW — PR #NN` here when your PR is open.
+- **Branch:** `claude/lifetime-stats` (off latest `master`)
+- **Owned files (yours):** `js/stats.js` *(new)*, `css/stats.css` *(new — link in `<head>`)*
+- **Shared (edit minimally):** `js/game.js` (increment a few lifetime counters at
+  the existing kill/reward hooks — well-separated additive lines), `js/actors.js`
+  (`player.stats = {}` on `createPlayer`, lazily back-filled — no VERSION bump),
+  `index.html` `<head>` (css link) + a 📊 button (inject it from `stats.js` into
+  `#nav-menu` like `crafting.js` does, to avoid `index.html` body churn), `js/main.js` (init).
+- **Goal:** a read-only 📊 **Chronicle of Deeds** modal. Most values **derive** from
+  existing save data (bestiary kill totals, cards/codex %, spirit stones on hand);
+  add only a few genuine lifetime counters that can't be derived — fights
+  won/lost/drawn, total stones earned, ms played — incremented in `game.js`.
+- **Constraints:** self-contained like `crafting.js`/`meridians.js` — own button +
+  modal DOM, **no `ui.js`**. Own stylesheet, **not** appended to `style.css`.
+  `player.stats` additive + back-filled; no VERSION bump.
+- **Verify (cloud — no localhost link):** headless (counters increment on
+  kill/win/loss; derived totals match a known save) + real-Chromium (📊 opens,
+  numbers render, 0 console errors). Tell the author how to run locally in the PR.
+
+## ⏭ QUEUE (do next — no need to wait on #1)
+
+1. **R · World events / calendar** — branch `claude/world-events`. Owns
+   `js/events.js` (+ own css). A deterministic repeating wall-clock calendar of
+   global buffs ("double drops", "+50% XP", "cheap repairs") — derive the active
+   event from the clock (no persistence, like the Recently-Active feed). Shared:
+   `js/game.js` (one guarded multiplier line in the reward path), `js/main.js`/css
+   (a HUD banner showing the active event + time remaining). Nice synergy with your
+   stats panel (surface the active event there too if easy).
+
+*(When the queue empties, ping #1 for a refill — don't grab a board row yourself.)*
 
 ## ✅ COMPLETED THIS SESSION
 
-- **W · Combat feedback & "juice"** — **`IN REVIEW — PR #21`**, branch `claude/combat-juice`.
-- **T · Fight replay & share** — **`IN REVIEW — PR #23`**, branch `claude/fight-replay`.
-  Built off master and deliberately **touches no `ui.js`** (injects its own ⟳ Replay /
-  ⧉ Share-log controls into the combat panel's `.combat-buttons` from `replay.js`),
-  so it stacks cleanly on top of W with zero overlap in the playback code.
-
-## ▶ (prior W assignment, for reference)
-
-- **Status:** `IN REVIEW — PR #21` (branch `claude/combat-juice`, off latest master).
-- **Branch:** `claude/combat-juice` (off latest `master`)
-- **Owned files (yours):** `js/combatfx.js` *(new)*, `css/combatfx.css` *(new)*
-- **Shared (edit minimally):** `js/ui.js` — ONE hook in `playCombat` to emit an
-  fx event per turn; `index.html` `<head>` — add
-  `<link rel="stylesheet" href="css/combatfx.css">`.
-- **Goal:** make fights *feel* like fights. Floating damage / heal / crit numbers
-  over the struck actor, a hit-flash + subtle shake, HP bars that animate down
-  during playback, and a victory/defeat flourish on resolution.
-- **Constraints:** purely presentational — read the existing per-turn `turns[]`
-  data, mutate **no** game state. Gate motion behind `prefers-reduced-motion`
-  (the polish pass established that pattern). Own a new sheet — do **not** append
-  to `css/style.css`. Note the exact `playCombat` hook location in your Worker Log.
-- **Verify (cloud — no localhost link):** real-Chromium playback of a fight shows
-  numbers/flash/HP-tween, instant-combat mode still works, 0 console errors. Tell
-  the author how to run locally in the PR body.
-
-## ⏭ QUEUE (do these next, in order — no need to wait on #1)
-
-1. **T · Fight replay & share** — branch `claude/fight-replay`. Owns `js/replay.js`.
-   Shared: `js/ui.js` (a "Replay" button on the combat panel — same neighbourhood
-   as your W hook, which is why it's yours), `js/main.js`, a css link. The combat
-   result already carries the full `turns[]`; persist the last one, add replay +
-   an "export log" shareable string. Reuse your W fx layer for the replay.
-
-*(When the queue empties, ping #1 for a refill — don't grab a board row yourself.)*
+- **W · Combat feedback & "juice"** — **MERGED, PR #21**, branch `claude/combat-juice`.
+- **T · Fight replay & share** — **`IN REVIEW — PR #23`**, branch `claude/fight-replay`
+  (touches no `ui.js`; injects its own ⟳ Replay / ⧉ Share-log controls; stacks
+  cleanly on W). Awaiting #1 merge.
 
 ---
 

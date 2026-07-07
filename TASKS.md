@@ -81,7 +81,7 @@ meridians, **U** gems) all add an independent additive line in the same
 | F | **Third zone — Core Formation tier** — a new area gated behind FE9, 3 new creatures + their Spirit Cards + a portal. **Do after E** (then it's just new files). | `js/zones/<zone>.js` *(new, after E)* | `js/actors.js`/`js/cards.js`/`js/map.js` (if E not yet landed), `js/progression.js` (realm gate — coordinate w/ H) | `AVAILABLE` | — | — | — | — |
 | G | **Epic quest chain** (GDD §5) — one multi-step "epic quest" with a strong named (Epic/Legendary) reward, spanning existing zones. | `js/quests.js` (append the chain) | `js/items.js` (named reward item, additive) | `IN REVIEW` | pick-your-task-wakee5 | `claude/epic-quest-chain` | #14 | 2026-07-07 |
 | H | **Core Formation realm + advanced techniques** (GDD §9.1) — add the 3rd realm to the ladder + tier-3/4 techniques for it. | `js/techniques.js` (additions) | `js/progression.js` (`REALMS` + `STAGE_XP`) — coordinate w/ F | `AVAILABLE` | — | — | — | — |
-| I | **Second Legendary boss** (GDD §5) — a new calamity beast: own lair, cooldown, Epic/Legendary drop, boss Spirit Card. Consider refactoring `boss.js` into a small registry so bosses are data. | `js/boss.js` (→ registry) or `js/bosses/*.js` *(new)* | `js/cards.js`, `js/game.js`, `js/ui.js`, `css` | `AVAILABLE` | — | — | — | — |
+| I | **Second Legendary boss** (GDD §5) — a new calamity beast: own lair, cooldown, Epic/Legendary drop, boss Spirit Card. Consider refactoring `boss.js` into a small registry so bosses are data. | `js/boss.js` (→ registry) or `js/bosses/*.js` *(new)* | `js/cards.js`, `js/game.js`, `js/ui.js`, `css` | `CLAIMED` | choose-task-fxtfot | `claude/second-boss` | — | 2026-07-07 |
 | J | **Full balance pass + committed sim harness** (GDD §8.6) — commit a reusable headless balance-sim (`tools/`), then a full-range tuning pass (XP curve, drop rates, boss stats, market prices). Mostly **solo & late** — touches tuning constants across files. | `tools/balance.mjs` *(new)* | tuning constants in `progression.js`/`items.js`/`actors.js`/`boss.js` | `BLOCKED` | — | — | — | Do near the end, once most content (F–I) is in — otherwise you tune a moving target. |
 | K | **Itch.io packaging & store page** (GDD §5) — `docs/STORE.md` draft (description, feature list, screenshot checklist), proper `<title>`/meta/OG + favicon, a one-file build/zip note, a `LICENSE`. | `docs/` *(new)*, `LICENSE`, `README.md` | `index.html` `<head>` only | `AVAILABLE` | — | — | — | — |
 | L | **Accessibility & keyboard input** — arrow/WASD tile movement, number/Esc hotkeys for modals, `:focus-visible` audit, ARIA roles on map/modals. | `js/input.js` *(new)* | `js/main.js` (wire), `css/style.css`, light `index.html` (aria) | `AVAILABLE` | — | — | — | — |
@@ -185,6 +185,19 @@ Format: `- [YYYY-MM-DD · session <id>] <comment>`.
 - [initial] Add the 3rd realm to `progression.js` `REALMS` + extend `STAGE_XP` (keep the per-realm barrier-spike shape). Add tier-3/4 techniques in `techniques.js` gated to the new realm. Coordinate the realm index with task F's zone gate. Headless-verify the XP curve. GDD §9.1.
 
 ### Task I — Second Legendary boss
+- [2026-07-07 · session choose-task-fxtfot] Claimed (branch `claude/second-boss`).
+  I authored the original `boss.js` (task 1 / PR #9), so no coordination needed —
+  refactoring my own module. Plan: turn `boss.js`'s single `BOSS` const into a
+  small **`BOSSES` registry** (array/map of data) + make `maybeManifestBoss`/
+  `onBossDefeated`/`bossLairStatus`/`spawnBoss` iterate it (per-boss cooldown on
+  `player.boss` keyed by id — migrate the old single `{defeatedAt,defeats}` shape
+  forward). Add boss #2 as data (new lair in Cindervein, own cooldown, guaranteed
+  Epic/chance-Legendary drop) + its Spirit Card in `cards.js`. `game.js`/`ui.js`
+  touches stay in the boss regions I already wrote (manifest calls, lair marker,
+  boss tile row, `bossCodexEntry`, legendary banner) — generalized from one boss
+  to N. **Heads-up:** this touches `game.js`/`cards.js`/`ui.js` in the same boss
+  hunks as my held strip PR #13 and crafting #15 — all separate regions, but I'll
+  keep the boss changes localized. Headless-tune boss #2 like #1; verify Chromium.
 - [initial] Reuse everything the first boss did (Actor-shaped, `resolveCombat`, reward branch). Cleanest: refactor `boss.js` to hold a small `BOSSES` registry (data) + generic manifest/defeat logic, then add the 2nd boss as data + a card. Coordinate with whoever owns `boss.js`. New lair tile, own cooldown, Epic/Legendary drop + boss Spirit Card. GDD §5.
 
 ### Task J — Balance pass + sim harness

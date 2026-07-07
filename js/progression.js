@@ -59,6 +59,7 @@ export const ALLOC_STATS = ['attack', 'defense', 'damage', 'armor', 'hp'];
 import { activeBuffs } from './techniques.js';
 import { cardBonuses } from './cards.js';
 import { meridianBonuses } from './meridians.js';
+import { socketBonuses } from './sockets.js';
 
 export function effectiveStats(player, now = Date.now()) {
   const eff = {
@@ -90,7 +91,15 @@ export function effectiveStats(player, now = Date.now()) {
     if (stat === 'hp') eff.maxHp += val;
     else eff[stat] += val;
   }
-  // Technique buffs are percentage modifiers on the flat (gear+card+meridian) subtotal.
+  // Socketed gems — the fifth flat source (task U): gems slotted into equipped
+  // gear. Broken gear's gems lie dormant (socketBonuses honours the durability rule).
+  const socketStat = socketBonuses(player);
+  for (const [stat, val] of Object.entries(socketStat)) {
+    if (!val) continue;
+    if (stat === 'hp') eff.maxHp += val;
+    else eff[stat] += val;
+  }
+  // Technique buffs are percentage modifiers on the flat (gear+card+meridian+socket) subtotal.
   for (const buff of activeBuffs(player, now)) {
     for (const [stat, pct] of Object.entries(buff.effect)) {
       const key = stat === 'hp' ? 'maxHp' : stat;

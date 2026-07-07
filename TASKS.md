@@ -96,6 +96,19 @@ meridians, **U** gems) all add an independent additive line in the same
 | U | **Gem sockets / enchanting** — sockets on higher-rarity gear; slot gems (a dropped item type) for flat bonuses that flow through `effectiveStats`. | `js/sockets.js` *(new)* | `js/items.js` (`sockets` on templates + gem item type), `js/progression.js` (add gem bonuses in `effectiveStats`), `js/ui.js` (tooltip), `css` | `AVAILABLE` | — | — | — | — |
 | V | **Ascension / New Game+** — at max realm, reset progression for a permanent "ascension" multiplier (kept across resets). A prestige loop for replay. | `js/ascension.js` *(new)* | `js/game.js` (reset-with-keep flow), `js/progression.js` (apply the multiplier), `js/actors.js` (`player.ascension`), `index.html`/`css`/`main.js` | `AVAILABLE` | — | — | — | — |
 
+### UX / UX-overhaul batch (W–AB) — *the game needs heavy UX work; this is that push*
+
+**Parallel-safety rule for this batch (READ FIRST):** UX work naturally piles onto the two most-shared files — `css/style.css` and `js/ui.js`. To keep these runnable in parallel, **each UX task owns a NEW css file** (`css/<name>.css`) added via a `<link>` in `index.html`'s `<head>` — **do NOT append to `css/style.css`.** The only shared line is the one `<link>` you add (both-add, trivial). Touch `js/ui.js` only at a single, well-separated hook if unavoidable, and say where in your Notes. Load order matters: responsive/theme overrides link **after** the feature sheets. `AB` (nav/HUD structural redesign) is the one high-touch task — do it **solo & late**, after the others land.
+
+| # | Task | Owned files (yours to edit freely) | Shared files (edit minimally, expect to rebase) | Status | Owner | Branch | PR | Claimed |
+|---|---|---|---|---|---|---|---|---|
+| W | **Combat feedback & "juice"** — floating damage / heal / crit numbers, hit-flash + subtle shake on the struck actor, HP bars that animate down during playback, a victory/defeat flourish. Makes fights *feel* like fights. | `js/combatfx.js` *(new)*, `css/combatfx.css` *(new)* | `js/ui.js` (`playCombat` — one hook to emit an fx event per turn), `index.html` `<head>` (css link) | `AVAILABLE` | — | — | — | — |
+| X | **Unified toast / feedback system** — one queue-based toast (`toast(msg,type)`) for drops, breakthroughs, purchases, quest/bounty completion, and *errors* (right now most feedback is buried in the Chronicle log). A consistent, legible feedback language other modules call. | `js/toast.js` *(new)*, `css/toast.css` *(new)* | `js/main.js` (route a few key state changes through it), `index.html` `<head>`. **Coexist with / absorb** the existing achievements toast | `AVAILABLE` | — | — | — | — |
+| Y | **Item comparison tooltips + inventory UX** — hover an unequipped artifact → tooltip shows **stat deltas vs the equipped piece** (▲green / ▼red), rarity-tinted borders/glow, clear equipped/locked markers, tidier right-click actions. The single biggest gear-decision UX gap. | `js/itemcompare.js` *(new)*, `css/itemcompare.css` *(new)* | `js/ui.js` (tooltip render — one hook), `index.html` `<head>` | `AVAILABLE` | — | — | — | — |
+| Z | **Mobile / touch & responsive overhaul** — mobile-first pass: larger tap targets, a bottom nav dock on small screens, tap-to-move map, safe-area insets, zero horizontal overflow down to 320px. Build on the polish pass's breakpoints, don't fight them. | `css/responsive.css` *(new — link LAST so it overrides)* | light `index.html` (viewport meta + a dock container), `js/main.js` (optional dock wiring) | `AVAILABLE` | — | — | — | — |
+| AA | **Theme system (light/dark) + design-token refresh** — a persisted theme toggle in ⚙ Settings, a refined color/spacing/type token layer, consistent elevation & iconography. The polish pass seeded tokens (`--radius`, `--gold-soft`…); formalize them and add a light theme. | `js/theme.js` *(new)*, `css/theme.css` *(new token layer)* | `js/settings.js` (toggle control — coordinate w/ owner), `index.html` `<head>` | `AVAILABLE` | — | — | — | — |
+| AB | **Navigation & HUD redesign** *(high-touch — solo & late)* — replace the button-grid nav with a proper dock/menu and redesign the top HUD (Qi / HP / realm / spirit-stones as clear labelled meters, sticky action bar). Structural, so it touches shared markup — do it **after** W–AA land to minimize rebases. | `css/hud.css` *(new)* | `index.html` (HUD + nav structure), `js/ui.js` (`renderPlayerBar`), `js/main.js` | `AVAILABLE` | — | — | — | — |
+
 > **Parallelism note:** A–D, K, L each own a distinct new module → run concurrently. The shared-file neighbourhood (`index.html` button-panel + a pre-`</body>` overlay, a CSS section appended at EOF, a `main.js` import+init) is the same one every Stage-2 feature used — both-add merges, cheap rebase, integrator merges one PR at a time. E–I touch core data; sequence via their Notes (E→F; F & H coordinate on the realm/zone). J is last.
 
 ---
@@ -300,6 +313,24 @@ Format: `- [YYYY-MM-DD · session <id>] <comment>`.
 ### Task V — Ascension / New Game+
 - [initial] New `js/ascension.js`: at max realm, offer a prestige reset (wipe level/gear, keep cards/codex or convert to an "ascension" multiplier on `player.ascension`) applied in `progression.js`. A replay loop. Touches `game.js` reset flow — coordinate with the reset handler.
 
+### Task W — Combat feedback & "juice"
+- [initial] New `js/combatfx.js` + `css/combatfx.css` (link in `<head>`). The combat result already carries `turns[]` with per-turn damage; `ui.js` `playCombat` walks them. Add ONE hook there that calls into `combatfx` per turn to spawn a floating number over the struck actor, flash/shake it, and tween its HP bar; on resolution, a victory/defeat flourish. Keep it purely presentational (reads the turn data, mutates no state). Respect `prefers-reduced-motion` (the polish pass established that gate). Owns its css file — do **not** append to `style.css`.
+
+### Task X — Unified toast / feedback system
+- [initial] New `js/toast.js` (a small queue + `toast(message, type='info'|'success'|'warn'|'error')`) + `css/toast.css`. Today feedback is scattered: achievements pop a toast, everything else only writes to the Chronicle log — drops, breakthroughs, purchases, quest/bounty claims, and **errors** ("not enough spirit stones", "pack full") are easy to miss. Route the high-signal ones through toasts from `main.js`/the relevant wrappers. **Coordinate with the achievements toast** (in `achievements.js`) — either absorb it or match its visual language so there aren't two toast systems. No new save fields.
+
+### Task Y — Item comparison tooltips + inventory UX
+- [initial] New `js/itemcompare.js` + `css/itemcompare.css`. The biggest gear-decision gap: hovering an unequipped item should show its stats **as deltas vs the currently-equipped piece in that slot** (▲green up / ▼red down / grey neutral), so a player can tell an upgrade at a glance. Also: rarity-tinted slot borders/glow, a clear "equipped" marker, and tidier right-click actions. One hook into `ui.js`'s tooltip render (say exactly where in your claim note). Pure read of `effectiveStats`/equipped items — no state changes.
+
+### Task Z — Mobile / touch & responsive overhaul
+- [initial] New `css/responsive.css`, linked **last** in `<head>` so it can override feature sheets. Mobile-first pass: bigger tap targets, a bottom nav dock replacing the button grid on small screens, tap-to-move on the map (reuse `tryMove`; coordinate lightly with task L if it's claimed — both touch input), `env(safe-area-inset-*)`, and zero horizontal overflow at 320px. Build on the polish pass's ≤900/≤620px breakpoints rather than rewriting them.
+
+### Task AA — Theme system (light/dark) + design-token refresh
+- [initial] New `js/theme.js` (reads/writes a `fallen-immortal-theme` localStorage key — its own key, not the save schema; applies a `data-theme` attr on `<html>`) + `css/theme.css` (a formalized token layer + a light palette). The polish pass already seeded tokens (`--radius`, `--gold-soft`, `--ring`…) — promote those to the single source of truth and add a light theme that reskins via tokens only. Add the toggle to the ⚙ Settings modal (coordinate with `settings.js`'s owner; it's a low-touch modal). Default stays dark.
+
+### Task AB — Navigation & HUD redesign (high-touch — solo & late)
+- [initial] New `css/hud.css`. The one structural UX task: replace the `#nav-menu` button grid with a proper dock/menu, and redesign the top HUD so Qi / HP / realm / spirit-stones read as **labelled meters** (not just chips), with a sticky action bar. Because it restructures shared markup (`index.html` header/nav) and `ui.js` `renderPlayerBar`, run it **solo and after W–AA have merged** so it rebases cleanly. Keep all existing element ids that other modules bind (`#chk-instant`, `#btn-reset`, the feature buttons, badge spans) or migrate their bindings in the same PR.
+
 ---
 
 ## Claim protocol (the atomic part)
@@ -370,6 +401,7 @@ The claim board stops two sessions doing the *same* task. These rules stop their
 
 Optional but helpful — a one-line breadcrumb per session so the next one has context.
 
+- 2026-07-07 — session_01Sty (integrator) — added the **UX / UX-overhaul batch (W–AB)**: Combat juice (W), unified toasts (X), item-comparison tooltips (Y), mobile/touch overhaul (Z), theme system (AA), nav/HUD redesign (AB, solo & late). Parallel-safety rule for this batch: **each UX task owns a NEW `css/<name>.css`** linked in `<head>` instead of appending to `style.css`, so they don't collide on the two most-shared UX files (`style.css`/`ui.js`).
 - 2026-07-07 — session_01Sty (integrator) — merged PRs #14 (Epic quest, task G), #15 (Crafting & Forge, task A), #16 (Hunt bounties, task P). #16 rebased onto master (CLAUDE.md/css/main.js conflicts resolved keep-both), verified in real Chromium (bounty modal opens with 4 offers, accept works, 0 console errors). Tasks A/G/P → DONE. Strip-testing #13 still HELD until Stage 3 dev completes.
 - 2026-07-07 — pick-your-task-wakee5 — task O (Daily trials) IN REVIEW, PR #18.
 - 2026-07-07 — pick-your-task-wakee5 — claimed task O (Daily trials).

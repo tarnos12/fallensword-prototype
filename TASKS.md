@@ -113,7 +113,7 @@ meridians, **U** gems) all add an independent additive line in the same
 | K | **Itch.io packaging & store page** (GDD §5) — `docs/STORE.md` draft (description, feature list, screenshot checklist), proper `<title>`/meta/OG + favicon, a one-file build/zip note, a `LICENSE`. | `docs/` *(new)*, `LICENSE`, `README.md` | `index.html` `<head>` only | `AVAILABLE` | — | — | — | — |
 | L | **Accessibility & keyboard input** — arrow/WASD tile movement, number/Esc hotkeys for modals, `:focus-visible` audit, ARIA roles on map/modals. | `js/input.js` *(new)* | `js/main.js` (wire), `css/style.css`, light `index.html` (aria) | `AVAILABLE` | — | — | — | — |
 | M | **Salvage / materials** — right-click "salvage" breaks unwanted gear into crafting materials (feeds task A). Materials are a stackable item type on `player`. | `js/salvage.js` *(new)* | `js/items.js` (material item shape), `js/game.js` (salvage wrapper), `js/ui.js` (context-menu entry), `css` | `AVAILABLE` | — | — | — | — |
-| N | **Meridian talent tree** — a permanent passive point tree (earned per breakthrough, separate from stat points) that feeds `effectiveStats`. Own ☯ modal. | `js/meridians.js` *(new)* | `js/progression.js` (one add-line in `effectiveStats` + a points grant on breakthrough), `js/actors.js` (`player.meridians`), `css`/`main.js` (init) — **self-contained modal, no `index.html`/`ui.js`** | `CLAIMED` | choose-task-fxtfot | `claude/meridian-tree` | — | 2026-07-07 |
+| N | **Meridian talent tree** — a permanent passive point tree (earned per breakthrough, separate from stat points) that feeds `effectiveStats`. Own ☯ modal. | `js/meridians.js` *(new)* | `js/progression.js` (one `effectiveStats` add-line — **no `applyBreakthroughs` change**), `js/actors.js` (`player.meridians`), `css`/`main.js` (init) — **self-contained modal, no `index.html`/`ui.js`/`game.js`** | `IN REVIEW` | choose-task-fxtfot | `claude/meridian-tree` | #20 | 2026-07-07 |
 | O | **Daily trials** — a rotating (wall-clock daily) challenge encounter with bonus rewards; one attempt per reset. | `js/trials.js` *(new)* | `js/game.js` (spawn/reward hook), `js/actors.js` (`player.trials` timestamp), `index.html`/`css`/`main.js` | `DONE` | pick-your-task-wakee5 | `claude/daily-trials` | #18 | 2026-07-07 |
 | P | **Hunt bounties** — a bounty board: "slay N of creature X" for stone/XP rewards, refreshed on a timer. Reads the existing bestiary kill counts. | `js/bounties.js` *(new)* | `js/game.js` (claim hook), `js/actors.js` (`player.bounties`), `index.html`/`css`/`main.js` | `DONE` | pick-your-task-aj14ny | `claude/hunt-bounties` | #16 | 2026-07-06 |
 | Q | **Sect disciple missions** — send hired disciples (task S sect) on timed wall-clock missions that return spirit stones / materials. Extends the Sect. | `js/sectmissions.js` *(new)* | `js/game.js` (tick + claim), `js/guild.js` (read members — no edit), `index.html`/`css`/`main.js` | `AVAILABLE` | — | — | — | — |
@@ -275,6 +275,17 @@ Format: `- [YYYY-MM-DD · session <id>] <comment>`.
 - [initial] New `js/salvage.js` + a stackable "material" item type. Right-click a pack item → "Salvage" → destroys it for materials scaled by rarity/level. Feeds task A (Crafting) — coordinate the material shape with whoever owns A (leave a note). Shared: `items.js` (material item), `game.js` (wrapper), `ui.js` (context-menu entry).
 
 ### Task N — Meridian talent tree
+- [2026-07-07 · session choose-task-fxtfot] **IN REVIEW — PR #20 open.** Built as
+  designed, even leaner than the row: **points are DERIVED from level** (1 per
+  breakthrough = `level−1`), so **no `applyBreakthroughs` change and no `game.js`
+  touch** — existing saves get the right points automatically, no migration. `N`'s
+  only shared touches: `progression.js` (one flat `effectiveStats` add-line —
+  separate hunk from B/U), `actors.js` (`player.meridians = { nodes:{} }`),
+  `main.js` (import + `initMeridians`; allocate persists via `save.js` `saveGame`),
+  and a `css` section. Own ☯ button (in `#nav-menu`) + modal — no `index.html`,
+  no `ui.js`. 5 flat-stat nodes ranked to 5. Known minor: char-sheet tooltip lumps
+  the meridian bonus into "gear" (total correct; modal shows the breakdown) — left
+  as-is to avoid `ui.js`. Verified 17-check headless + 7-check real-Chromium (0 err).
 - [2026-07-07 · session choose-task-fxtfot] Claimed (branch `claude/meridian-tree`).
   Plan: `js/meridians.js` owns a small **node catalog** (flat stat nodes:
   attack/defense/damage/armor/hp, ranked) + `meridianBonuses(player)` → flat

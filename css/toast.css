@@ -1,0 +1,61 @@
+/* Unified toast / feedback system (task X). Own sheet — not appended to
+   style.css. Shares the achievements-toast visual language (panel card, coloured
+   left accent, slide/fade) but anchors top-centre so it never overlaps the
+   bottom-right achievement "unlock" toasts. Reuses the style.css design tokens
+   (--panel, --gold, --win, --loss, --dim, --qi) which are defined on :root. */
+
+#toast-host {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 130; /* above modals (80–90) and achievement toasts (120) */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  max-width: min(92vw, 420px);
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 14px;
+  background: var(--panel, #1d2029);
+  color: var(--text, #d6d3c8);
+  border: 1px solid var(--panel-edge, #2c3040);
+  border-left: 4px solid var(--dim, #8a8778);
+  border-radius: 6px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
+  font-size: 0.85rem;
+  line-height: 1.35;
+  opacity: 0;
+  transform: translateY(-12px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: auto; /* clickable to dismiss early */
+  cursor: pointer;
+}
+
+.toast.show { opacity: 1; transform: translateY(0); }
+
+.toast-icon { flex: 0 0 auto; font-size: 1rem; line-height: 1; }
+.toast-msg { flex: 1; min-width: 0; }
+
+/* Type accents — colour the left border + icon. */
+.toast-info    { border-left-color: var(--qi, #4fc3f7); }
+.toast-info    .toast-icon { color: var(--qi, #4fc3f7); }
+.toast-success { border-left-color: var(--win, #6fbf73); }
+.toast-success .toast-icon { color: var(--win, #6fbf73); }
+.toast-warn    { border-left-color: var(--draw, #b0a06a); }
+.toast-warn    .toast-icon { color: var(--draw, #b0a06a); }
+.toast-error   { border-left-color: var(--loss, #e57373); }
+.toast-error   .toast-icon { color: var(--loss, #e57373); }
+
+@media (prefers-reduced-motion: reduce) {
+  .toast { transition: opacity 0.2s ease; transform: none; }
+  .toast.show { transform: none; }
+}

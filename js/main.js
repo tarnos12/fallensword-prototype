@@ -67,6 +67,8 @@ import { initForge } from './crafting.js';
 import { initBounties, renderBounties, updateBountyBadge } from './bounties.js';
 import { initTrials, renderTrialBadge } from './trials.js';
 import { initMeridians, allocateMeridian } from './meridians.js';
+import { toast, initToasts } from './toast.js';
+import { stageName } from './progression.js';
 import { initDebug } from './debug.js'; // TESTING ONLY (strip before demo)
 
 const state = createGame();
@@ -175,12 +177,16 @@ function refreshLive() {
 function onTileClick(x, y) {
   if (inCombat) return;
   const res = tryMove(state, x, y);
-  if (!res.ok && res.reason.startsWith('Need')) addLog(state, res.reason);
+  if (!res.ok && res.reason.startsWith('Need')) {
+    addLog(state, res.reason);
+    toast(res.reason, 'warn'); // e.g. "Need 2 Qi to move there"
+  }
   renderAll();
 }
 
 function onAttack(monsterId) {
   if (inCombat) return;
+  const levelBefore = state.player.level;
   const result = attack(state, monsterId);
   if (!result) return;
   inCombat = true;
@@ -188,6 +194,18 @@ function onAttack(monsterId) {
   playCombat(state, result, () => {
     inCombat = false;
     renderAll();
+    // Surface the fight's high-signal rewards once the playback finishes.
+    const drop = result.rewards?.itemDrop;
+    if (drop) toast(`Loot: ${drop.name} (Lv ${drop.level})`, 'success');
+    const card = result.cardDrop;
+    if (card && (card.kind === 'new' || card.kind === 'upgrade')) {
+      toast(`Spirit Card ${card.kind === 'new' ? 'obtained' : 'refined'}: ${card.card.creatureName} (L${card.level})`, 'success');
+    } else if (card && card.kind === 'duplicate') {
+      toast(`Duplicate card → +${card.stones} spirit stones`, 'info');
+    }
+    if (state.player.level > levelBefore) {
+      toast(`Breakthrough! ${stageName(state.player.level)}`, 'success');
+    }
   });
 }
 
@@ -285,7 +303,12 @@ function initBackup() {
 initCombatSettings();
 initCodex(state);
 initPavilion(state, {
-  buy: (id) => { marketBuy(state, id); renderAll(); },
+  buy: (id) => {
+    const r = marketBuy(state, id);
+    renderAll();
+    if (r?.ok) toast(`Bought ${r.item.name} for ${r.price} ◆${r.toMailbox ? ' → mailbox' : ''}`, 'success');
+    else if (r?.reason) toast(r.reason, 'error'); // e.g. "Not enough spirit stones"
+  },
   list: (itemId, price) => { marketList(state, itemId, price); renderAll(); },
   cancel: (id) => { marketCancel(state, id); renderAll(); },
   collect: () => { marketCollect(state); renderAll(); },
@@ -310,8 +333,18 @@ initForge(state, {
   repair: (id) => { forgeRepair(state, id); renderAll(); },
 });
 initBounties(state, {
-  accept: (id) => { acceptBounty(state, id); renderBounties(state); renderAll(); },
-  claim: (id) => { claimBounty(state, id); renderBounties(state); renderAll(); },
+  accept: (id) => {
+    const r = acceptBounty(state, id);
+    renderBounties(state); renderAll();
+    if (r?.ok) toast(`Bounty accepted: slay ${r.bounty.target} ${r.bounty.name}`, 'info');
+    else if (r?.reason) toast(r.reason, 'error');
+  },
+  claim: (id) => {
+    const r = claimBounty(state, id);
+    renderBounties(state); renderAll();
+    if (r?.ok) toast(`Bounty claimed: +${r.reward.stones} ◆, +${r.reward.xp} XP`, 'success');
+    else if (r?.reason) toast(r.reason, 'error');
+  },
 });
 initTrials(state, {
   onAttempt: () => { const res = attemptDailyTrial(state); renderAll(); return res; },
@@ -322,6 +355,7 @@ initMeridians(state, {
     renderAll(); // effective stats now reflect the opened meridian
   },
 });
+initToasts(); // unified toast/feedback host (task X)
 initDebug(state, renderAll); // TESTING ONLY (strip before demo)
 renderAll();
 initTutorial(); // first-run onboarding overlay (+ ❔ Help button); after renderAll so targets exist

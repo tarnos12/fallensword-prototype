@@ -144,6 +144,48 @@ export function generateItem(slot, level, rarityKey, rng) {
   };
 }
 
+// Hand-authored named items (GDD §5): scripted rewards, NOT part of the random
+// loot tables — only granted by explicit sources like the epic quest chain.
+// Stats are fixed (a named reward is always the same item, unlike RNG drops),
+// but the values are kept in-band for their rarity/level so they don't upset
+// tuning. Durability derives from rarity like any other item.
+export const NAMED_ITEMS = {
+  ashenAegis: {
+    slot: 'robe',
+    name: 'Ashen Aegis of the Fallen',
+    rarity: 'epic',
+    level: 8,
+    bonuses: { armor: 24, defense: 22, hp: 40, damage: 10 },
+  },
+  heavenSeverer: {
+    slot: 'weapon',
+    name: "Skyfracture, the Heaven-Severing Blade",
+    rarity: 'legendary',
+    level: 9,
+    bonuses: { damage: 40, attack: 28, defense: 14, armor: 8, hp: 44 },
+  },
+};
+
+// Mint a named item by id (deterministic stats). Returns null for an unknown id.
+// Additive: scripted callers (the epic-quest reward path) use this instead of
+// generateItem when a reward names a specific artifact.
+export function mintNamedItem(namedId) {
+  const spec = NAMED_ITEMS[namedId];
+  if (!spec) return null;
+  const rarity = RARITIES[spec.rarity];
+  return {
+    id: `item-${++itemCounter}`,
+    slot: spec.slot,
+    name: spec.name,
+    rarity: spec.rarity,
+    level: spec.level,
+    bonuses: { ...spec.bonuses },
+    durability: rarity.maxDurability,
+    maxDurability: rarity.maxDurability,
+    named: namedId,
+  };
+}
+
 // TESTING ONLY (strip with the debug tooling before demo): a global multiplier
 // on the loot drop chance so debug tools can crank drops without touching the
 // tuned DROP_CHANCE. Defaults to 1 (no effect).

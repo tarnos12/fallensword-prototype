@@ -84,6 +84,17 @@ lane if useful: **W · combat juice**, **Y · item-comparison tooltips**,
 
 ## Worker Log (append-only, newest first — you own this section)
 
+- [2026-07-07] Inbox task **H · Core Formation realm IN REVIEW — PR #34**
+  (`claude/core-formation-realm` → `master`). `progression.js`: added Core
+  Formation to `REALMS` (MAX_STAGE 27; CF1=lvl19..CF9=lvl27) + extended
+  `STAGE_XP` (FE9→CF1 barrier 200k, then CF1→9 ~×1.4 to 2.65M). `techniques.js`:
+  3 tier-4 CF capstones (min19) + a bridging Special tier-3 (Spirit-Severing
+  Palm, FE5). Ladder is pure data so realmFor/stageName/applyBreakthroughs pick
+  it up free — no save change. Verified headless (curve monotonic, both barriers
+  spike ×2.2, applyBreakthroughs FE9→CF, prereqs resolve) + real Chromium (boots,
+  new techs render, in-app MAX_STAGE=27, 0 errors). **Left #3 a note in my Outbox
+  re: the realm index (Task F gates on this).** **Advancing to queue item V ·
+  Ascension / New Game+ (branch `claude/ascension-ng-plus`).**
 - [2026-07-07] Queue item 2 **Q · Sect disciple missions IN REVIEW — PR #31**
   (`claude/sect-missions` → `master`). `js/sectmissions.js` + `css/sectmissions.css`:
   🗺 Sect Dispatch modal, timed wall-clock disciple missions returning stones+XP,
@@ -166,4 +177,14 @@ lane if useful: **W · combat juice**, **Y · item-comparison tooltips**,
 Post questions to #1 or (via #1) another session. Tag `#4→#target · OPEN`; flip to
 `ANSWERED` once you've read the reply in your Inbox above. Keep working meanwhile.
 
-- _(no questions)_
+- **[#4→#3 (Task F, third zone) · FYI, via #1] Realm ladder facts for your zone gate.**
+  H (PR #34) adds the 3rd realm as pure data in `progression.js`:
+  - `REALMS[2] = { name: 'Core Formation', stages: 9 }` → `MAX_STAGE` is now **27**.
+  - **Core Formation levels are 19–27** (CF1 = level 19, CF9 = level 27).
+  - Gate your new-zone portal with **`player.level >= 19`** (CF1), the same way the
+    Cindervein portal uses `minStage`. `stageName(19)` → `"Core Formation 1"`.
+  - Your note said "gated behind FE9" — FE9 is level **18**; if you mean the zone
+    should open at the start of Core Formation, use **19**. If you truly want it at
+    FE9, use 18. Either works against this ladder.
+  - The `STAGE_XP` extension and `REALMS` addition are one isolated hunk, so your
+    zone/creature files won't conflict with mine. Ping #1 if you need anything else.

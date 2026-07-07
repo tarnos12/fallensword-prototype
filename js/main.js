@@ -44,6 +44,7 @@ import {
   startSectMission,
   tickSectMissions,
   collectSectMissions,
+  ascend,
 } from './game.js';
 import {
   renderPlayerBar,
@@ -73,6 +74,7 @@ import { initAchievements, updateAchievementBadge, showAchievementToasts } from 
 import { initForge } from './crafting.js';
 import { initBounties, renderBounties, updateBountyBadge } from './bounties.js';
 import { initSectMissions, renderSectMissions, updateSectMissionBadge } from './sectmissions.js';
+import { initAscension, renderAscension } from './ascension.js';
 import { initTrials, renderTrialBadge } from './trials.js';
 import { initAlchemy, renderPillBar } from './alchemy.js';
 import { initMeridians, allocateMeridian } from './meridians.js';
@@ -388,6 +390,14 @@ initSectMissions(state, {
     const r = collectSectMissions(state);
     renderSectMissions(state); renderAll();
     if (r?.count > 0) toast(`Collected ${r.count} disciple reward(s): +${r.stones} ◆, +${r.xp} XP`, 'success');
+  },
+});
+initAscension(state, {
+  ascend: () => {
+    const r = ascend(state);
+    renderAscension(state); renderAll();
+    if (r?.ok) toast(`✦ Ascension ${r.ascension} — permanent +${r.bonusPct}% to all stats!`, 'success');
+    else if (r?.reason) toast(r.reason, 'warn');
   },
 });
 initTrials(state, {

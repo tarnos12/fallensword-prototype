@@ -45,6 +45,7 @@ import { createMarketProvider, emptyMarket } from './market.js';
 import { createGuildProvider, guildBuffs } from './guild.js';
 import { createBountyProvider } from './bounties.js';
 import { createSectMissionProvider } from './sectmissions.js';
+import { performAscension, canAscend } from './ascension.js';
 import { saveLoadout, applyLoadout, deleteLoadout } from './loadouts.js';
 import { normalizeBossState, maybeManifestBoss, onBossDefeated, bossHints } from './boss.js';
 import { recordAchievements } from './achievements.js';
@@ -175,6 +176,26 @@ function grantTestingKit(state) {
 
 export function resetGame() {
   clearSave();
+}
+
+// Ascension / New Game+ (task V). A prestige reset that — unlike resetGame's
+// full wipe — keeps the player's collections and grants a permanent stat bonus.
+// The reset itself lives in ascension.js; here we own Qi (reset to the new cap)
+// plus logging and persistence.
+export function canAscendNow(state) {
+  return canAscend(state.player);
+}
+
+export function ascend(state) {
+  const res = performAscension(state.player);
+  if (res.ok) {
+    state.qi = maxQi(state.player);
+    addLog(state, `✦ You ascend! Ascension ${res.ascension} — a permanent +${res.bonusPct}% to all stats. The climb begins anew.`);
+    saveGame(state);
+  } else if (res.reason) {
+    addLog(state, res.reason);
+  }
+  return res;
 }
 
 // Achievements (GDD §6.5): a light idempotent "check & record" hook. Milestones

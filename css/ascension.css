@@ -1,0 +1,83 @@
+/* Ascension / New Game+ (task V). Own sheet — injected by ascension.js.
+   Reuses the shared design tokens (:root in style.css), so it themes for free. */
+
+.ascension-nav-btn { width: 100%; margin-top: 8px; color: var(--gold); border-color: var(--gold); }
+
+#ascension-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(8, 9, 13, 0.8);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  overflow-y: auto;
+}
+
+#ascension-panel {
+  background: var(--panel);
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 540px;
+  padding: 16px 20px 22px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+}
+
+#ascension-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--panel-edge);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+#ascension-header h2 { margin: 0; color: var(--gold); font-weight: normal; letter-spacing: 1px; }
+
+.asc-status {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--bg);
+  border: 1px solid var(--panel-edge);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+.asc-tier { font-size: 1.05rem; }
+.asc-tier strong { color: var(--gold); }
+.asc-bonus { font-size: 0.85rem; }
+.asc-bonus strong { color: var(--win); }
+
+.asc-intro { font-size: 0.85rem; color: var(--dim); line-height: 1.55; margin: 12px 0; }
+
+.asc-cols { display: flex; gap: 12px; flex-wrap: wrap; }
+.asc-col {
+  flex: 1 1 200px;
+  border: 1px solid var(--panel-edge);
+  border-radius: 6px;
+  padding: 8px 12px 10px;
+  background: var(--bg);
+}
+.asc-col h3 { margin: 4px 0 6px; font-size: 0.85rem; letter-spacing: 0.5px; font-weight: normal; }
+.asc-keep h3 { color: var(--win); }
+.asc-wipe h3 { color: var(--loss); }
+.asc-col ul { margin: 0; padding-left: 18px; font-size: 0.8rem; color: var(--text); }
+.asc-col li { padding: 2px 0; }
+.asc-keep strong { color: var(--win); }
+
+.asc-go {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  padding: 9px 12px;
+  font-size: 0.9rem;
+}
+.asc-go:not(:disabled) { color: var(--gold); border-color: var(--gold); }
+
+@media (max-width: 480px) {
+  .asc-cols { flex-direction: column; }
+}

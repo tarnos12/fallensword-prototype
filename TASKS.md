@@ -48,7 +48,7 @@ Task IDs are stable handles, not priority — go by the **Status** column. Featu
 | 2 | Onboarding / tutorial pass — first-run guided intro | `js/tutorial.js` *(new)* | `css/style.css` (tutorial section), `js/main.js` (init) | `DONE` | session_01Sty | `claude/onboarding-tutorial` | #5 | 2026-07-06 |
 | 3 | Profile & Rivals feed (GDD §6.5) — profile panel with active buffs, a "Rivals" list and a "Recently Active" feed, populated from the shared `personas.js` roster | `js/profile.js` *(new)* | `index.html` (button + modal), `css/style.css` (profile section), `js/main.js` (init), `js/ui.js` (optional) | `DONE` | pick-your-task-aj14ny | `claude/pick-your-task-aj14ny` | #8 | 2026-07-06 |
 | 4 | Save export / import (GDD §4.4) — export the save as a copy-paste string / file and import it back (back up without an account) | `js/save.js` (additive `exportSave`/`importSave`) | `index.html` (backup buttons), `css/style.css`, `js/main.js` (wiring) | `DONE` | pick-your-task-wakee5 | `claude/pick-your-task-wakee5` | #6 | 2026-07-06 |
-| 5 | Visual / UI polish pass | `css/style.css` | `index.html`, `js/ui.js` | `AVAILABLE` | — | — | — | Unblocked: all feature tasks (1–4, 7–9) are merged. Do it **solo** — a cross-cutting CSS/UI sweep. Whoever takes it, claim it so no feature work runs alongside. |
+| 5 | Visual / UI polish pass | `css/style.css` | `index.html`, `js/ui.js` | `CLAIMED` | choose-task-fxtfot | `claude/ui-polish` | — | 2026-07-06 |
 | 6 | Strip testing conveniences (pre-demo) | `js/debug.js` *(delete)* | `js/game.js`, `js/items.js`, `js/cards.js`, `js/main.js`, `index.html`, `css/style.css` | `BLOCKED` | — | — | — | Demo-prep only. Do **absolutely last** — after task 5 (polish) merges, since polish may want the debug tools. See CLAUDE.md "TESTING-ONLY". |
 | 7 | Combat Sets / loadouts (GDD §6.2) — save & swap named equipped-item sets (e.g. a leveling set vs a boss set) | `js/loadouts.js` *(new)* | `js/actors.js` (`player.loadouts`), `js/game.js` (save/apply wrappers), `js/main.js` (init + render call), `css/style.css` | `DONE` | session_01Sty | `claude/combat-sets` | #7 | 2026-07-06 |
 | 8 | Achievements / milestones — a panel tracking milestones (first breakthrough, N kills, first Epic, full codex, first sect hire…) with a toast on unlock | `js/achievements.js` *(new)* | `index.html` (button + modal), `css/style.css`, `js/main.js` (init), `js/game.js` (small record hooks) | `DONE` | pick-your-task-wakee5 | `claude/achievements-milestones` | #10 | 2026-07-06 |
@@ -164,6 +164,15 @@ should rebase around. Format: `- [YYYY-MM-DD · session <id>] <comment>`.
   GDD §4.4 / Stage 3 pulled forward — also handy for sharing test saves.
 
 ### Task 5 — Visual / UI polish
+- [2026-07-06 · session choose-task-fxtfot] Claimed (branch `claude/ui-polish`,
+  off the latest master with all features merged). Running the cross-cutting
+  polish sweep solo now that no feature work is in flight. Scope: primarily
+  `css/style.css` (design-token pass — spacing/typography/rarity/panel rhythm,
+  responsive layout, focus states, modal/banner consistency), light `index.html`
+  (structure/aria only, no logic), and touch-ups in `js/ui.js` render output if a
+  class hook is needed. Will NOT change game logic. Heads-up for Task 6 (strip):
+  I leave the TESTING-ONLY debug block + its styles alone — your checklist is
+  unaffected. Verified headless + real-Chromium DOM at the end.
 - [initial] Blocked on purpose. A `css/style.css` + `index.html` + `ui.js` sweep
   that overlaps everything; running it during feature work guarantees conflicts.
   Start only after tasks 1–4 are merged.

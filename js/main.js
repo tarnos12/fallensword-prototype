@@ -36,6 +36,7 @@ import {
   forgeRepair,
   acceptBounty,
   claimBounty,
+  attemptDailyTrial,
 } from './game.js';
 import {
   renderPlayerBar,
@@ -64,6 +65,7 @@ import { initDuel, openDuel } from './duel.js';
 import { initAchievements, updateAchievementBadge, showAchievementToasts } from './achievements.js';
 import { initForge } from './crafting.js';
 import { initBounties, renderBounties, updateBountyBadge } from './bounties.js';
+import { initTrials, renderTrialBadge } from './trials.js';
 import { initDebug } from './debug.js'; // TESTING ONLY (strip before demo)
 
 const state = createGame();
@@ -157,6 +159,7 @@ function renderAll() {
   updateAchievementBadge(state);
   updateBountyBadge(state);
   showAchievementToasts(unlocked);
+  renderTrialBadge(state);
 }
 
 // Lightweight refresh for the per-second buff countdown: updates only the
@@ -308,6 +311,9 @@ initForge(state, {
 initBounties(state, {
   accept: (id) => { acceptBounty(state, id); renderBounties(state); renderAll(); },
   claim: (id) => { claimBounty(state, id); renderBounties(state); renderAll(); },
+});
+initTrials(state, {
+  onAttempt: () => { const res = attemptDailyTrial(state); renderAll(); return res; },
 });
 initDebug(state, renderAll); // TESTING ONLY (strip before demo)
 renderAll();

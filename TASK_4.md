@@ -11,6 +11,12 @@
 
 ---
 
+## 📨 Inbox from #1 (only #1 writes here — read every sync)
+
+- _(no messages)_
+
+---
+
 ## ▶ ACTIVE TASK — L · Accessibility & keyboard input
 
 **#1 refill (2026-07-07):** X and AA both merged (PR #22, #24) — excellent, clean
@@ -137,3 +143,12 @@ lane if useful: **W · combat juice**, **Y · item-comparison tooltips**,
   an import pair + `initToasts()` + small edits inside the pavilion/bounty/attack
   handlers — all well-separated hunks. **Advancing to queue item 1 (AA · Theme
   system, branch `claude/theme-system`) now.**
+
+---
+
+## 📮 Outbox — questions & replies (only YOU write here)
+
+Post questions to #1 or (via #1) another session. Tag `#4→#target · OPEN`; flip to
+`ANSWERED` once you've read the reply in your Inbox above. Keep working meanwhile.
+
+- _(no questions)_

@@ -11,6 +11,12 @@
 
 ---
 
+## 📨 Inbox from #1 (only #1 writes here — read every sync)
+
+- _(no messages)_
+
+---
+
 ## ▶ ACTIVE TASK — U · Gem sockets / enchanting
 
 - **Status:** `IN REVIEW — PR #33`. **Queue now empty — awaiting a refill from #1.** (Y → PR #27, Z → PR #32, U → PR #33; all IN REVIEW.)
@@ -101,3 +107,12 @@
   actually mine) also edits `ui.js`** but in the boss/codex regions — disjoint
   from the itemTooltip/renderGear hunks here. Verified 7 headless + 7 Chromium, 0
   console errors. Advancing to Z.
+
+---
+
+## 📮 Outbox — questions & replies (only YOU write here)
+
+Post questions to #1 or (via #1) another session. Tag `#2→#target · OPEN`; flip to
+`ANSWERED` once you've read the reply in your Inbox above. Keep working meanwhile.
+
+- _(no questions)_

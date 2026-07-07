@@ -11,6 +11,12 @@
 
 ---
 
+## 📨 Inbox from #1 (only #1 writes here — read every sync)
+
+- _(no messages)_
+
+---
+
 ## ▶ ACTIVE TASK — (queue empty — awaiting #1 refill)
 
 All queued tasks are in review: **S3 → PR #26**, **R → PR #28**, **C → PR #30**.
@@ -137,3 +143,12 @@ All queued tasks are in review: **S3 → PR #26**, **R → PR #28**, **C → PR 
   victory flourish; instant mode = no arena but resolves; 0 console errors.
   **Next up: T (Fight replay & share)** — reuses this fx layer; the combat panel
   `ui.js` neighbourhood is mine, so no cross-session collision.
+
+---
+
+## 📮 Outbox — questions & replies (only YOU write here)
+
+Post questions to #1 or (via #1) another session. Tag `#3→#target · OPEN`; flip to
+`ANSWERED` once you've read the reply in your Inbox above. Keep working meanwhile.
+
+- _(no questions)_

@@ -49,6 +49,39 @@ assigned, current state). The **Task Notes** section is the human layer — free
 cross-session comments: why a choice was made, what's half-done, a shared-file
 edit to watch for, a dependency.
 
+## 📨 Messaging / Q&A between sessions
+
+Sessions can ask each other (or #1) questions **without breaking the one-writer
+rule** — nobody writes a shared file, so there is still no push-race. Every
+`TASK_<n>.md` has two mail sections:
+
+- **`## 📨 Inbox from #1`** (top of the file) — **only #1 writes here.** Answers,
+  clarifications, and directives to that worker land here. Workers **read** it
+  every sync.
+- **`## 📮 Outbox — questions & replies`** (bottom of the file) — **only that
+  worker writes here.** Post a question addressed to whoever should answer.
+
+**Routing is a star through #1 (the hub).** You only ever write *your own* file, so:
+
+| To ask… | Do this | Answer arrives… |
+|---|---|---|
+| **#1 a question** | append to *your* Outbox: `- [YYYY-MM-DD · #3→#1 · OPEN] Q: …` | in *your* `Inbox from #1` |
+| **another worker** (e.g. #2) a question | append to *your* Outbox addressed `#3→#2` | #1 relays it into #2's Inbox; #2 answers via its Outbox; #1 relays back |
+
+**#1's loop:** on each sync, read every worker's Outbox. Answer `#→1` items by
+writing into that worker's Inbox and marking the Outbox item `ANSWERED` (— wait,
+#1 can't edit a worker's Outbox; instead #1 just writes the answer to the Inbox
+and the worker flips its own Outbox item to `ANSWERED` when it reads the reply).
+For `#a→#b` items, copy the question into #b's Inbox tagged `(relayed from #a)`.
+
+**Latency:** this is **pull, not push** — a worker sees new Inbox mail only on its
+next `git fetch origin coordination`. Fine for design questions. If something is
+**truly blocking** and a session is idle, #1 can wake it out-of-band via the
+`claude-code-remote` scheduling tools (a real push); reserve that for blockers.
+
+**Etiquette:** keep it short, always tag `#from→#to` + a status (`OPEN`/
+`ANSWERED`), and don't block on a non-blocking question — note it and keep working.
+
 ---
 
 ## Status legend

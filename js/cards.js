@@ -31,6 +31,9 @@ export const CARDS = {
   // roll; it's held here so the codex/collection totals and cardForCreature stay
   // uniform with every other card.
   card_ancientTerror: { id: 'card_ancientTerror', creatureId: 'ancientTerror', creatureName: 'Xuanming, the Ancient Terror', bonusType: 'damage', perLevel: 3, maxLevel: 5, dropChance: 0.5 },
+  // Second boss card — the Ember Calamity (js/boss.js). A potent +3 Attack/level
+  // (complements the Ancient Terror's +Damage), same boss-roll drop shape.
+  card_emberCalamity: { id: 'card_emberCalamity', creatureId: 'emberCalamity', creatureName: 'Zhulong, the Ember Calamity', bonusType: 'attack', perLevel: 3, maxLevel: 5, dropChance: 0.5 },
 };
 
 const BY_CREATURE = {};

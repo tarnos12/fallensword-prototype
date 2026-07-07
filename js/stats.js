@@ -9,10 +9,12 @@
 // into #nav-menu), its own modal DOM, and its own stylesheet. Never touches ui.js
 // and never mutates game state.
 
-import { stageName, realmFor, MAX_STAGE } from './progression.js';
+import { stageName, realmFor, MAX_STAGE, ASCENSION_STAT_PER_TIER } from './progression.js';
 import { CREATURE_TYPES } from './actors.js';
 import { CARDS, ownedCardCount } from './cards.js';
 import { achievementProgress } from './achievements.js';
+import { setBonuses } from './sets.js';
+import { MERIDIAN_LIST } from './meridians.js';
 
 const TOTAL_CREATURES = Object.keys(CREATURE_TYPES).length;
 const TOTAL_CARDS = Object.keys(CARDS).length;
@@ -27,6 +29,45 @@ function speciesFaced(p) {
 }
 function pct(n, d) {
   return d > 0 ? Math.round((n / d) * 100) : 0;
+}
+
+// --- Stage-3 system derivations (all pure reads over confirmed fields) ---
+
+// Ascension tier — prestige count on player.ascension (ascension.js writes it).
+function ascensionTier(p) {
+  return p.ascension ?? 0;
+}
+// Meridian nodes opened (rank >= 1) — player.meridians.nodes[id] = rank (meridians.js).
+function meridiansOpened(p) {
+  return Object.values(p.meridians?.nodes ?? {}).filter((r) => (r || 0) >= 1).length;
+}
+// Total meridian ranks spent across all nodes.
+function meridianRankTotal(p) {
+  return Object.values(p.meridians?.nodes ?? {}).reduce((a, b) => a + (b || 0), 0);
+}
+// Gems slotted into equipped gear — item.sockets[] holds gem objects (sockets.js).
+function gemsSocketed(p) {
+  let n = 0;
+  for (const item of Object.values(p.equipment ?? {})) {
+    if (item && Array.isArray(item.sockets)) n += item.sockets.filter(Boolean).length;
+  }
+  return n;
+}
+// Whether a full gear set is worn — setBonuses() returns all-zero when none (sets.js).
+function setActive(p) {
+  return Object.values(setBonuses(p)).some((v) => v > 0);
+}
+// Alchemy pills held — player.consumables = { pillId: qty } (alchemy.js / game.js).
+function pillsHeld(p) {
+  return Object.values(p.consumables ?? {}).reduce((a, b) => a + (b || 0), 0);
+}
+// Active hunt bounties — player.bounties is a bare array (bounties.js).
+function activeBounties(p) {
+  return Array.isArray(p.bounties) ? p.bounties.length : 0;
+}
+// Sect disciples afield — player.sectMissions.active[] (sectmissions.js).
+function activeSectMissions(p) {
+  return (p.sectMissions?.active ?? []).length;
 }
 
 function formatDuration(ms) {
@@ -49,6 +90,7 @@ export function statsSummary(state) {
   const resolved = won + lost;
   const { realm, sub } = realmFor(p.level);
   const ach = achievementProgress(p);
+  const asc = ascensionTier(p);
 
   return [
     {
@@ -71,6 +113,7 @@ export function statsSummary(state) {
         ['Draws (unresolved)', `${drawn}`],
         ['Win rate', resolved > 0 ? `${pct(won, resolved)}%` : '—'],
         ['Artifacts looted', `${st.itemsLooted || 0}`],
+        ['Active hunt bounties', `${activeBounties(p)}`],
       ],
     },
     {
@@ -87,6 +130,18 @@ export function statsSummary(state) {
         ['Spirit stones on hand', `${p.spiritStones || 0}`],
         ['Spirit stones won in battle', `${st.stonesWon || 0}`],
         ['Sect disciples', `${(p.guild?.members ?? []).length}`],
+        ['Disciples on missions', `${activeSectMissions(p)}`],
+        ['Alchemy pills in pouch', `${pillsHeld(p)}`],
+      ],
+    },
+    {
+      title: 'Ascension & Mastery',
+      rows: [
+        ['Ascension tier', asc > 0 ? `${asc} (+${Math.round(asc * ASCENSION_STAT_PER_TIER * 100)}% stats)` : '0'],
+        ['Meridians opened', `${meridiansOpened(p)} / ${MERIDIAN_LIST.length}`],
+        ['Meridian ranks channelled', `${meridianRankTotal(p)}`],
+        ['Gems socketed', `${gemsSocketed(p)}`],
+        ['Gear set bonus', setActive(p) ? 'Active' : 'Inactive'],
       ],
     },
     {

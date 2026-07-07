@@ -15,6 +15,7 @@
 // which keeps this a genuinely low-conflict, additive feature.
 
 import { initThemeControl } from './theme.js';
+import { initAudioControl } from './audio.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -23,6 +24,7 @@ export function initSettings() {
   if (!overlay) return;
 
   initThemeControl(); // Appearance section: light/dark theme toggle (task AA)
+  initAudioControl(); // Sound section: mute + volume for the SFX layer
 
   const open = () => overlay.classList.remove('hidden');
   const close = () => overlay.classList.add('hidden');

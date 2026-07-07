@@ -13,12 +13,16 @@
 // transient action feedback (top-centre) never overlap. Styles live in their own
 // sheet (css/toast.css), not appended to style.css. No save fields.
 
+import { sfx } from './audio.js';
+
 const MAX_VISIBLE = 3;   // cap concurrent toasts; the rest queue and pump in
 const DURATION_MS = 3500; // auto-dismiss after this long on screen
 const EXIT_MS = 320;      // must match the css transition duration
 
 const TYPES = new Set(['info', 'success', 'warn', 'error']);
 const ICONS = { info: 'ℹ', success: '✓', warn: '⚠', error: '✕' };
+// Toast type → audio cue (js/audio.js). One-directional: toast → audio.
+const SFX = { success: 'reward', warn: 'deny', error: 'deny', info: 'info' };
 
 const pending = []; // queued {message, type} not yet shown
 const live = [];    // on-screen { node, timer }
@@ -54,6 +58,7 @@ function pump() {
 
 function render(item) {
   ensureHost();
+  sfx(SFX[item.type]); // audio feedback (no-op if muted / unknown / no audio)
   const node = document.createElement('div');
   node.className = `toast toast-${item.type}`;
   node.setAttribute('role', item.type === 'error' || item.type === 'warn' ? 'alert' : 'status');

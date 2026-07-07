@@ -1,0 +1,29 @@
+/* Sound / SFX feedback layer (js/audio.js). Styles for the "Sound" section that
+   js/audio.js self-injects into the ⚙ Settings modal only. The section reuses the
+   existing .settings-section / .instant-toggle / .settings-hint classes from
+   style.css (like theme.js's Appearance section); this sheet only styles the one
+   new control the theme toggle doesn't have — the volume slider row. Loaded after
+   style.css so its tokens (var(--…)) are available; theme-aware for free. */
+
+.audio-volume-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.audio-volume-row input[type="range"] {
+  flex: 1;
+  min-width: 0;
+  height: 4px;
+  cursor: pointer;
+  accent-color: var(--gold);
+}
+
+/* When muted, the disabled slider reads as inactive. */
+.audio-volume-row input[type="range"]:disabled {
+  cursor: default;
+  opacity: 0.45;
+}

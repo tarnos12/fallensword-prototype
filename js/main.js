@@ -70,6 +70,7 @@ import { initMeridians, allocateMeridian } from './meridians.js';
 import { toast, initToasts } from './toast.js';
 import { stageName } from './progression.js';
 import { recordFight, initReplay, getLastFight, setReplayVisible } from './replay.js';
+import { initInput } from './input.js';
 import { initDebug } from './debug.js'; // TESTING ONLY (strip before demo)
 
 const state = createGame();
@@ -376,6 +377,9 @@ initDebug(state, renderAll); // TESTING ONLY (strip before demo)
 renderAll();
 initTutorial(); // first-run onboarding overlay (+ ❔ Help button); after renderAll so targets exist
 initSettings(); // ⚙ settings modal — after initTutorial so its "replay tutorial" can reach ❔ Help
+// Keyboard & accessibility (task L). Last, so every modal (incl. runtime-injected
+// ones + the tutorial overlay) exists for the ARIA pass. Movement reuses onTileClick.
+initInput({ move: (dx, dy) => onTileClick(state.pos.x + dx, state.pos.y + dy) });
 
 // Wall-clock Qi regen + passive spirit-stone income + technique-buff tick
 // (once per second).

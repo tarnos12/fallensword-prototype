@@ -13,7 +13,7 @@
 
 ## ▶ ACTIVE TASK — W · Combat feedback & "juice"
 
-- **Status:** `ASSIGNED` → set to `IN REVIEW — PR #NN` here when your PR is open.
+- **Status:** `IN REVIEW — PR #21` (branch `claude/combat-juice`, off latest master).
 - **Branch:** `claude/combat-juice` (off latest `master`)
 - **Owned files (yours):** `js/combatfx.js` *(new)*, `css/combatfx.css` *(new)*
 - **Shared (edit minimally):** `js/ui.js` — ONE hook in `playCombat` to emit an
@@ -44,4 +44,19 @@
 
 ## Worker Log (append-only, newest first — you own this section)
 
-- _(add entries as you work: `- [YYYY-MM-DD] <what/why/where the ui.js hook is>`)_
+- [2026-07-07] W done → **PR #21**, `claude/combat-juice`. New `js/combatfx.js`
+  + `css/combatfx.css` (own sheet, linked in `<head>` after style.css — did NOT
+  append to style.css). **Exact `ui.js` hooks in `playCombat`** (for the T
+  session / rebasers): (1) `beginFx(result, isInstant())` immediately after the
+  `$('combat-title').textContent = ...` line; (2) `turnFx(result.turns[i])`
+  inside `showNext`, right after `log.insertAdjacentHTML('beforeend', lines[i])`
+  and before `i++`; (3) `endFx(result)` inside `finish()`, right after
+  `close.classList.remove('hidden')`. Plus the import at the top of ui.js:
+  `import { beginFx, turnFx, endFx } from './combatfx.js';`. All presentational —
+  reads `result.turns[]`/`result.monster` only, mutates no state; player start-HP
+  derived from turn 1. Instant mode builds no arena; motion gated behind
+  `prefers-reduced-motion`. Verified real Chromium: fight shows floating
+  dmg/crit/miss numbers (observed 3 floats: 2 crit, 1 miss), HP-bar tween to 0%,
+  victory flourish; instant mode = no arena but resolves; 0 console errors.
+  **Next up: T (Fight replay & share)** — reuses this fx layer; the combat panel
+  `ui.js` neighbourhood is mine, so no cross-session collision.

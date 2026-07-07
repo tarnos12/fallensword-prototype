@@ -64,6 +64,7 @@ import { activeBuffs } from './techniques.js';
 import { cardBonuses } from './cards.js';
 import { meridianBonuses } from './meridians.js';
 import { socketBonuses } from './sockets.js';
+import { setBonuses } from './sets.js';
 
 export function effectiveStats(player, now = Date.now()) {
   const eff = {
@@ -103,7 +104,16 @@ export function effectiveStats(player, now = Date.now()) {
     if (stat === 'hp') eff.maxHp += val;
     else eff[stat] += val;
   }
-  // Technique buffs are percentage modifiers on the flat (gear+card+meridian+socket) subtotal.
+  // Gear set bonuses — the sixth flat source (task B): a completed weapon+robe set
+  // grants a bonus on top of the pieces. Honours the broken-gear rule (a broken
+  // piece doesn't count toward its set).
+  const setStat = setBonuses(player);
+  for (const [stat, val] of Object.entries(setStat)) {
+    if (!val) continue;
+    if (stat === 'hp') eff.maxHp += val;
+    else eff[stat] += val;
+  }
+  // Technique buffs are percentage modifiers on the flat (gear+card+meridian+socket+set) subtotal.
   for (const buff of activeBuffs(player, now)) {
     for (const [stat, pct] of Object.entries(buff.effect)) {
       const key = stat === 'hp' ? 'maxHp' : stat;

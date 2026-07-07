@@ -45,17 +45,17 @@ const TEMPLATES = {
     rare: [
       { name: 'Thunder-Etched Blade', attrs: [['damage', 1, 3], ['attack', 1, 2], ['armor', 1, 1], ['hp', 2, 4], ['defense', 1, 2]] },
       { name: 'Moonshadow Spear', attrs: [['attack', 1, 3], ['damage', 1, 2], ['hp', 2, 4], ['defense', 1, 1], ['armor', 1, 1]] },
-      { name: 'Cloudpiercer Jian', attrs: [['damage', 1, 2], ['attack', 1, 3], ['defense', 1, 2], ['armor', 1, 1], ['hp', 2, 4]] },
+      { name: 'Cloudpiercer Jian', setId: 'skydancer', attrs: [['damage', 1, 2], ['attack', 1, 3], ['defense', 1, 2], ['armor', 1, 1], ['hp', 2, 4]] },
       { name: 'Beast-Bone Glaive', attrs: [['attack', 1, 2], ['damage', 1, 2], ['defense', 1, 2], ['hp', 2, 4], ['armor', 1, 1]] },
     ],
     epic: [
       { name: 'Dragonvein Sabre', attrs: [['damage', 1, 3], ['attack', 1, 2], ['armor', 1, 1], ['hp', 2, 4], ['defense', 1, 2]] },
-      { name: 'Phoenix-Feather Spear', attrs: [['attack', 1, 3], ['damage', 1, 2], ['hp', 2, 4], ['defense', 1, 1], ['armor', 1, 1]] },
+      { name: 'Phoenix-Feather Spear', setId: 'phoenix', attrs: [['attack', 1, 3], ['damage', 1, 2], ['hp', 2, 4], ['defense', 1, 1], ['armor', 1, 1]] },
       { name: 'Starfall Jian', attrs: [['damage', 1, 2], ['attack', 1, 3], ['defense', 1, 2], ['armor', 1, 1], ['hp', 2, 4]] },
       { name: 'Demon-Subduing Halberd', attrs: [['attack', 1, 2], ['damage', 1, 2], ['defense', 1, 2], ['hp', 2, 4], ['armor', 1, 1]] },
     ],
     legendary: [
-      { name: 'Nine Calamities Sabre', attrs: [['damage', 1, 3], ['attack', 1, 2], ['armor', 1, 1], ['hp', 2, 4], ['defense', 1, 2]] },
+      { name: 'Nine Calamities Sabre', setId: 'nineHeavens', attrs: [['damage', 1, 3], ['attack', 1, 2], ['armor', 1, 1], ['hp', 2, 4], ['defense', 1, 2]] },
       { name: 'Sundering Heavens Spear', attrs: [['attack', 1, 3], ['damage', 1, 2], ['hp', 2, 4], ['defense', 1, 1], ['armor', 1, 1]] },
       { name: 'Immortal-Slaying Jian', attrs: [['damage', 1, 2], ['attack', 1, 3], ['defense', 1, 2], ['armor', 1, 1], ['hp', 2, 4]] },
     ],
@@ -79,16 +79,16 @@ const TEMPLATES = {
     ],
     rare: [
       { name: 'Spirit-Silk Raiment', attrs: [['defense', 1, 3], ['armor', 1, 2], ['hp', 2, 5], ['attack', 1, 1], ['damage', 1, 1]] },
-      { name: 'Crane-Feather Cloak', attrs: [['hp', 3, 6], ['defense', 1, 2], ['armor', 1, 1], ['attack', 1, 1], ['damage', 1, 1]] },
+      { name: 'Crane-Feather Cloak', setId: 'skydancer', attrs: [['hp', 3, 6], ['defense', 1, 2], ['armor', 1, 1], ['attack', 1, 1], ['damage', 1, 1]] },
       { name: 'Jade-Thread Robe', attrs: [['armor', 1, 2], ['hp', 2, 5], ['defense', 1, 2], ['damage', 1, 1], ['attack', 1, 1]] },
     ],
     epic: [
       { name: 'Qilin-Scale Vestment', attrs: [['armor', 1, 2], ['hp', 2, 5], ['defense', 1, 2], ['damage', 1, 1], ['attack', 1, 1]] },
-      { name: 'Phoenix-Down Robe', attrs: [['defense', 1, 3], ['armor', 1, 2], ['hp', 2, 5], ['attack', 1, 1], ['damage', 1, 1]] },
+      { name: 'Phoenix-Down Robe', setId: 'phoenix', attrs: [['defense', 1, 3], ['armor', 1, 2], ['hp', 2, 5], ['attack', 1, 1], ['damage', 1, 1]] },
       { name: 'Black Tortoise Mantle', attrs: [['hp', 3, 6], ['defense', 1, 2], ['armor', 1, 1], ['attack', 1, 1], ['damage', 1, 1]] },
     ],
     legendary: [
-      { name: 'Nine-Heavens Cloud Mantle', attrs: [['defense', 1, 3], ['armor', 1, 2], ['hp', 2, 5], ['attack', 1, 1], ['damage', 1, 1]] },
+      { name: 'Nine-Heavens Cloud Mantle', setId: 'nineHeavens', attrs: [['defense', 1, 3], ['armor', 1, 2], ['hp', 2, 5], ['attack', 1, 1], ['damage', 1, 1]] },
       { name: 'Dragon-Scale Imperial Robe', attrs: [['armor', 1, 2], ['hp', 2, 5], ['defense', 1, 2], ['damage', 1, 1], ['attack', 1, 1]] },
     ],
     mythic: [
@@ -149,6 +149,7 @@ export function generateItem(slot, level, rarityKey, rng) {
     durability: rarity.maxDurability,
     maxDurability: rarity.maxDurability,
     ...(socketN ? { sockets: new Array(socketN).fill(null) } : {}),
+    ...(template.setId ? { setId: template.setId } : {}), // gear set membership (task B)
   };
 }
 

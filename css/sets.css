@@ -1,0 +1,15 @@
+/* Gear set bonuses (board task B) — item-tooltip set block. Own sheet; the rows
+   are appended by ui.js's itemTooltip via sets.js `setLine`. style.css untouched. */
+
+.tt-line.set-head {
+  margin-top: 5px;
+  color: var(--gold);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.tt-line.set-member { padding-left: 4px; font-size: 0.82rem; color: var(--dim); }
+.tt-line.set-member.on { color: var(--text, #d6d3c8); }
+
+.tt-line.set-bonus { padding-left: 4px; font-size: 0.82rem; }
+.tt-line.set-bonus.active { color: var(--win, #6fbf73); font-weight: 600; }

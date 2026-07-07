@@ -17,6 +17,7 @@ import { BOSS_LIST, bossAtLair, bossLairStatus } from './boss.js';
 import { beginFx, turnFx, endFx } from './combatfx.js';
 import { compareRows, setCompareContext } from './itemcompare.js'; // task Y: hover deltas
 import { isGem, gemIcon, gemStatText, socketLine } from './sockets.js'; // task U: gems + sockets
+import { setLine, setSetsContext } from './sets.js'; // task B: gear set progress in tooltip
 
 const $ = (id) => document.getElementById(id);
 
@@ -344,6 +345,7 @@ function itemTooltip(item, hint) {
     <div class="tt-line dim">Lv ${item.level} ${item.slot} · ${RARITIES[item.rarity].label}</div>
     ${stats}${dur}
     ${socketLine(item)}
+    ${setLine(item)}
     ${compareRows(item)}
     <div class="tt-hint">${hint}</div>`;
 }
@@ -387,6 +389,7 @@ function makeItemSlot(item, { label, onClick, onMenu, tooltipHint }) {
 export function renderGear(state, { onEquip, onUnequip, onSell, onDestroy, atGate }) {
   const p = state.player;
   setCompareContext(p); // task Y: give itemcompare the live equipment to diff against
+  setSetsContext(p); // task B: give sets the live equipment for tooltip progress
   const slots = $('equipment-slots');
   slots.innerHTML = '';
   for (const slot of ['weapon', 'robe']) {

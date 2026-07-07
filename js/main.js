@@ -76,6 +76,8 @@ import { initSectMissions, renderSectMissions, updateSectMissionBadge } from './
 import { initTrials, renderTrialBadge } from './trials.js';
 import { initAlchemy, renderPillBar } from './alchemy.js';
 import { initMeridians, allocateMeridian } from './meridians.js';
+import { initSockets, slotGem, unslotGem } from './sockets.js';
+import { INVENTORY_SIZE } from './items.js';
 import { toast, initToasts } from './toast.js';
 import { stageName } from './progression.js';
 import { recordFight, initReplay, getLastFight, setReplayVisible } from './replay.js';
@@ -399,6 +401,18 @@ initMeridians(state, {
   allocate: (id) => {
     if (allocateMeridian(state.player, id).ok) saveGame(state);
     renderAll(); // effective stats now reflect the opened meridian
+  },
+});
+initSockets(state, {
+  slot: (itemId, i, gemId) => {
+    const r = slotGem(state.player, itemId, i, gemId);
+    if (r.ok) { saveGame(state); renderAll(); toast(`Socketed ${r.gem.name}.`, 'success'); }
+    else if (r.reason) toast(r.reason, 'error');
+  },
+  unslot: (itemId, i) => {
+    const r = unslotGem(state.player, itemId, i, INVENTORY_SIZE);
+    if (r.ok) { saveGame(state); renderAll(); toast(`Removed ${r.gem.name}.`); }
+    else if (r.reason) toast(r.reason, 'error');
   },
 });
 initToasts(); // unified toast/feedback host (task X)

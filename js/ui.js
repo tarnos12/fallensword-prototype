@@ -16,6 +16,7 @@ import { TECHNIQUES, CATEGORIES, get as getTech, isLearned, canLearn, canCast, a
 import { BOSS_LIST, bossAtLair, bossLairStatus } from './boss.js';
 import { beginFx, turnFx, endFx } from './combatfx.js';
 import { compareRows, setCompareContext } from './itemcompare.js'; // task Y: hover deltas
+import { isGem, gemIcon, gemStatText, socketLine } from './sockets.js'; // task U: gems + sockets
 
 const $ = (id) => document.getElementById(id);
 
@@ -324,6 +325,14 @@ export function renderCharSheet(state, onAllocate) {
 const SLOT_ICONS = { weapon: '⚔️', robe: '👘' };
 
 function itemTooltip(item, hint) {
+  // Gems (task U) are their own item kind — no slot/durability/compare; show the
+  // single flat bonus they grant when socketed.
+  if (isGem(item)) {
+    return `<div class="tt-name rarity-${item.rarity}">${gemIcon(item)} ${item.name}</div>
+      <div class="tt-line dim">Lv ${item.level} gem · ${RARITIES[item.rarity].label}</div>
+      <div class="tt-line">${gemStatText(item)} when socketed</div>
+      <div class="tt-hint">${hint}</div>`;
+  }
   const stats = Object.entries(item.bonuses)
     .map(([s, v]) => `<div class="tt-line">+${v} ${STAT_LABELS[s] ?? s}</div>`)
     .join('');
@@ -334,6 +343,7 @@ function itemTooltip(item, hint) {
   return `<div class="tt-name rarity-${item.rarity}">${item.name}</div>
     <div class="tt-line dim">Lv ${item.level} ${item.slot} · ${RARITIES[item.rarity].label}</div>
     ${stats}${dur}
+    ${socketLine(item)}
     ${compareRows(item)}
     <div class="tt-hint">${hint}</div>`;
 }
@@ -344,10 +354,16 @@ function makeItemSlot(item, { label, onClick, onMenu, tooltipHint }) {
   el.className = 'item-slot';
   if (item) {
     el.classList.add(`icon-${item.rarity}`);
-    const pct = Math.round((item.durability / item.maxDurability) * 100);
-    const durClass = item.durability <= 0 ? 'broken' : pct < 25 ? 'low' : '';
-    el.innerHTML = `<span class="item-icon">${SLOT_ICONS[item.slot]}</span>
-      <span class="dur-bar"><span class="dur-fill ${durClass}" style="width:${Math.max(4, pct)}%"></span></span>`;
+    if (isGem(item)) {
+      // Gems (task U): no slot glyph / durability bar — just the gem icon.
+      el.classList.add('is-gem');
+      el.innerHTML = `<span class="item-icon">${gemIcon(item)}</span>`;
+    } else {
+      const pct = Math.round((item.durability / item.maxDurability) * 100);
+      const durClass = item.durability <= 0 ? 'broken' : pct < 25 ? 'low' : '';
+      el.innerHTML = `<span class="item-icon">${SLOT_ICONS[item.slot]}</span>
+        <span class="dur-bar"><span class="dur-fill ${durClass}" style="width:${Math.max(4, pct)}%"></span></span>`;
+    }
     attachTooltip(el, () => itemTooltip(item, tooltipHint));
     el.addEventListener('click', () => {
       hideTip();
@@ -390,6 +406,28 @@ export function renderGear(state, { onEquip, onUnequip, onSell, onDestroy, atGat
     const item = p.inventory[i];
     if (!item) {
       inv.appendChild(makeItemSlot(null, {}));
+      continue;
+    }
+    if (isGem(item)) {
+      // Gems (task U) don't equip — they socket into gear via the 💎 Jewelcraft
+      // modal (sockets.js). Click is a no-op; right-click still sells/destroys.
+      inv.appendChild(
+        makeItemSlot(item, {
+          tooltipHint: atGate ? 'Socket in 💎 Jewelcraft · Right-click: sell / destroy' : 'Socket in 💎 Jewelcraft · Right-click: destroy (sell at Sect Gate)',
+          onClick: () => {},
+          onMenu: (e) =>
+            openMenu(e, [
+              { label: `Sell for ${sellValue(item)} ◆`, disabled: !atGate, onClick: () => onSell(item.id) },
+              {
+                label: 'Destroy',
+                danger: true,
+                onClick: () => {
+                  if (confirm(`Destroy ${item.name}? This is permanent.`)) onDestroy(item.id);
+                },
+              },
+            ]),
+        })
+      );
       continue;
     }
     inv.appendChild(

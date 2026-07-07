@@ -47,6 +47,7 @@ import { createBountyProvider } from './bounties.js';
 import { saveLoadout, applyLoadout, deleteLoadout } from './loadouts.js';
 import { BOSS, emptyBossState, maybeManifestBoss, onBossDefeated } from './boss.js';
 import { recordAchievements } from './achievements.js';
+import * as Trials from './trials.js';
 import { saveGame, loadGame, clearSave } from './save.js';
 
 // --- Qi (stamina) tuning. Prototype regen is fast so playtesting isn't
@@ -104,6 +105,7 @@ export function createGame() {
   if (!state.player.loadouts) state.player.loadouts = [];
   if (!state.player.boss) state.player.boss = emptyBossState();
   if (!state.player.achievements) state.player.achievements = [];
+  if (!state.player.trials) state.player.trials = { lastDay: -1, plays: 0, wins: 0 };
   if (state.lastStoneTick == null) state.lastStoneTick = Date.now();
   if (!state.market) state.market = emptyMarket();
   state.offlineStones = 0;
@@ -177,6 +179,52 @@ export function checkAchievements(state) {
     saveGame(state);
   }
   return fresh;
+}
+
+// Daily Trial (GDD §5): resolve today's one-attempt challenge. The foe is
+// authored in trials.js (deterministic per UTC day + level); the fight goes
+// through the shared pure resolveCombat, so it's the same math as any bout —
+// only the reward path differs. A win pays bonus stones/XP (+ a chance at gear);
+// a loss/draw costs nothing. Costs no Qi — it's a daily ritual, not a wilds fight.
+export function attemptDailyTrial(state) {
+  const p = state.player;
+  if (!p.trials) p.trials = { lastDay: -1, plays: 0, wins: 0 };
+  if (Trials.attemptedToday(p)) return { ok: false, reason: "You have already faced today's trial." };
+
+  const { foe, reward } = Trials.todaysTrial(p);
+  const me = playerCombatActor(p);
+  const result = resolveCombat(me, foe, randomSeed());
+
+  p.trials.lastDay = Trials.dayNumber();
+  p.trials.plays += 1;
+
+  const out = { ok: true, outcome: result.outcome, foe, result, reward: null };
+  if (result.outcome === 'win') {
+    p.trials.wins += 1;
+    p.spiritStones += reward.stones;
+    grantXp(state, reward.xp);
+    const granted = { stones: reward.stones, xp: reward.xp, item: null };
+    // Gear reward: rolled at claim, capped like any drop; skipped if the pack is full.
+    if (reward.itemChance && state.worldRng() < reward.itemChance) {
+      const slot = state.worldRng() < 0.5 ? 'weapon' : 'robe';
+      const item = generateItem(slot, p.level, null, state.worldRng);
+      if (p.inventory.length < INVENTORY_SIZE) {
+        p.inventory.push(item);
+        granted.item = item;
+      }
+    }
+    out.reward = granted;
+    addLog(
+      state,
+      `Daily Trial won against ${foe.name}: +${reward.stones} stones, +${reward.xp} XP${granted.item ? `, looted ${granted.item.name}` : ''}.`
+    );
+  } else if (result.outcome === 'loss') {
+    addLog(state, `Daily Trial: ${foe.name} bested you. No penalty — return tomorrow.`);
+  } else {
+    addLog(state, `Daily Trial against ${foe.name} ended in a draw. Return tomorrow.`);
+  }
+  saveGame(state);
+  return out;
 }
 
 export function currentTile(state) {

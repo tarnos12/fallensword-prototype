@@ -1793,3 +1793,116 @@ button[title="Close"]:hover:not(:disabled) {
   .duel-matchup { grid-template-columns: 1fr; }
   .duel-vs { padding: 2px 0; }
 }
+
+/* --- Daily Trials (GDD §5) --- */
+
+.trials-btn { width: 100%; color: var(--gold); border-color: var(--gold); }
+
+#trials-badge.trial-ready { color: var(--win); }
+
+#trials-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(8, 9, 13, 0.78);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  overflow-y: auto;
+}
+
+#trials-panel {
+  background: var(--panel);
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 520px;
+  padding: 16px 20px 22px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+}
+
+#trials-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--panel-edge);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+#trials-header h2 { margin: 0; color: var(--gold); font-weight: normal; letter-spacing: 1px; }
+
+#btn-close-trials { padding: 2px 10px; }
+
+.trial-intro { font-size: 0.82rem; color: var(--dim); line-height: 1.6; margin: 0 0 14px; }
+
+.trial-foe {
+  border: 1px solid var(--panel-edge);
+  border-left: 3px solid var(--gold);
+  border-radius: 6px;
+  background: var(--bg);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+
+.trial-foe.trial-lesser { border-left-color: #7bc67e; }
+.trial-foe.trial-even { border-left-color: var(--gold); }
+.trial-foe.trial-greater { border-left-color: var(--loss); }
+
+.trial-foe-head { margin-bottom: 10px; }
+
+.trial-tier {
+  display: inline-block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gold);
+  border: 1px solid var(--panel-edge);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-right: 8px;
+}
+
+.trial-foe-name { font-weight: bold; font-size: 1rem; }
+
+.trial-foe-title { display: block; font-size: 0.78rem; color: var(--dim); font-style: italic; margin-top: 3px; }
+
+.trial-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.trial-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 5px 4px;
+  border: 1px solid var(--panel-edge);
+  border-radius: 5px;
+  font-size: 0.7rem;
+  color: var(--dim);
+}
+
+.trial-stat b { color: var(--text); font-size: 0.95rem; }
+
+.trial-reward { font-size: 0.82rem; color: var(--text); }
+
+.trial-reward b { color: var(--gold); }
+
+.trial-attempt-btn {
+  width: 100%;
+  color: var(--loss);
+  border-color: var(--loss);
+  padding: 8px;
+  font-size: 0.95rem;
+  letter-spacing: 1px;
+}
+
+.trial-attempt-btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
+
+.trial-note { font-size: 0.78rem; color: var(--dim); margin: 10px 0 0; text-align: center; }

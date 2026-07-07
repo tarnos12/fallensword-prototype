@@ -83,6 +83,7 @@
         <button id="btn-achievements" type="button" class="achievements-btn" title="Achievements — cultivation milestones">🏆 Achievements <span id="achievements-badge" class="dim"></span></button>
         <button id="btn-bounties" type="button" class="bounties-btn" title="Hunt Bounties — slay beasts for bonus rewards">🏹 Hunt Bounties <span id="bounty-claim-count" class="mail-badge hidden"></span></button>
         <button id="btn-settings" type="button" class="settings-btn" title="Settings — display preferences, tutorial & save">⚙ Settings</button>
+        <button id="btn-trials" type="button" class="trials-btn" title="Daily Trial — a rotating challenge, one attempt per day">🗓 Daily Trial <span id="trials-badge" class="dim"></span></button>
       </div>
 
       <div class="panel-box">
@@ -248,6 +249,17 @@
         <button id="btn-close-duel" type="button" title="Close">✕</button>
       </div>
       <div id="duel-body"></div>
+    </div>
+  </div>
+
+  <div id="trials-overlay" class="hidden">
+    <div id="trials-panel">
+      <div id="trials-header">
+        <h2>Daily Trial</h2>
+        <button id="btn-close-trials" type="button" title="Close">✕</button>
+      </div>
+      <p class="trial-intro">A rotating challenger appears each day, scaled to your cultivation. One attempt per day — win for bonus spirit stones and insight. Losing costs nothing.</p>
+      <div id="trials-body"></div>
     </div>
   </div>
 

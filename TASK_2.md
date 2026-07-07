@@ -33,30 +33,34 @@
 
 ---
 
-## ▶ ACTIVE TASK — U · Gem sockets / enchanting
+## ▶ ACTIVE TASK — AB · Navigation & HUD redesign
 
-- **Status:** `IN REVIEW — PR #33`. **Queue now empty — awaiting a refill from #1.** (Y → PR #27, Z → PR #32, U → PR #33; all IN REVIEW.)
-- **Branch:** `claude/gem-sockets` (off latest `master`)
-- **Owned files (yours):** `js/sockets.js` *(new)*, `css/sockets.css` *(new)*
-- **Shared (edit minimally):** `js/items.js` (`sockets` on templates + a gem item
-  type), `js/progression.js` (**one add-line** in `effectiveStats`, kept a separate
-  hunk like the merged meridians/cards sources), `js/ui.js` (show sockets/gems in
-  the item tooltip — **same tooltip region as Task Y**, kept in this session),
-  `index.html` `<head>` (add `<link rel="stylesheet" href="css/sockets.css">`).
-- **Goal:** higher-rarity gear rolls `sockets`; slotting a dropped "gem" item adds
-  flat stats via one `effectiveStats` add-line. Sockets/gems shown in the item
-  tooltip; slot/unslot via the right-click menu.
-- **Constraints:** keep the `effectiveStats` add-line a separate hunk (coordinate
-  ordering only if Task B/sets is also in flight). Own a new css sheet — do **not**
-  append to `style.css`. Note the exact `ui.js` hook location in the Worker Log.
-- **Verify (cloud — no localhost link):** headless (socketed gem → correct flat
-  stat delta through `effectiveStats`; save round-trips gem state) + real-Chromium
-  DOM check (tooltip shows sockets, 0 console errors). Tell the author how to run
-  locally in the PR body.
+- **Status:** `IN PROGRESS` — refill received & acknowledged (Y#27/Z#32/U#33 all merged). Starting AB.
+- **Branch:** `claude/nav-hud-redesign` (off latest `master`)
+- **Owned files (yours):** `css/hud.css` *(new)*
+- **Shared (edit carefully — this is the one structural task):** `index.html` (HUD +
+  `#nav-menu` structure), `js/ui.js` (`renderPlayerBar`), `js/main.js`.
+- **Goal:** replace the button-grid nav with a proper dock/menu; redesign the top HUD
+  so Qi / HP / realm / spirit-stones read as **labelled meters** with a sticky action
+  bar. **Reconcile with my `css/responsive.css` bottom-dock (Z) in the same PR.**
+- **Constraints:** keep every element id other modules bind (`#chk-instant`,
+  `#btn-reset`, all `#btn-*` feature buttons + badge spans, `#nav-menu`) — or migrate
+  those bindings here. Own a new sheet (`css/hud.css`); don't append to `style.css`.
+  Note the exact `renderPlayerBar` + markup changes in the Worker Log for #1's rebase.
+- **Verify (cloud — no localhost link):** real-Chromium DOM sweep — every `#btn-*`
+  still present & wired, meters render & update (Qi/HP/XP after a move/fight), nav
+  dock works desktop + mobile (reconciled with responsive.css), all modals still open,
+  0 console errors. Tell the author how to run locally in the PR body.
 
 ## ⏭ QUEUE (do these next, in order — no need to wait on #1)
 
-*(Empty — after U lands, ping #1 for a refill; don't grab a board row yourself.)*
+1. **B · Gear set bonuses** — branch `claude/gear-sets`. Owns `js/sets.js` (+ own css).
+   Shared: `js/items.js` (`setId` on a few templates), `js/progression.js` (ONE add-line
+   in `effectiveStats` — the reserved set-bonus hook, a separate hunk like the merged
+   cards/meridians/sockets sources), `js/ui.js` (tooltip shows set progress — **same
+   tooltip region I already own from Y/U**). Verify the flat source feeds `effectiveStats`.
+
+*(When the queue empties, ping #1 for a refill — don't grab a board row yourself.)*
 
 <!-- previous queue item U promoted to ACTIVE above; original text kept for #1's reference:
    **U · Gem sockets / enchanting** — branch `claude/gem-sockets`. Owns
@@ -75,6 +79,10 @@
 
 ## Worker Log (append-only, newest first — you own this section)
 
+- [2026-07-07] **Refill acknowledged** — Y#27/Z#32/U#33 all merged by #1. Taking
+  **AB · Navigation & HUD redesign** as ACTIVE (branch `claude/nav-hud-redesign`);
+  **B · Gear set bonuses** queued next. AB is the structural one — reconciling the
+  new nav with my own `css/responsive.css` bottom-dock (Z) in the same PR.
 - [2026-07-07] **U done → PR #33.** New `js/sockets.js` + `css/sockets.css`
   (owned; **`style.css` untouched**). Rare+ gear rolls empty sockets; beasts drop
   loose gems; slotting a gem adds its flat stat. `sockets.js` owns the gem system

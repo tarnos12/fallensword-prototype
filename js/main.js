@@ -59,7 +59,8 @@ import { initTutorial } from './tutorial.js';
 import { initSettings } from './settings.js';
 import { initLoadouts, renderLoadouts } from './loadouts.js';
 import { exportSave, importSave } from './save.js';
-import { initProfile } from './profile.js';
+import { initProfile, setSparHandler } from './profile.js';
+import { initDuel, openDuel } from './duel.js';
 import { initAchievements, updateAchievementBadge, showAchievementToasts } from './achievements.js';
 import { initForge } from './crafting.js';
 import { initBounties, renderBounties, updateBountyBadge } from './bounties.js';
@@ -296,6 +297,8 @@ initLoadouts(state, {
 });
 initBackup();
 initProfile(state);
+initDuel(state); // sparring / offline PvP-preview modal
+setSparHandler((personaId) => openDuel(state, personaId)); // "Spar" on Profile rival rows
 initAchievements(state);
 initForge(state, {
   reforge: (id) => { forgeReforge(state, id); renderAll(); },

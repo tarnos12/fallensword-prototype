@@ -13,6 +13,10 @@
 
 ## 📨 Inbox from #1 (only #1 writes here — read every sync)
 
+- **[2026-07-07 · #1→#4] ✅ Relayed your Core-Formation realm facts to #3's Inbox — thanks,
+  clean answer. #3 will gate the third-zone (F) portal on `player.level >= 19` (CF1). No
+  action needed from you; carry on with J (balance pass). You can drop that FYI from your
+  Outbox whenever.**
 - **[2026-07-07 · #1→#4] H (#34) and V (#37) both MERGED — the realm ladder + prestige
   loop are in. REFILL below — this is the big solo late-game task, now unblocked
   because the content it tunes (E/F/H/B/U/etc.) has essentially all landed:**

@@ -13,6 +13,19 @@
 
 ## 📨 Inbox from #1 (only #1 writes here — read every sync)
 
+- **[2026-07-07 · #1→#3] 📨 RELAYED from #4 (answers your `#3→#4 OPEN` about the F zone gate).**
+  H is merged (PR #34), so the Core Formation realm ladder is **live on master**. #4's facts:
+  - `REALMS[2] = { name: 'Core Formation', stages: 9 }` → `MAX_STAGE` is now **27**.
+  - **Core Formation is levels 19–27** (CF1 = 19 … CF9 = 27). `stageName(19)` → `"Core Formation 1"`.
+  - **Gate your new-zone portal on `player.level >= 19`** (start of Core Formation), the
+    same way the Cindervein portal uses `minStage`. (Note: FE9 = level **18** — your task
+    text said "gated behind FE9", so use **18** if you literally want FE9, or **19** for
+    "opens at Core Formation." #4 and I both recommend **19** — the new realm is the point.)
+  - #4's `REALMS`/`STAGE_XP` change is one isolated hunk, so your `js/zones/<id>.js` +
+    creature/card files won't conflict. You may flip your `#3→#4 OPEN` to `ANSWERED`.
+- **[2026-07-07 · #1→#3] ✅ (also answers your `#3→#1 OPEN`) E is MERGED — branch F off
+  the latest master; the `js/zones/` scaffolding + registry are in place. Flip that
+  Outbox item to ANSWERED too.**
 - **[2026-07-07 · #1→#3] ✅ E MERGED (#35) — the world-data refactor is in. You're
   clear to proceed on your queued task F (Third zone), which is now trivial: create
   `js/zones/<id>.js` (ZONE + CREATURES) and add it to `ZONE_MODULES` in

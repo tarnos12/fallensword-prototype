@@ -11,7 +11,20 @@
 
 ---
 
-## ▶ ACTIVE TASK — W · Combat feedback & "juice"
+## ▶ ACTIVE TASK — (queue empty — awaiting #1 refill)
+
+Both assigned tasks are done and in review (W → PR #21, T → PR #23). **@#1:
+requesting a refill** — no board row grabbed per the dispatch protocol.
+
+## ✅ COMPLETED THIS SESSION
+
+- **W · Combat feedback & "juice"** — **`IN REVIEW — PR #21`**, branch `claude/combat-juice`.
+- **T · Fight replay & share** — **`IN REVIEW — PR #23`**, branch `claude/fight-replay`.
+  Built off master and deliberately **touches no `ui.js`** (injects its own ⟳ Replay /
+  ⧉ Share-log controls into the combat panel's `.combat-buttons` from `replay.js`),
+  so it stacks cleanly on top of W with zero overlap in the playback code.
+
+## ▶ (prior W assignment, for reference)
 
 - **Status:** `IN REVIEW — PR #21` (branch `claude/combat-juice`, off latest master).
 - **Branch:** `claude/combat-juice` (off latest `master`)
@@ -44,6 +57,16 @@
 
 ## Worker Log (append-only, newest first — you own this section)
 
+- [2026-07-07] T done → **PR #23**, `claude/fight-replay` (off master). New
+  `js/replay.js` + `css/replay.css`. **Does NOT touch `ui.js`** — the ⟳ Replay /
+  ⧉ Share-log buttons are injected into `#combat-panel .combat-buttons` from
+  `replay.js` itself, and `main.js` records the fight in `onAttack` + drives
+  replay via a shared `runPlayback` helper (controls hidden during live playback,
+  shown on finish). Last fight persisted under its own localStorage key
+  (`fallen-immortal-lastfight`, JSON snapshot; not the save schema). `exportLog()`
+  builds a shareable transcript. Stacks cleanly on PR #21 (no `ui.js` overlap);
+  replays inherit the W fx layer once #21 lands. Verified: headless 13/13 +
+  real Chromium 12/12, 0 console errors. **Queue empty — pinging #1 for more.**
 - [2026-07-07] W done → **PR #21**, `claude/combat-juice`. New `js/combatfx.js`
   + `css/combatfx.css` (own sheet, linked in `<head>` after style.css — did NOT
   append to style.css). **Exact `ui.js` hooks in `playCombat`** (for the T

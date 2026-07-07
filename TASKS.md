@@ -49,7 +49,7 @@ Task IDs are stable handles, not priority — go by the **Status** column. Featu
 | 3 | Profile & Rivals feed (GDD §6.5) — profile panel with active buffs, a "Rivals" list and a "Recently Active" feed, populated from the shared `personas.js` roster | `js/profile.js` *(new)* | `index.html` (button + modal), `css/style.css` (profile section), `js/main.js` (init), `js/ui.js` (optional) | `DONE` | pick-your-task-aj14ny | `claude/pick-your-task-aj14ny` | #8 | 2026-07-06 |
 | 4 | Save export / import (GDD §4.4) — export the save as a copy-paste string / file and import it back (back up without an account) | `js/save.js` (additive `exportSave`/`importSave`) | `index.html` (backup buttons), `css/style.css`, `js/main.js` (wiring) | `DONE` | pick-your-task-wakee5 | `claude/pick-your-task-wakee5` | #6 | 2026-07-06 |
 | 5 | Visual / UI polish pass | `css/style.css` | `index.html` (no `js/ui.js` touch) | `DONE` | choose-task-fxtfot | `claude/ui-polish` | #12 | 2026-07-06 |
-| 6 | Strip testing conveniences (pre-demo) | `js/debug.js` *(delete)* | `js/game.js`, `js/items.js`, `js/cards.js`, `js/main.js`, `index.html`, `css/style.css` | `CLAIMED` | choose-task-fxtfot | `claude/strip-testing` | — | 2026-07-06 |
+| 6 | Strip testing conveniences (pre-demo) | `js/debug.js` *(deleted)* | `js/game.js`, `js/items.js`, `js/cards.js`, `js/main.js`, `css/style.css` (no `index.html` touch) | `IN REVIEW` | choose-task-fxtfot | `claude/strip-testing` | #13 | 2026-07-06 |
 | 7 | Combat Sets / loadouts (GDD §6.2) — save & swap named equipped-item sets (e.g. a leveling set vs a boss set) | `js/loadouts.js` *(new)* | `js/actors.js` (`player.loadouts`), `js/game.js` (save/apply wrappers), `js/main.js` (init + render call), `css/style.css` | `DONE` | session_01Sty | `claude/combat-sets` | #7 | 2026-07-06 |
 | 8 | Achievements / milestones — a panel tracking milestones (first breakthrough, N kills, first Epic, full codex, first sect hire…) with a toast on unlock | `js/achievements.js` *(new)* | `index.html` (button + modal), `css/style.css`, `js/main.js` (init), `js/game.js` (small record hooks) | `DONE` | pick-your-task-wakee5 | `claude/achievements-milestones` | #10 | 2026-07-06 |
 | 9 | Settings / preferences modal — consolidate display prefs (instant combat, replay tutorial, reset save) into one ⚙ panel | `js/settings.js` *(new)* | `index.html` (button + modal), `css/style.css`, `js/main.js` (init), `js/ui.js` (relocate the instant-combat toggle) | `DONE` | pick-your-task-aj14ny | `claude/settings-modal` | #11 | 2026-07-06 |
@@ -188,6 +188,16 @@ should rebase around. Format: `- [YYYY-MM-DD · session <id>] <comment>`.
   Start only after tasks 1–4 are merged.
 
 ### Task 6 — Strip testing conveniences
+- [2026-07-06 · session choose-task-fxtfot] **IN REVIEW — PR #13 open** into
+  `master` (rebased onto the polish merge b41a682, so it stacks cleanly on #12).
+  Net +12/−388 across 7 files. Deleted `js/debug.js`; removed the debug block +
+  `applyGodStats` from `game.js`, `grantTestingKit`/quartermaster kit, the
+  drop-rate multipliers from `items.js`/`cards.js`, and the debug-panel CSS.
+  Real starting values: `MAX_QI` 500→120, `INVENTORY_SIZE` 24→12. **No
+  `index.html` touch** (debug.js self-built its DOM). Nothing marked
+  `TESTING ONLY` remains. Verified headless + real-Chromium (0 errors, real fight
+  resolves; polish intact). **This is the last Stage 2 task — once #13 merges,
+  Stage 2 (Demo) is content-complete.** Left for the author to merge.
 - [2026-07-06 · session choose-task-fxtfot] Claimed (branch `claude/strip-testing`,
   off master AFTER task 5 polish merged — PR #12 is in). This is the final Stage 2
   task; all features + polish are on master. Executing the CLAUDE.md

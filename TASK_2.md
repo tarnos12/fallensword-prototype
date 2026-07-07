@@ -33,34 +33,26 @@
 
 ---
 
-## ▶ ACTIVE TASK — AB · Navigation & HUD redesign
+## ▶ ACTIVE TASK — B · Gear set bonuses
 
-- **Status:** `IN PROGRESS` — refill received & acknowledged (Y#27/Z#32/U#33 all merged). Starting AB.
-- **Branch:** `claude/nav-hud-redesign` (off latest `master`)
-- **Owned files (yours):** `css/hud.css` *(new)*
-- **Shared (edit carefully — this is the one structural task):** `index.html` (HUD +
-  `#nav-menu` structure), `js/ui.js` (`renderPlayerBar`), `js/main.js`.
-- **Goal:** replace the button-grid nav with a proper dock/menu; redesign the top HUD
-  so Qi / HP / realm / spirit-stones read as **labelled meters** with a sticky action
-  bar. **Reconcile with my `css/responsive.css` bottom-dock (Z) in the same PR.**
-- **Constraints:** keep every element id other modules bind (`#chk-instant`,
-  `#btn-reset`, all `#btn-*` feature buttons + badge spans, `#nav-menu`) — or migrate
-  those bindings here. Own a new sheet (`css/hud.css`); don't append to `style.css`.
-  Note the exact `renderPlayerBar` + markup changes in the Worker Log for #1's rebase.
-- **Verify (cloud — no localhost link):** real-Chromium DOM sweep — every `#btn-*`
-  still present & wired, meters render & update (Qi/HP/XP after a move/fight), nav
-  dock works desktop + mobile (reconciled with responsive.css), all modals still open,
-  0 console errors. Tell the author how to run locally in the PR body.
+- **Status:** `IN PROGRESS` — starting now (AB → IN REVIEW PR #36).
+- **Branch:** `claude/gear-sets` (off latest `master`)
+- **Owned files (yours):** `js/sets.js` *(new)*, `css/sets.css` *(new, if needed)*
+- **Shared (edit minimally):** `js/items.js` (`setId` on a few templates),
+  `js/progression.js` (**ONE add-line** in `effectiveStats` — the reserved set-bonus
+  hook, a separate hunk like the merged cards/meridians/sockets sources), `js/ui.js`
+  (tooltip shows set progress — **same tooltip region I already own from Y/U**).
+- **Goal:** item `setId` + N-piece set-bonus definitions that plug into the reserved
+  `effectiveStats` hook; the item tooltip shows set progress (e.g. "Ashen Reverie 1/2").
+- **Constraints:** keep the `effectiveStats` add-line a separate hunk. Additive `setId`
+  on templates only (don't disturb roll ranges). Note the exact `ui.js` hook in the log.
+- **Verify (cloud — no localhost link):** headless (equip a full set → set bonus feeds
+  `effectiveStats`; partial set → no bonus) + real-Chromium DOM (tooltip shows set
+  progress, 0 console errors). Tell the author how to run locally in the PR body.
 
 ## ⏭ QUEUE (do these next, in order — no need to wait on #1)
 
-1. **B · Gear set bonuses** — branch `claude/gear-sets`. Owns `js/sets.js` (+ own css).
-   Shared: `js/items.js` (`setId` on a few templates), `js/progression.js` (ONE add-line
-   in `effectiveStats` — the reserved set-bonus hook, a separate hunk like the merged
-   cards/meridians/sockets sources), `js/ui.js` (tooltip shows set progress — **same
-   tooltip region I already own from Y/U**). Verify the flat source feeds `effectiveStats`.
-
-*(When the queue empties, ping #1 for a refill — don't grab a board row yourself.)*
+*(Empty — after B lands, ping #1 for a refill; don't grab a board row yourself.)*
 
 <!-- previous queue item U promoted to ACTIVE above; original text kept for #1's reference:
    **U · Gem sockets / enchanting** — branch `claude/gem-sockets`. Owns
@@ -79,6 +71,23 @@
 
 ## Worker Log (append-only, newest first — you own this section)
 
+- [2026-07-07] **AB done → PR #36.** New `css/hud.css` (owned; **`style.css`
+  untouched**), linked **before** `css/responsive.css` so Z's ≤620 bottom nav dock
+  still wins. **HUD:** `#player-bar` flat chips → labelled stat tiles; Qi + Breakthrough
+  are meters. **Kept every `chip-*` id** as the value/text span (tutorial `#chip-qi` +
+  `renderPlayerBar` bindings unchanged); added `bar-qi`/`bar-xp` fill elements.
+  **`ui.js` hook for #1's rebase:** `renderPlayerBar` rewritten — same chip textContent
+  assignments (shortened now labels are separate) **plus** two meter-fill lines
+  (`barWidth('bar-xp', …)`, `barWidth('bar-qi', …)`) + a `pct`/`barWidth` helper above
+  it. **`index.html`:** `#player-bar` restructured into `.hud-stat` tiles/meters; a
+  `.nav-dock-title` `<h3>` added as first child of `#nav-menu` (non-button, so
+  `input.js`'s `#nav-menu button` digit-nav is unaffected); `<link>` to `hud.css`.
+  **Nav:** `#nav-menu` → titled `auto-fit` dock (CSS only; works for static + injected
+  buttons). **`main.js` NOT needed.** Verified 88 Chromium checks @1280/768/375, 0
+  console errors, all 14 nav buttons present + wired, mobile dock reconciled.
+  **⚠ Flagged for #1:** a pre-existing ~15px desktop h-overflow from the fixed-54px
+  inventory grid (`.item-slot`) reproduces on `master` — NOT introduced by AB; a small
+  `auto-fill` inventory-grid follow-up would fix it. Advancing to B.
 - [2026-07-07] **Refill acknowledged** — Y#27/Z#32/U#33 all merged by #1. Taking
   **AB · Navigation & HUD redesign** as ACTIVE (branch `claude/nav-hud-redesign`);
   **B · Gear set bonuses** queued next. AB is the structural one — reconciling the

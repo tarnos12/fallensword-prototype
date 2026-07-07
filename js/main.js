@@ -31,6 +31,9 @@ import {
   applyLoadoutAction,
   deleteLoadoutAction,
   checkAchievements,
+  forgeReforge,
+  forgeUpgrade,
+  forgeRepair,
 } from './game.js';
 import {
   renderPlayerBar,
@@ -56,6 +59,7 @@ import { initLoadouts, renderLoadouts } from './loadouts.js';
 import { exportSave, importSave } from './save.js';
 import { initProfile } from './profile.js';
 import { initAchievements, updateAchievementBadge, showAchievementToasts } from './achievements.js';
+import { initForge } from './crafting.js';
 import { initDebug } from './debug.js'; // TESTING ONLY (strip before demo)
 
 const state = createGame();
@@ -289,6 +293,11 @@ initLoadouts(state, {
 initBackup();
 initProfile(state);
 initAchievements(state);
+initForge(state, {
+  reforge: (id) => { forgeReforge(state, id); renderAll(); },
+  upgrade: (id) => { forgeUpgrade(state, id); renderAll(); },
+  repair: (id) => { forgeRepair(state, id); renderAll(); },
+});
 initDebug(state, renderAll); // TESTING ONLY (strip before demo)
 renderAll();
 initTutorial(); // first-run onboarding overlay (+ ❔ Help button); after renderAll so targets exist

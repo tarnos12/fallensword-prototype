@@ -1561,3 +1561,74 @@ button[title="Close"]:hover:not(:disabled) {
   #inventory-list { grid-template-columns: repeat(auto-fill, 48px); }
   .item-slot { width: 48px; height: 48px; font-size: 1.35rem; }
 }
+
+/* --- Stage 3: Crafting & Forge (GDD §5) --- */
+
+#forge-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(8, 9, 13, 0.78);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  overflow-y: auto;
+}
+
+#forge-panel {
+  background: var(--panel);
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 620px;
+  padding: 16px 20px 22px;
+  box-shadow: var(--shadow-modal, 0 8px 40px rgba(0, 0, 0, 0.7));
+}
+
+#forge-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--panel-edge);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+#forge-header h2 { margin: 0; color: var(--gold); font-weight: normal; letter-spacing: 1px; }
+
+.forge-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+
+.forge-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--panel-edge);
+  border-radius: 6px;
+  background: var(--bg);
+  flex-wrap: wrap;
+}
+
+.forge-icon { width: 44px; height: 44px; font-size: 1.3rem; flex: 0 0 auto; cursor: default; }
+
+.forge-info { flex: 1 1 200px; min-width: 180px; }
+
+.forge-name { font-weight: bold; font-size: 0.9rem; }
+
+.forge-stats { font-size: 0.76rem; margin: 2px 0; }
+
+.forge-where { font-size: 0.72rem; }
+
+.forge-actions { display: flex; flex-direction: column; gap: 4px; flex: 0 0 auto; }
+
+.forge-btn { font-size: 0.76rem; padding: 4px 10px; white-space: nowrap; }
+
+.forge-btn.temper { color: var(--gold); border-color: var(--gold-soft, var(--panel-edge)); }
+.forge-btn.temper:hover:not(:disabled) { border-color: var(--gold); }
+
+@media (max-width: 620px) {
+  .forge-actions { flex-direction: row; flex-wrap: wrap; width: 100%; }
+}

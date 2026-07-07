@@ -27,6 +27,7 @@
   <link rel="stylesheet" href="css/sets.css">
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/a11y.css">
+  <link rel="stylesheet" href="css/hud.css"><!-- task AB: HUD meters + nav dock -->
   <link rel="stylesheet" href="css/responsive.css"><!-- task Z: linked last so it overrides -->
   <script>/* theme bootstrap — set data-theme before paint to avoid a flash */try{var t=localStorage.getItem('fallen-immortal-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}</script>
 </head>
@@ -34,13 +35,41 @@
   <a href="#map-grid" class="skip-link">Skip to map</a>
   <header id="header">
     <h1>Fallen Immortal <span class="subtitle">Cultivate · Hunt · Ascend</span></h1>
+    <!-- HUD (board task AB): labelled stat tiles + Qi/breakthrough meters. The
+         chip-* ids are kept as the value/text spans so renderPlayerBar + the
+         tutorial spotlight (#chip-qi) keep binding unchanged; the bar-* fills
+         are new elements renderPlayerBar also drives. -->
     <div id="player-bar">
-      <span class="stat-chip" id="chip-level" title="Cultivation stage"></span>
-      <span class="stat-chip" id="chip-xp" title="Cultivation progress toward next breakthrough"></span>
-      <span class="stat-chip" id="chip-points" title="Unspent stat points"></span>
-      <span class="stat-chip" id="chip-stones" title="Spirit stones"></span>
-      <span class="stat-chip" id="chip-hp" title="Health (effective)"></span>
-      <span class="stat-chip qi" id="chip-qi" title="Spiritual energy — regenerates over time, even while away"></span>
+      <div class="hud-stat hud-key">
+        <span class="hud-label">Realm</span>
+        <span class="hud-value" id="chip-level" title="Cultivation stage"></span>
+      </div>
+      <div class="hud-stat hud-meter">
+        <span class="hud-label">Breakthrough</span>
+        <div class="hud-track">
+          <div class="hud-fill hud-fill-xp" id="bar-xp"></div>
+          <span class="hud-meter-text" id="chip-xp" title="Cultivation progress toward next breakthrough"></span>
+        </div>
+      </div>
+      <div class="hud-stat hud-meter hud-meter-qi">
+        <span class="hud-label">Qi</span>
+        <div class="hud-track">
+          <div class="hud-fill hud-fill-qi" id="bar-qi"></div>
+          <span class="hud-meter-text qi" id="chip-qi" title="Spiritual energy — regenerates over time, even while away"></span>
+        </div>
+      </div>
+      <div class="hud-stat">
+        <span class="hud-label">Vitality</span>
+        <span class="hud-value" id="chip-hp" title="Health (effective)"></span>
+      </div>
+      <div class="hud-stat">
+        <span class="hud-label">Spirit Stones</span>
+        <span class="hud-value hud-gold" id="chip-stones" title="Spirit stones"></span>
+      </div>
+      <div class="hud-stat">
+        <span class="hud-label">Points</span>
+        <span class="hud-value" id="chip-points" title="Unspent stat points"></span>
+      </div>
     </div>
   </header>
 
@@ -98,6 +127,7 @@
       </div>
 
       <div id="nav-menu" class="panel-box">
+        <h3 class="nav-dock-title">Halls &amp; Pavilions</h3>
         <button id="btn-codex" type="button" class="codex-btn" title="Beast Codex & Spirit Cards">📖 Beast Codex</button>
         <button id="btn-pavilion" type="button" class="pavilion-btn" title="Treasure Pavilion — buy & sell artifacts">🏛 Treasure Pavilion <span id="pavilion-mail-count" class="mail-badge hidden"></span></button>
         <button id="btn-sect" type="button" class="sect-btn" title="Your Sect — recruit disciples for passive buffs">⛩ Sect</button>

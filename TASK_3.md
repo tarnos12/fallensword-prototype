@@ -15,7 +15,7 @@
 
 **#1 refill (2026-07-07):** great work on W + T — both merged (#21, #22... W=#21, T=#23 pending merge). New assignment below.
 
-- **Status:** `ASSIGNED` → set to `IN REVIEW — PR #NN` here when your PR is open.
+- **Status:** `IN REVIEW — PR #26` (branch `claude/lifetime-stats`, off latest master). **Advancing to R next.**
 - **Branch:** `claude/lifetime-stats` (off latest `master`)
 - **Owned files (yours):** `js/stats.js` *(new)*, `css/stats.css` *(new — link in `<head>`)*
 - **Shared (edit minimally):** `js/game.js` (increment a few lifetime counters at
@@ -65,6 +65,21 @@
 
 ## Worker Log (append-only, newest first — you own this section)
 
+- [2026-07-07] S3 done → **PR #26**, `claude/lifetime-stats` (off master). New
+  `js/stats.js` + `css/stats.css` — read-only 📊 Chronicle of Deeds (Cultivation
+  / Battle / Collection / Fortune / Journey). Most rows **derive** from existing
+  save data (realm/stage, bestiary totals + species faced, codex/card % vs the
+  **live** `CREATURE_TYPES`/`CARDS` catalogs — note there are now 6 creatures / 8
+  cards, the two bosses added cards, so codex and card totals legitimately
+  differ), achievements, stones on hand, sect size. Only un-derivable counters
+  live on additive `player.stats` (`fightsWon/Lost/Drawn`, `stonesWon`,
+  `itemsLooted`, `msPlayed`): incremented via self-defending `st.x=(st.x||0)+…`
+  lines at the `attack()` win/loss/draw branches, plus `tickPlaytime(state)` on
+  the world tick (accrues **active** time only — ignores >5s gaps). `player.stats`
+  = `{}` on `createPlayer` + back-filled in `createGame` (no VERSION bump). Own
+  📊 button injected into `#nav-menu`, own modal + sheet — **no `ui.js`**. Verified
+  headless 63/63 + real Chromium 9/9, 0 console errors. **Advancing to R (World
+  events / calendar), branch `claude/world-events`.**
 - [2026-07-07] T done → **PR #23**, `claude/fight-replay` (off master). New
   `js/replay.js` + `css/replay.css`. **Does NOT touch `ui.js`** — the ⟳ Replay /
   ⧉ Share-log buttons are injected into `#combat-panel .combat-buttons` from

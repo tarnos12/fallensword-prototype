@@ -11,7 +11,7 @@ New session? Do this **before writing any code**:
 3. Claim it (see **Claim protocol**). If your claim push is rejected, someone
    beat you — re-fetch, and either pick another task or redo the claim.
 4. **Always make a new branch for a new feature, and name the branch to match
-   the feature** — e.g. `claude/legendary-boss`, `claude/settings-modal` — never
+   the feature** — e.g. `claude/crafting-forge`, `claude/set-bonuses` — never
    a generic session id like `claude/pick-your-task-xxxx`. Branch off `master`,
    then open a PR into `master`.
 5. Keep your row's status current: `CLAIMED` → `IN REVIEW` → `DONE`, **and jot
@@ -37,263 +37,95 @@ thread on the task.
 
 ---
 
-## Task Board
+## Stage 2 (Demo) — ✅ COMPLETE
 
-Task IDs are stable handles, not priority — go by the **Status** column. Feature tasks 1–4 are claimed/merging and 7–9 are the current claimable batch; 5–6 stay `BLOCKED` (do last).
+All Stage-2 tasks are merged into `master`: Sect stub (#3), Legendary boss (#9),
+Onboarding (#5), Profile & Rivals (#8), Save export/import (#6), Visual polish
+(#12), Combat Sets (#7), Achievements (#10), Settings (#11). The full per-task
+thread is in this file's git history on `coordination`.
 
-| # | Task | Owned files (yours to edit freely) | Shared files (edit minimally, expect to rebase) | Status | Owner (session) | Branch | PR | Claimed (UTC) |
+> **⚠ One Stage-2 item is intentionally held: strip-testing (PR #13).** It's
+> reviewed and merge-ready, but it **deletes the debug panel + testing kit and
+> lowers `MAX_QI`/`INVENTORY_SIZE` to real values** — i.e. it removes the tooling
+> Stage-3 sessions rely on to test fast. **Do NOT merge #13 until Stage 3 dev is
+> done.** It is the very last pre-1.0 step, right before packaging/demo.
+
+---
+
+## Stage 3 (1.0 Release, offline) — Task Board
+
+Goal (GDD §5): a complete, shippable single-player 1.0 — more world, full quest
+content, crafting + set bonuses, more Legendary encounters, a full balance pass,
+and itch.io packaging. **Stage-3 task IDs are letters (A–L)** to stay distinct
+from the Stage-2 numeric IDs referenced in the session log.
+
+**🟢 Parallel-safe starter batch (grab these first — each owns a NEW module, no
+cross-dependencies, minimal shared-file overlap):** **A, B, C, D, K, L**. Four
+sessions can take four of these right now and not collide beyond the usual
+`index.html`/`css`/`main.js` button+modal+init neighbourhood (both-add, trivial
+rebase). Content tasks **E–J** touch shared data files (`map`/`actors`/`quests`/
+`progression`/`cards`) — read their Notes for ordering (task **E** is a
+foundational refactor that makes **F** conflict-free).
+
+| # | Task | Owned files (yours to edit freely) | Shared files (edit minimally, expect to rebase) | Status | Owner | Branch | PR | Claimed |
 |---|---|---|---|---|---|---|---|---|
-| S | Sect / Warband stub (`GuildProvider`) | `js/guild.js` | `js/game.js`, `js/ui.js`, `js/actors.js`, `index.html`, `css/style.css`, `js/main.js` | `DONE` | (initial) | `claude/read-repo-global-claude-md-rtc4og` | #3 | — |
-| 1 | Legendary boss — hand-authored Ancient Terror, first Epic/named drops, boss Spirit Card | `js/boss.js` *(new)* | `js/cards.js`, `js/game.js`, `js/ui.js`, `css/style.css` | `DONE` | choose-task-fxtfot | `claude/choose-task-fxtfot` | #9 | 2026-07-06 |
-| 2 | Onboarding / tutorial pass — first-run guided intro | `js/tutorial.js` *(new)* | `css/style.css` (tutorial section), `js/main.js` (init) | `DONE` | session_01Sty | `claude/onboarding-tutorial` | #5 | 2026-07-06 |
-| 3 | Profile & Rivals feed (GDD §6.5) — profile panel with active buffs, a "Rivals" list and a "Recently Active" feed, populated from the shared `personas.js` roster | `js/profile.js` *(new)* | `index.html` (button + modal), `css/style.css` (profile section), `js/main.js` (init), `js/ui.js` (optional) | `DONE` | pick-your-task-aj14ny | `claude/pick-your-task-aj14ny` | #8 | 2026-07-06 |
-| 4 | Save export / import (GDD §4.4) — export the save as a copy-paste string / file and import it back (back up without an account) | `js/save.js` (additive `exportSave`/`importSave`) | `index.html` (backup buttons), `css/style.css`, `js/main.js` (wiring) | `DONE` | pick-your-task-wakee5 | `claude/pick-your-task-wakee5` | #6 | 2026-07-06 |
-| 5 | Visual / UI polish pass | `css/style.css` | `index.html` (no `js/ui.js` touch) | `DONE` | choose-task-fxtfot | `claude/ui-polish` | #12 | 2026-07-06 |
-| 6 | Strip testing conveniences (pre-demo) | `js/debug.js` *(deleted)* | `js/game.js`, `js/items.js`, `js/cards.js`, `js/main.js`, `css/style.css` (no `index.html` touch) | `IN REVIEW` | choose-task-fxtfot | `claude/strip-testing` | #13 | 2026-07-06 |
-| 7 | Combat Sets / loadouts (GDD §6.2) — save & swap named equipped-item sets (e.g. a leveling set vs a boss set) | `js/loadouts.js` *(new)* | `js/actors.js` (`player.loadouts`), `js/game.js` (save/apply wrappers), `js/main.js` (init + render call), `css/style.css` | `DONE` | session_01Sty | `claude/combat-sets` | #7 | 2026-07-06 |
-| 8 | Achievements / milestones — a panel tracking milestones (first breakthrough, N kills, first Epic, full codex, first sect hire…) with a toast on unlock | `js/achievements.js` *(new)* | `index.html` (button + modal), `css/style.css`, `js/main.js` (init), `js/game.js` (small record hooks) | `DONE` | pick-your-task-wakee5 | `claude/achievements-milestones` | #10 | 2026-07-06 |
-| 9 | Settings / preferences modal — consolidate display prefs (instant combat, replay tutorial, reset save) into one ⚙ panel | `js/settings.js` *(new)* | `index.html` (button + modal), `css/style.css`, `js/main.js` (init), `js/ui.js` (relocate the instant-combat toggle) | `DONE` | pick-your-task-aj14ny | `claude/settings-modal` | #11 | 2026-07-06 |
+| A | **Crafting & Forge** (GDD §5) — spend materials + spirit stones to upgrade/reforge gear (add a stat roll, repair-to-max, reroll within a rarity cap). ⚒ modal. | `js/crafting.js` *(new)* | `js/game.js` (wrappers), `js/items.js` (additive reforge/material helper), `index.html`/`css/style.css`/`js/main.js` (button+modal+init) | `AVAILABLE` | — | — | — | — |
+| B | **Gear set bonuses** (GDD §5) — item `setId` + N-piece set-bonus definitions that plug into the reserved `effectiveStats` hook. | `js/sets.js` *(new)* | `js/items.js` (add `setId` to some templates), `js/progression.js` (one add-set-bonuses line in `effectiveStats`), `js/ui.js` (tooltip shows set progress) | `AVAILABLE` | — | — | — | — |
+| C | **Alchemy / consumables** (GDD §6.4) — brew pills from drops + stones: timed buff / instant Qi / instant XP, stored in a consumables pouch, used from the HUD. 🜁 modal. | `js/alchemy.js` *(new)* | `js/game.js` (wrappers + tick), `js/actors.js` (`player.consumables`), `index.html`/`css`/`js/main.js` | `AVAILABLE` | — | — | — | — |
+| D | **Sparring / offline PvP-preview** (GDD §4.1, §6.5) — synthesize deterministic Actor stat-sheets for personas and let the player "spar" a Rival through the existing pure `resolveCombat`. The PvP hook, still offline. | `js/duel.js` *(new)*, `js/rivals.js` *(new)* | `js/profile.js` (a "Spar" button on rival rows — coordinate w/ owner), `index.html`/`css`/`js/main.js` | `AVAILABLE` | — | — | — | — |
+| E | **World-data modularization (enabling refactor)** — extract `ZONES` from `map.js` into per-zone modules (`js/zones/*.js`) + a creature registry, so new zones/creatures are new files, not edits to shared `map.js`/`actors.js`. Unblocks conflict-free zone authoring. | `js/map.js` (refactor), `js/zones/` *(new dir)* | `js/actors.js` (creature registry), `js/game.js` (imports) | `AVAILABLE` | — | — | — | — |
+| F | **Third zone — Core Formation tier** — a new area gated behind FE9, 3 new creatures + their Spirit Cards + a portal. **Do after E** (then it's just new files). | `js/zones/<zone>.js` *(new, after E)* | `js/actors.js`/`js/cards.js`/`js/map.js` (if E not yet landed), `js/progression.js` (realm gate — coordinate w/ H) | `AVAILABLE` | — | — | — | — |
+| G | **Epic quest chain** (GDD §5) — one multi-step "epic quest" with a strong named (Epic/Legendary) reward, spanning existing zones. | `js/quests.js` (append the chain) | `js/items.js` (named reward item, additive) | `AVAILABLE` | — | — | — | — |
+| H | **Core Formation realm + advanced techniques** (GDD §9.1) — add the 3rd realm to the ladder + tier-3/4 techniques for it. | `js/techniques.js` (additions) | `js/progression.js` (`REALMS` + `STAGE_XP`) — coordinate w/ F | `AVAILABLE` | — | — | — | — |
+| I | **Second Legendary boss** (GDD §5) — a new calamity beast: own lair, cooldown, Epic/Legendary drop, boss Spirit Card. Consider refactoring `boss.js` into a small registry so bosses are data. | `js/boss.js` (→ registry) or `js/bosses/*.js` *(new)* | `js/cards.js`, `js/game.js`, `js/ui.js`, `css` | `AVAILABLE` | — | — | — | — |
+| J | **Full balance pass + committed sim harness** (GDD §8.6) — commit a reusable headless balance-sim (`tools/`), then a full-range tuning pass (XP curve, drop rates, boss stats, market prices). Mostly **solo & late** — touches tuning constants across files. | `tools/balance.mjs` *(new)* | tuning constants in `progression.js`/`items.js`/`actors.js`/`boss.js` | `BLOCKED` | — | — | — | Do near the end, once most content (F–I) is in — otherwise you tune a moving target. |
+| K | **Itch.io packaging & store page** (GDD §5) — `docs/STORE.md` draft (description, feature list, screenshot checklist), proper `<title>`/meta/OG + favicon, a one-file build/zip note, a `LICENSE`. | `docs/` *(new)*, `LICENSE`, `README.md` | `index.html` `<head>` only | `AVAILABLE` | — | — | — | — |
+| L | **Accessibility & keyboard input** — arrow/WASD tile movement, number/Esc hotkeys for modals, `:focus-visible` audit, ARIA roles on map/modals. | `js/input.js` *(new)* | `js/main.js` (wire), `css/style.css`, light `index.html` (aria) | `AVAILABLE` | — | — | — | — |
 
-> **Parallelism note:** Feature tasks each own a distinct new module and touch different parts of the shared files, so they run concurrently. The likeliest overlap is `index.html`/`css`/`main.js` (each adds a button + modal + init) plus `js/ui.js` — keep those edits small and at separated anchor points, and expect the 2nd+ PR into `master` to rebase. Tasks **5** (polish) and **6** (strip) stay serialized to the very end; running them alongside feature work guarantees painful conflicts.
+> **Parallelism note:** A–D, K, L each own a distinct new module → run concurrently. The shared-file neighbourhood (`index.html` button-panel + a pre-`</body>` overlay, a CSS section appended at EOF, a `main.js` import+init) is the same one every Stage-2 feature used — both-add merges, cheap rebase, integrator merges one PR at a time. E–I touch core data; sequence via their Notes (E→F; F & H coordinate on the realm/zone). J is last.
 
 ---
 
 ## Task Notes & cross-session comments
 
 Append-only, newest first, per task. This is where sessions talk to each other.
-Leave a note when you claim, when you hit a decision the next session should know,
-when you leave work half-done, or when you touch a shared file in a way others
-should rebase around. Format: `- [YYYY-MM-DD · session <id>] <comment>`.
+Format: `- [YYYY-MM-DD · session <id>] <comment>`.
 
-### Task S — Sect / Warband stub
-- [2026-07-06] DONE — merged to master via PR #3. `js/guild.js` + `⛩ Sect`
-  modal. Shared-file touches now on master: `game.js` (maxQi/tickStones/attack
-  hooks + hire/dismiss wrappers), `ui.js` (Sect modal render), `actors.js`
-  (`player.guild`), `index.html` (button+overlay), `css` (sect styles),
-  `main.js` (initSect). Branch off the latest master and these are already in.
+### Task A — Crafting & Forge
+- [initial] New `js/crafting.js` owns the logic + its own ⚒ modal (build DOM in-module like `tutorial.js`/`loadouts.js` did → avoids `index.html`/`ui.js` churn). Reforge = reroll an item's stat values within its existing rarity/level (uses `items.js` roll helpers — read, or add a small additive `reforgeItem`). "Materials" can just be spirit stones + sacrificing a same-slot item. Persist nothing new beyond what rides on `player`. GDD §5 crafting.
 
-### Task 1 — Legendary boss
-- [2026-07-06 · session choose-task-fxtfot] **IN REVIEW — PR #9 open** into
-  `master`. Ready to merge; rebase onto latest master first if 3/4/7 land ahead.
-- [2026-07-06 · session choose-task-fxtfot] **Built & pushed** to branch
-  `claude/choose-task-fxtfot` (no PR opened yet — awaiting go-ahead). New module
-  `js/boss.js` holds the whole encounter (BOSS def, spawn, manifest, cooldown,
-  reward roll). Final shared-file footprint is **smaller than planned** —
-  did **NOT** touch `js/actors.js`, `js/items.js`, or `index.html`:
-    • `js/cards.js` — one entry: `card_ancientTerror` (boss Spirit Card,
-      `bonusType: 'damage'`, +3/level, dropChance 0.5). Additive; safe.
-    • `js/game.js` — `import ... from './boss.js'`; back-fill `player.boss` in
-      `createGame`; `manifestBoss`/`maybeBossHint` calls in `tryMove`/`travel`/
-      `createGame`; a `monster.isBoss` branch inside the `attack()` win block
-      (guaranteed Epic/Legendary drop + boss card). All at existing anchors.
-    • `js/ui.js` — `import { BOSS, isBossLair, bossLairStatus } from './boss.js'`;
-      lair marker in `renderMap`; boss row + lair note in `renderTilePanel`;
-      `boss-win` branch in `outcomeBanner`; a `bossCodexEntry` + Legendary
-      section in `renderCodex` (codex counts now include the boss/its card).
-    • `css/style.css` — appended a `/* Legendary boss */` section at EOF.
-  The boss is deliberately NOT in `CREATURE_TYPES`/any spawn table — it's a
-  scheduled solo encounter at Cindervein `(9,9)`, gated at FE1 (`minStage 10`),
-  30-min wall-clock cooldown. Rebase note for Task 5/6: my `game.js`/`ui.js`
-  edits sit next to the existing card/market hooks and codex render — small,
-  well-separated hunks. Verified headless (boss-flow sim) + real-Chromium DOM.
+### Task B — Gear set bonuses
+- [initial] New `js/sets.js` defines sets (`setId` → { name, pieces, bonusPerCount }). Add `setId` to a few existing `items.js` templates (additive). The ONE pipeline hook: in `progression.js` `effectiveStats`, after gear/cards, add `setBonuses(player)` flat stats (the conventions doc already reserves "set bonuses" here). Show set progress in the `ui.js` item tooltip. GDD §5.
 
-### Task 2 — Onboarding / tutorial
-- [2026-07-06 · session session_01Sty] DONE — merged to master via PR #5.
-- [2026-07-06 · session session_01Sty] Final footprint even
-  smaller than planned: `js/tutorial.js` builds ALL its own DOM (the ❔ Help
-  button + overlay), so it touches **NO `index.html` and NO `ui.js`**. Only
-  shared edits: `css/style.css` (a `/* Onboarding / tutorial */` section
-  appended at the very end) and `js/main.js` (one import + one `initTutorial()`
-  line right after `renderAll()`). "Seen" state is its own localStorage key, not
-  the save schema. Boss/Profile/Save sessions: nothing of mine to rebase around
-  except a trailing CSS block + two main.js lines.
+### Task C — Alchemy / consumables
+- [initial] New `js/alchemy.js`: recipes (stones + a dropped material → a pill). Pills are consumables on `player.consumables` (additive, back-fill in `createGame`); using one grants a timed buff (reuse the `activeBuffs`/technique-buff shape so it flows through `effectiveStats`), or instant Qi/XP. Own 🜁 modal + a "use" affordance. Coordinate the buff shape with the technique buff list. GDD §6.4.
 
-### Task 3 — Profile & Rivals feed
-- [2026-07-06 · session pick-your-task-aj14ny] IN REVIEW — PR #8 opened into
-  master from `claude/pick-your-task-aj14ny`. Rebase note: shared touches are the
-  👤 button + `#profile-overlay` in `index.html`, a "Profile & Rivals" `css`
-  section just before the TESTING-ONLY block, and two `js/main.js` lines (import
-  + `initProfile(state)` after `initSect`) — all well-separated hunks.
-- [2026-07-06 · session pick-your-task-aj14ny] Implementation complete and
-  pushed to `claude/pick-your-task-aj14ny` (commit "Add Profile & Rivals feed").
-  New `js/profile.js` owns everything incl. its own rendering (`initProfile`/
-  `renderProfile`) — did NOT touch `js/ui.js`, so no collision with the boss
-  session. Shared-file touches (rebase around these): `index.html` (👤 button in
-  the button panel-box + `#profile-overlay` modal at end of body), `css` (new
-  "Profile & Rivals" section immediately before the TESTING-ONLY debug block),
-  `js/main.js` (`initProfile` import + call after `initSect`). New additive field
-  `player.rivals` (persona ids) round-trips through the existing save — lazily
-  back-filled, no VERSION bump. Verified headless (Node provider sim: all three
-  buff sources + rivals + deterministic feed) and in real Chromium (modal opens,
-  summary/feed render, rival add/unmark round-trips, no console errors). Status
-  left CLAIMED — PR not yet opened; flip to IN REVIEW when the PR lands.
-- [2026-07-06 · session pick-your-task-aj14ny] Claimed. Building the Profile &
-  Rivals feed in new module `js/profile.js` — a read-only modal (👤 button) with:
-  the player's summary + active buffs (technique buffs, Spirit Card bonuses, sect
-  buffs — read off the same pipelines), a "Rivals" list and a "Recently Active"
-  feed both drawn from the shared `personas.js` roster (deterministic, no second
-  pool). Shared touches kept minimal: `index.html` (one button + overlay), `css`
-  (profile section), `js/main.js` (initProfile). NOT touching `js/ui.js` to avoid
-  colliding with the boss session (task 1). Branch `claude/pick-your-task-aj14ny`.
-- [initial] Reuse the `personas.js` roster (same cast as market + sect) so the
-  world feels consistent — do NOT invent a second persona pool. New `js/profile.js`
-  owns it. Surface the player's active buffs (technique buffs + sect/card
-  bonuses), a "Rivals" list, and a "Recently Active" feed drawn from personas.
-  Read-only over existing data + a modal, so it's low-conflict. GDD §6.5.
+### Task D — Sparring / offline PvP-preview
+- [initial] `js/rivals.js`: deterministic level-scaled Actor stat-sheets for personas (same roster). `js/duel.js`: a spar screen that calls the PURE `resolveCombat(playerCombatActor, rivalActor, seed)` — do NOT leak game state into combat.js. No stakes for 1.0 (bragging rights) or a tiny stone wager. Hook a "Spar" button onto the Profile rival rows — leave a note here + coordinate if `profile.js` is being actively edited. GDD §4.1 (PvP hook), §6.5.
 
-### Task 4 — Save export / import
-- [2026-07-06 · session pick-your-task-wakee5] IN REVIEW — PR #6. Done:
-  additive `exportSave`/`importSave` in `save.js` (DOM-free; `FIMMORTAL-SAVE-v1:`
-  + UTF-8-safe base64 envelope; import validates version 1/2 + `player`, rejects
-  garbage/future/malformed, does NOT reload). Shared-file touches now on the
-  branch: `index.html` (💾 Backup/Restore button next to reset + `#backup-overlay`
-  modal), `css` (backup modal styles appended at EOF), `main.js` (`initBackup()`
-  wiring + `exportSave`/`importSave` import). All at separated anchor points
-  (button block near reset, overlay before `<script>`, CSS appended) — should
-  auto-merge cleanly alongside tasks 2/3. Tested headless (15/15) + real Chromium
-  (Playwright, 0 JS errors).
-- [2026-07-06 · session pick-your-task-wakee5] Claimed. Building additive
-  `exportSave`/`importSave` in `js/save.js` + Export/Import backup buttons.
-  Shared touches kept minimal: `index.html` (two buttons, likely near save
-  controls), `css` (backup section), `js/main.js` (wiring). Branch
-  `claude/pick-your-task-wakee5`. Rebase around these anchors.
-- [initial] Additive to `js/save.js`: `exportSave()` returns the JSON blob as a
-  base64/string (and/or a downloadable file); `importSave(str)` validates, writes
-  to localStorage, and reloads. Reuse the existing `KEY`/`VERSION` + migration
-  path so imported old saves still migrate. Guard against malformed input.
-  GDD §4.4 / Stage 3 pulled forward — also handy for sharing test saves.
+### Task E — World-data modularization (enabling)
+- [initial] Foundational refactor: move each zone's `ZONES[...]` block out of `map.js` into `js/zones/<id>.js`, and expose a creature registry so `CREATURE_TYPES` can be composed from per-zone creature files. `map.js` becomes loader + grid logic only. Keep behaviour identical (verify the existing zones still spawn/travel). This makes task F (and future zones) *new files* instead of `map.js`/`actors.js` conflicts. Ping the board when it lands so F can start clean.
 
-### Task 5 — Visual / UI polish
-- [2026-07-06 · session choose-task-fxtfot] **IN REVIEW — PR #12 open** into
-  `master`. Pure presentation; **`js/ui.js` NOT touched** (final footprint is just
-  `css/style.css` + light `index.html`). Highlights: removed the `Stage 1 MVP`
-  dev label (tagline + `<title>` + inline ☯ favicon, also kills the favicon 404);
-  token layer + appended polish section (motion w/ reduced-motion guard,
-  `:focus-visible` ring, sticky header, unified panel elevation, richer map-tile
-  gradients, modal backdrop-blur + shared ✕ style); `#nav-menu` 2-col grid; moved
-  the Chronicle under the map; full responsive (≤900/≤620px). **Task 6 (strip):**
-  I left the TESTING-ONLY debug panel + its styles alone — your checklist stands.
-  Verified real-Chromium (16-check DOM sweep, 0 console errors).
-- [2026-07-06 · session choose-task-fxtfot] Claimed (branch `claude/ui-polish`,
-  off the latest master with all features merged). Running the cross-cutting
-  polish sweep solo now that no feature work is in flight. Scope: primarily
-  `css/style.css` (design-token pass — spacing/typography/rarity/panel rhythm,
-  responsive layout, focus states, modal/banner consistency), light `index.html`
-  (structure/aria only, no logic), and touch-ups in `js/ui.js` render output if a
-  class hook is needed. Will NOT change game logic. Heads-up for Task 6 (strip):
-  I leave the TESTING-ONLY debug block + its styles alone — your checklist is
-  unaffected. Verified headless + real-Chromium DOM at the end.
-- [initial] Blocked on purpose. A `css/style.css` + `index.html` + `ui.js` sweep
-  that overlaps everything; running it during feature work guarantees conflicts.
-  Start only after tasks 1–4 are merged.
+### Task F — Third zone (Core Formation tier)
+- [initial] A new area past Cindervein, gated behind FE9 (or the Core Formation realm from task H). 3 new creatures + their Spirit Cards + a stage-gated portal. **Easiest after task E lands** (then you just add files). If you start before E, expect to rebase `map.js`/`actors.js`/`cards.js`. Coordinate the realm gate with task H. GDD §5/§9.2.
 
-### Task 6 — Strip testing conveniences
-- [2026-07-06 · session choose-task-fxtfot] **IN REVIEW — PR #13 open** into
-  `master` (rebased onto the polish merge b41a682, so it stacks cleanly on #12).
-  Net +12/−388 across 7 files. Deleted `js/debug.js`; removed the debug block +
-  `applyGodStats` from `game.js`, `grantTestingKit`/quartermaster kit, the
-  drop-rate multipliers from `items.js`/`cards.js`, and the debug-panel CSS.
-  Real starting values: `MAX_QI` 500→120, `INVENTORY_SIZE` 24→12. **No
-  `index.html` touch** (debug.js self-built its DOM). Nothing marked
-  `TESTING ONLY` remains. Verified headless + real-Chromium (0 errors, real fight
-  resolves; polish intact). **This is the last Stage 2 task — once #13 merges,
-  Stage 2 (Demo) is content-complete.** Left for the author to merge.
-- [2026-07-06 · session choose-task-fxtfot] Claimed (branch `claude/strip-testing`,
-  off master AFTER task 5 polish merged — PR #12 is in). This is the final Stage 2
-  task; all features + polish are on master. Executing the CLAUDE.md
-  "TESTING-ONLY — strip before demo" checklist: delete `js/debug.js` + its
-  `import`/`initDebug()` in `main.js`; remove the `TESTING ONLY — debug tools`
-  block in `game.js` + the `applyGodStats(actor)` call in `attack()`; drop
-  `setDropMultiplier`/`setCardDropMultiplier` (and their use in `rollDrop`/
-  `rollCardDrop`) from `items.js`/`cards.js`; remove `grantTestingKit` + the
-  quartermaster kit; lower `MAX_QI` (game.js) and `INVENTORY_SIZE` (items.js) to
-  real values; remove the debug panel markup/styles from `index.html`/`css`.
-  Will verify headless + real-Chromium after.
-- [initial] Demo-prep, do last. Full strip checklist is in `CLAUDE.md` →
-  "TESTING-ONLY — strip before demo". Deletes `js/debug.js` and unwinds the
-  labelled hooks in `game.js`/`items.js`/`cards.js`/`main.js`.
+### Task G — Epic quest chain
+- [initial] Append a multi-step epic quest to `js/quests.js` (event-driven, same shape as the existing chain) with a strong named reward (an Epic/Legendary item authored in `items.js`). Self-contained in `quests.js` + one item — low conflict. GDD §5.
 
-### Task 7 — Combat Sets / loadouts
-- [2026-07-06 · session session_01Sty] IN REVIEW — PR #7. Ended up touching
-  **NO `js/ui.js` and NO `index.html`**: `loadouts.js` builds its own "Combat
-  Sets" panel (inserted after the gear box) like `tutorial.js`/`debug.js` do.
-  Final shared footprint: `actors.js` (`player.loadouts` field), `game.js`
-  (3 wrappers + createGame back-fill), `js/main.js` (import + `initLoadouts` +
-  one `renderLoadouts()` line in `renderAll`), `css` (section appended at EOF).
-  Boss session (task 1): nothing of mine in ui.js to rebase around after all.
-- [2026-07-06 · session session_01Sty] Claimed. Named equipped-item sets a
-  player can save and swap (GDD §6.2: a leveling set vs a boss set). New
-  `js/loadouts.js` owns the logic. Plan: `player.loadouts = [{name, weapon, robe}]`
-  (item ids) on `player` (persisted with the save wholesale — NO `save.js` edit,
-  so no clash with task 4). Saving snapshots the currently-equipped ids; applying
-  equips them (reusing the existing equip/unequip in `items.js` — read, don't
-  edit). Shared touches: `actors.js` (`player.loadouts` field in `createPlayer`),
-  `game.js` (save/apply/delete wrappers + createGame back-fill), `js/ui.js` (a
-  small loadouts control block inside the existing gear panel — a NEW render fn,
-  won't touch the boss's encounter render), `css`. Branch `claude/combat-sets`.
-  Boss session (task 1): my `actors.js`/`game.js`/`ui.js` edits are additive and
-  in separate functions/regions from yours — should auto-merge; ping here if not.
+### Task H — Core Formation realm + techniques
+- [initial] Add the 3rd realm to `progression.js` `REALMS` + extend `STAGE_XP` (keep the per-realm barrier-spike shape). Add tier-3/4 techniques in `techniques.js` gated to the new realm. Coordinate the realm index with task F's zone gate. Headless-verify the XP curve. GDD §9.1.
 
-### Task 8 — Achievements / milestones
-- [2026-07-06 · session pick-your-task-wakee5] IN REVIEW — PR #10. 13 read-only
-  milestones in `js/achievements.js` + 🏆 modal/toasts. Shared-file touches now
-  on the branch (built off latest master, so tutorial+loadouts+backup are in):
-  `game.js` (`player.achievements` back-fill in createGame + `checkAchievements`
-  wrapper), `main.js` (`checkAchievements` at top of `renderAll` + init + import),
-  `index.html` (🏆 button in the codex/pavilion/sect panel-box + `#achievements-overlay`
-  before `<script>`), `css` (appended at EOF). Never touches `ui.js` or `actors.js`.
-  Heads-up for the integrator: the `index.html` button-block + pre-`<script>`
-  overlay anchors are the same neighbourhood task 3 (Profile) touches — trivial
-  both-add merge. Tested headless (23/23) + real Chromium (Playwright, 10/10, 0
-  JS errors; verified toast-once + no-re-toast-on-reload persistence).
-- [2026-07-06 · session pick-your-task-wakee5] Claimed (after finishing task 4,
-  PR #6). Building `js/achievements.js`: a milestone catalog evaluated read-only
-  over the save (level/realm, bestiary kills, cards, owned Epic+, guild members,
-  spirit stones) + a 🏆 Achievements button/modal and an unlock toast. `game.js`
-  touch is a tiny idempotent `recordAchievements(state)` "check & unlock" hook
-  called after kills/breakthroughs; unlocked ids persist on `player.achievements`.
-  Shared touches at separated anchors: `index.html` (button in the codex/pavilion
-  panel-box + overlay before `<script>`), `css` (appended at EOF), `main.js`
-  (init + call the hook after renders). Branch `claude/achievements-milestones`.
-- [initial] New `js/achievements.js` owns a milestone catalog + a panel (button +
-  modal) and a toast on unlock. Most state is derivable read-only from the save
-  (level, `bestiary` kills, `cards`, owned Epic+, `guild.members`), so the
-  `game.js` touch is a tiny "check & record" hook called after kills/breakthroughs.
-  Low-conflict: own module + `index.html` button/overlay + `css` + `main.js` init.
+### Task I — Second Legendary boss
+- [initial] Reuse everything the first boss did (Actor-shaped, `resolveCombat`, reward branch). Cleanest: refactor `boss.js` to hold a small `BOSSES` registry (data) + generic manifest/defeat logic, then add the 2nd boss as data + a card. Coordinate with whoever owns `boss.js`. New lair tile, own cooldown, Epic/Legendary drop + boss Spirit Card. GDD §5.
 
-### Task 9 — Settings / preferences modal
-- [2026-07-06 · session pick-your-task-aj14ny] IN REVIEW — **PR #11** into master
-  from `claude/settings-modal`. Final footprint is **smaller than planned — NO
-  `js/ui.js` edit at all.** Key trick: the instant toggle and reset button are
-  *relocated* in `index.html` but keep their ids (`#chk-instant`, `#btn-reset`),
-  so `ui.js`'s `initCombatSettings()` and `main.js`'s reset handler still bind
-  them unchanged; `playCombat`'s `isInstant()` reads the same localStorage key.
-  Replay-tutorial just triggers the tutorial's own `#btn-help` (created by
-  `initTutorial`) — no tutorial.js touch either. So `js/settings.js` owns only
-  modal open/close + the replay action. Shared touches to rebase around:
-  `index.html` (⚙ `#btn-settings` in the button panel-box; new
-  `#settings-overlay` before `</body>`; the instant-toggle `<label>` removed from
-  `#combat-panel`; `#btn-reset` moved out of the bottom panel-box into the modal),
-  `css` (appended "Settings / preferences" section at EOF), `js/main.js` (import
-  + `initSettings()` right after `initTutorial()`). Verified in real Chromium.
-- [2026-07-06 · session pick-your-task-aj14ny] Claimed. Branch
-  `claude/settings-modal` off latest master. Plan: `js/settings.js` owns a ⚙
-  panel (own button + overlay, self-rendered) consolidating: the instant-combat
-  toggle, a "replay tutorial" button (clears task 2's tutorial-seen localStorage
-  key + reopens the tutorial), and the reset-save action (reuse the existing
-  `resetGame` flow). Minimal-touch approach to the shared `js/ui.js`: rather than
-  ripping the instant-combat checkbox out of the combat panel (which the boss
-  session touched — task 1, now IN REVIEW PR #9), I'll keep `initCombatSettings`
-  intact and have Settings drive the SAME `#chk-instant` state, plus mirror the
-  toggle in the panel — so no fight over the combat-panel markup. Will finalize
-  the exact `ui.js` footprint after boss (task 1) merges and re-checking master.
-  Shared: `index.html` (⚙ button + overlay), `css` (settings section),
-  `js/main.js` (initSettings).
-- [initial] New `js/settings.js` — one ⚙ panel consolidating display prefs: the
-  instant-combat toggle (currently in the combat panel — relocate it here), a
-  "replay tutorial" button (clears the tutorial-seen key + reopens), and the reset
-  save action. Own module + `index.html` button/overlay + `css` + `main.js` init;
-  the only `ui.js` touch is moving the existing instant-combat checkbox handler.
+### Task J — Balance pass + sim harness
+- [initial] BLOCKED until most content (F–I) is on master — tuning a moving target wastes work. Commit the ad-hoc scratchpad sims as `tools/balance.mjs` (importable, no browser), then tune XP curve / drop rates / boss stats / market prices across the full level range. GDD §8.6.
+
+### Task K — Itch.io packaging & store page
+- [initial] `docs/STORE.md` (store description, feature bullets, screenshot shot-list), a `LICENSE`, and `index.html` `<head>` polish (title/meta/OG/favicon — note the polish pass already added an inline ☯ favicon; don't regress it). A short "how to zip & upload to itch.io" note. Low conflict (docs + `<head>`). GDD §5.
+
+### Task L — Accessibility & keyboard input
+- [initial] New `js/input.js`: arrow/WASD → move to the adjacent tile (reuse `tryMove`), Esc closes the open modal, digit keys open panels. Audit `:focus-visible` (the polish pass added a ring — build on it) and add ARIA roles/labels to the map grid + modals. Wire from `main.js`; light `css`. GDD polish / a11y.
 
 ---
 
@@ -310,7 +142,7 @@ git checkout -B coordination origin/coordination
 #    Owner (your session URL/short id), Branch (the feature branch you'll use),
 #    and Claimed (UTC date). Then:
 git add TASKS.md
-git commit -m "claim: task <#> (<session-id>)"
+git commit -m "claim: task <ID> (<session-id>)"
 
 # 3. Push. This is the lock.
 git push origin coordination
@@ -326,7 +158,7 @@ Then build the actual feature on a **separate** branch off `master`:
 
 ```bash
 git fetch origin master
-# Name the branch after the FEATURE, not the session (e.g. claude/legendary-boss).
+# Name the branch after the FEATURE, not the session (e.g. claude/crafting-forge).
 git checkout -B claude/<feature-name> origin/master
 # ... implement, commit, push, open a PR into master ...
 ```
@@ -365,12 +197,9 @@ The claim board stops two sessions doing the *same* task. These rules stop their
 
 Optional but helpful — a one-line breadcrumb per session so the next one has context.
 
-- 2026-07-06 — session_01Sty (integrator) — merged PRs #9 (boss), #8 (Profile), #10 (Achievements), #11 (Settings) — each rebased onto master with conflicts resolved (CLAUDE.md/css/index.html/game.js/main.js), verified in-browser after each. **All feature tasks 1–4 & 7–9 are DONE and integrated into master.** Unblocked task 5 (polish); task 6 (strip) stays blocked until polish lands.
-- 2026-07-06 — session_01Sty (integrator) — merged PR #7 (Combat Sets) + PR #6 (Save export, rebased & conflicts resolved); tasks 4 & 7 → DONE. Verified all features coexist in-browser, 0 errors. PR #9 (boss) is next in the merge queue.
-- 2026-07-06 — pick-your-task-wakee5 — task 8 (Achievements/milestones) IN REVIEW, PR #10. Task 4 (PR #6) merged to master by integrator.
-- 2026-07-06 — pick-your-task-wakee5 — claimed task 8 (Achievements/milestones).
-- 2026-07-06 — pick-your-task-wakee5 — task 4 (Save export/import) IN REVIEW, PR #6.
-- 2026-07-06 — pick-your-task-wakee5 — claimed task 4 (Save export/import).
-- 2026-07-06 — session_01Sty — finished task 2 (Onboarding, PR #5 merged); board was fully claimed/blocked, so added tasks 7 (Combat Sets), 8 (Achievements), 9 (Settings) and claimed 7 for myself. 8 & 9 left AVAILABLE.
-- 2026-07-06 — session_01Sty — finished task S (Sect stub, PR #3 merged); added tasks 3 (Profile/Rivals) & 4 (Save export/import). Noted task 1 already claimed by choose-task-fxtfot.
-- _(add entries here: `YYYY-MM-DD — session <id> — claimed/finished task <#>: <note>`)_
+- 2026-07-06 — session_01Sty (integrator) — **Stage 2 complete** (all PRs #3,#5–#12 merged; strip #13 held until end of Stage 3). Opened the **Stage 3 (1.0) task board** above: 12 tasks A–L, with A/B/C/D/K/L as the parallel-safe starter batch for up to 4 concurrent sessions. Task E is a foundational refactor; F–I are content (sequence per Notes); J (balance) is blocked until content lands.
+- 2026-07-06 — session_01Sty (integrator) — merged PRs #9 (boss), #8 (Profile), #10 (Achievements), #11 (Settings) — each rebased onto master with conflicts resolved, verified in-browser. All Stage-2 feature tasks DONE.
+- 2026-07-06 — session_01Sty (integrator) — merged PR #7 (Combat Sets) + PR #6 (Save export, rebased & resolved); tasks 4 & 7 → DONE.
+- 2026-07-06 — pick-your-task-wakee5 — tasks 4 & 8 (Save export, Achievements) built + PRs #6/#10.
+- 2026-07-06 — session_01Sty — tasks S/2/7 (Sect, Onboarding, Combat Sets); seeded tasks 3/4/7/8/9.
+- _(add entries here: `YYYY-MM-DD — session <id> — claimed/finished task <ID>: <note>`)_

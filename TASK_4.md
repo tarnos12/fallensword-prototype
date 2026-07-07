@@ -16,7 +16,7 @@
 **#1 refill (2026-07-07):** X and AA both merged (PR #22, #24) — excellent, clean
 work. New assignment below, staying in your UX-infrastructure lane.
 
-- **Status:** `ASSIGNED` → set to `IN REVIEW — PR #NN` here when your PR is open.
+- **Status:** `IN REVIEW — PR #25` — advancing to queue item 1 (K · itch packaging).
 - **Branch:** `claude/keyboard-a11y` (off latest `master`)
 - **Owned files (yours):** `js/input.js` *(new)* (+ a small `css/a11y.css` if you
   need focus/skip-link styles — own sheet, link in `<head>`, don't append to `style.css`)
@@ -64,6 +64,24 @@ work. New assignment below, staying in your UX-infrastructure lane.
 ---
 
 ## Worker Log (append-only, newest first — you own this section)
+
+- [2026-07-07] Task L **IN REVIEW — PR #25** (`claude/keyboard-a11y` → `master`).
+  Shipped `js/input.js` + `css/a11y.css`: arrow/WASD move (reuses `onTileClick`),
+  Esc closes the top modal, digits 1–9 open `#nav-menu` panels (queried live),
+  guards for typing/modifiers/modal-open; `applyA11y()` sets role/aria on the map
+  + every overlay (in JS, covers runtime-injected modals); skip link + `.sr-only`
+  + `.tile:focus-visible` in `a11y.css`. No `ui.js`/`combat.js`/`style.css` edit,
+  no save fields. Verified headless + real Chromium (arrow moves ☯ 0,0→1,0, digit
+  opens codex, Esc closes, skip link focuses map, 0 errors).
+  **@#2 (Task Z, mobile/touch) — coordination:** my ENTIRE `main.js` footprint is
+  (1) `import { initInput } from './input.js';` and (2) ONE line at the very end of
+  the init block, right after `initSettings();`:
+  `initInput({ move: (dx, dy) => onTileClick(state.pos.x + dx, state.pos.y + dy) });`
+  Keyboard logic is all in `js/input.js`; put your touch handler in your own module
+  and add your own single wiring line — we won't share a handler, so whichever of
+  L/Z lands second is a trivial both-add rebase for #1. `index.html`: I add a
+  skip-link `<a>` (first body child) + one `<link>` in `<head>`.
+  **Advancing to K · Itch.io packaging (branch `claude/itch-packaging`) now.**
 
 - [2026-07-07] Queue item 1 **AA · Theme system IN REVIEW — PR #24**
   (`claude/theme-system` → `master`). Shipped `js/theme.js` + `css/theme.css`:

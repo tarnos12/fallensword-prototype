@@ -88,7 +88,7 @@ meridians, **U** gems) all add an independent additive line in the same
 | M | **Salvage / materials** — right-click "salvage" breaks unwanted gear into crafting materials (feeds task A). Materials are a stackable item type on `player`. | `js/salvage.js` *(new)* | `js/items.js` (material item shape), `js/game.js` (salvage wrapper), `js/ui.js` (context-menu entry), `css` | `AVAILABLE` | — | — | — | — |
 | N | **Meridian talent tree** — a permanent passive point tree (earned per breakthrough, separate from stat points) that feeds `effectiveStats`. Own ☯ modal. | `js/meridians.js` *(new)* | `js/progression.js` (one add-line in `effectiveStats` + a points grant on breakthrough), `js/actors.js` (`player.meridians`), `index.html`/`css`/`main.js` | `AVAILABLE` | — | — | — | — |
 | O | **Daily trials** — a rotating (wall-clock daily) challenge encounter with bonus rewards; one attempt per reset. | `js/trials.js` *(new)* | `js/game.js` (spawn/reward hook), `js/actors.js` (`player.trials` timestamp), `index.html`/`css`/`main.js` | `AVAILABLE` | — | — | — | — |
-| P | **Hunt bounties** — a bounty board: "slay N of creature X" for stone/XP rewards, refreshed on a timer. Reads the existing bestiary kill counts. | `js/bounties.js` *(new)* | `js/game.js` (claim hook), `js/actors.js` (`player.bounties`), `index.html`/`css`/`main.js` | `AVAILABLE` | — | — | — | — |
+| P | **Hunt bounties** — a bounty board: "slay N of creature X" for stone/XP rewards, refreshed on a timer. Reads the existing bestiary kill counts. | `js/bounties.js` *(new)* | `js/game.js` (claim hook), `js/actors.js` (`player.bounties`), `index.html`/`css`/`main.js` | `CLAIMED` | pick-your-task-aj14ny | `claude/hunt-bounties` | — | 2026-07-06 |
 | Q | **Sect disciple missions** — send hired disciples (task S sect) on timed wall-clock missions that return spirit stones / materials. Extends the Sect. | `js/sectmissions.js` *(new)* | `js/game.js` (tick + claim), `js/guild.js` (read members — no edit), `index.html`/`css`/`main.js` | `AVAILABLE` | — | — | — | — |
 | R | **World events / calendar** — scheduled wall-clock buffs (e.g. "double drops", "bonus XP") that toggle on a repeating clock and surface in the HUD. | `js/events.js` *(new)* | `js/game.js` (apply the active event's multiplier in the reward path), `js/main.js`/`css` (HUD banner) | `AVAILABLE` | — | — | — | — |
 | S3 | **Statistics / lifetime summary** — a read-only 📊 panel: total kills, stones earned, fights won/lost/drawn, time played, cards/codex %. Mostly derivable; add a couple of lifetime counters. | `js/stats.js` *(new)* | `js/game.js` (increment a few lifetime counters), `js/actors.js` (`player.stats`), `index.html`/`css`/`main.js` | `AVAILABLE` | — | — | — | — |
@@ -163,6 +163,20 @@ Format: `- [YYYY-MM-DD · session <id>] <comment>`.
 - [initial] New `js/trials.js`: a wall-clock daily challenge (one attempt per real day, `player.trials` last-attempt timestamp — same pattern as Qi regen). Reuses `resolveCombat`/spawn; bonus reward on win. Own modal + a HUD entry.
 
 ### Task P — Hunt bounties
+- [2026-07-06 · session pick-your-task-aj14ny] Claimed. Branch `claude/hunt-bounties`
+  off latest master. Plan: `js/bounties.js` owns a 🏹 bounty-board modal +
+  provider (`createBountyProvider`), self-rendered (NOT touching `ui.js`).
+  Bounties = "slay N of creature X" generated deterministically from a wall-clock
+  time bucket (like the Pavilion/Recently-Active feeds), refreshed on a timer;
+  progress is `player.bestiary[typeId].kills` minus a snapshot taken when the
+  bounty is accepted, so **no `attack()` kill-hook needed** — pure read of
+  existing kill data. `player.bounties` (additive field, lazy back-fill, no
+  VERSION bump — same pattern as `player.rivals`) holds accepted/claimed state
+  (bucket id, typeId, target, killSnapshot, claimed). Shared touches: `game.js`
+  (thin `acceptBounty`/`claimBounty` wrappers that log + saveGame — well
+  separated from other hooks), `index.html` (🏹 button + overlay), `css`
+  (bounty section), `js/main.js` (init + a per-tick board refresh). Reward on
+  claim = spirit stones + XP scaled to target creature level.
 - [initial] New `js/bounties.js`: a board of "slay N of X" bounties refreshed on a timer, tracked against the existing `bestiary` kill counts (read-only) with a `player.bounties` progress/claim ledger. Own modal.
 
 ### Task Q — Sect disciple missions

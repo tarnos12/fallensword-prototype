@@ -13,7 +13,7 @@
 
 ## ▶ ACTIVE TASK — Y · Item comparison tooltips + inventory UX
 
-- **Status:** `ASSIGNED` → set to `IN REVIEW — PR #NN` here when your PR is open.
+- **Status:** `IN REVIEW — PR #27` (branch `claude/item-compare-tooltips`, off `master`). Advancing to queue item 1 (Z · mobile/responsive).
 - **Branch:** `claude/item-compare-tooltips` (off latest `master`)
 - **Owned files (yours):** `js/itemcompare.js` *(new)*, `css/itemcompare.css` *(new)*
 - **Shared (edit minimally):** `js/ui.js` — ONE hook in the item-tooltip render;
@@ -55,4 +55,14 @@
 
 ## Worker Log (append-only, newest first — you own this section)
 
-- _(add entries as you work: `- [YYYY-MM-DD] <what/why/where the ui.js hook is>`)_
+- [2026-07-07] **Y done → PR #27.** New `js/itemcompare.js` + `css/itemcompare.css`
+  (own sheet, linked in `index.html` `<head>` after `style.css`; **`style.css`
+  untouched**). **`ui.js` hook location for #1's rebase:** exactly two one-liners —
+  (a) `import { compareRows, setCompareContext } from './itemcompare.js';` after
+  the `techniques.js` import; (b) `setCompareContext(p);` as the 2nd line of
+  `renderGear` (right after `const p = state.player;`); (c) `${compareRows(item)}`
+  inside the `itemTooltip` return, between `${stats}${dur}` and the `.tt-hint`
+  line. Pure read, no state mutation. Note: **PR #19 (2nd boss, session-unknown?
+  actually mine) also edits `ui.js`** but in the boss/codex regions — disjoint
+  from the itemTooltip/renderGear hunks here. Verified 7 headless + 7 Chromium, 0
+  console errors. Advancing to Z.

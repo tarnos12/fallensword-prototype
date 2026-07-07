@@ -81,7 +81,7 @@ meridians, **U** gems) all add an independent additive line in the same
 | F | **Third zone — Core Formation tier** — a new area gated behind FE9, 3 new creatures + their Spirit Cards + a portal. **Do after E** (then it's just new files). | `js/zones/<zone>.js` *(new, after E)* | `js/actors.js`/`js/cards.js`/`js/map.js` (if E not yet landed), `js/progression.js` (realm gate — coordinate w/ H) | `AVAILABLE` | — | — | — | — |
 | G | **Epic quest chain** (GDD §5) — one multi-step "epic quest" with a strong named (Epic/Legendary) reward, spanning existing zones. | `js/quests.js` (append the chain) | `js/items.js` (named reward item, additive) | `DONE` | pick-your-task-wakee5 | `claude/epic-quest-chain` | #14 | 2026-07-07 |
 | H | **Core Formation realm + advanced techniques** (GDD §9.1) — add the 3rd realm to the ladder + tier-3/4 techniques for it. | `js/techniques.js` (additions) | `js/progression.js` (`REALMS` + `STAGE_XP`) — coordinate w/ F | `AVAILABLE` | — | — | — | — |
-| I | **Second Legendary boss** (GDD §5) — a new calamity beast: own lair, cooldown, Epic/Legendary drop, boss Spirit Card. Consider refactoring `boss.js` into a small registry so bosses are data. | `js/boss.js` (→ registry) or `js/bosses/*.js` *(new)* | `js/cards.js`, `js/game.js`, `js/ui.js`, `css` | `CLAIMED` | choose-task-fxtfot | `claude/second-boss` | — | 2026-07-07 |
+| I | **Second Legendary boss** (GDD §5) — a new calamity beast: own lair, cooldown, Epic/Legendary drop, boss Spirit Card. Consider refactoring `boss.js` into a small registry so bosses are data. | `js/boss.js` (→ registry) or `js/bosses/*.js` *(new)* | `js/cards.js`, `js/game.js`, `js/ui.js` (no `css` needed) | `IN REVIEW` | choose-task-fxtfot | `claude/second-boss` | #19 | 2026-07-07 |
 | J | **Full balance pass + committed sim harness** (GDD §8.6) — commit a reusable headless balance-sim (`tools/`), then a full-range tuning pass (XP curve, drop rates, boss stats, market prices). Mostly **solo & late** — touches tuning constants across files. | `tools/balance.mjs` *(new)* | tuning constants in `progression.js`/`items.js`/`actors.js`/`boss.js` | `BLOCKED` | — | — | — | Do near the end, once most content (F–I) is in — otherwise you tune a moving target. |
 | K | **Itch.io packaging & store page** (GDD §5) — `docs/STORE.md` draft (description, feature list, screenshot checklist), proper `<title>`/meta/OG + favicon, a one-file build/zip note, a `LICENSE`. | `docs/` *(new)*, `LICENSE`, `README.md` | `index.html` `<head>` only | `AVAILABLE` | — | — | — | — |
 | L | **Accessibility & keyboard input** — arrow/WASD tile movement, number/Esc hotkeys for modals, `:focus-visible` audit, ARIA roles on map/modals. | `js/input.js` *(new)* | `js/main.js` (wire), `css/style.css`, light `index.html` (aria) | `AVAILABLE` | — | — | — | — |
@@ -209,6 +209,17 @@ Format: `- [YYYY-MM-DD · session <id>] <comment>`.
 - [initial] Add the 3rd realm to `progression.js` `REALMS` + extend `STAGE_XP` (keep the per-realm barrier-spike shape). Add tier-3/4 techniques in `techniques.js` gated to the new realm. Coordinate the realm index with task F's zone gate. Headless-verify the XP curve. GDD §9.1.
 
 ### Task I — Second Legendary boss
+- [2026-07-07 · session choose-task-fxtfot] **IN REVIEW — PR #19 open.** Refactored
+  `boss.js` to a `BOSSES` registry (+ `BOSS_LIST`) — bosses are data now; every fn
+  iterates the registry. Added **Zhulong, the Ember Calamity** (Cindervein `(0,9)`,
+  gated FE5, 45-min cooldown, Epic/30%-Legendary drop, `card_emberCalamity`
+  +3 Atk/lvl; ATK 53/DEF 45/DMG 35/ARM 23/HP 508 @ Lv18, headless-tuned). Per-boss
+  progress keyed on `player.boss` by id; legacy single-boss shape migrated on load
+  (`normalizeBossState`, no VERSION bump). **No `css` change** — reuses all boss
+  styles. Codex now shows a "Legendary Calamities" section (entry per boss). Rebase
+  heads-up: my `game.js`/`cards.js`/`ui.js` touches are all in the boss regions I
+  authored (PR #9) — separate hunks from strip #13 / crafting #15. Verified 16-check
+  headless + 4-check real-Chromium (0 errors).
 - [2026-07-07 · session choose-task-fxtfot] Claimed (branch `claude/second-boss`).
   I authored the original `boss.js` (task 1 / PR #9), so no coordination needed —
   refactoring my own module. Plan: turn `boss.js`'s single `BOSS` const into a

@@ -8,17 +8,21 @@
 export const REALMS = [
   { name: 'Qi Condensation', stages: 9 },
   { name: 'Foundation Establishment', stages: 9 },
+  { name: 'Core Formation', stages: 9 },
 ];
 
 export const MAX_STAGE = REALMS.reduce((s, r) => s + r.stages, 0);
 
-// Cost to break through FROM stage n to n+1. The QC9 -> FE1 jump (index 9) is
-// a deliberate realm-barrier spike — the classic xianxia bottleneck.
+// Cost to break through FROM stage n to n+1. Each realm barrier (QC9 -> FE1 at
+// index 9, FE9 -> CF1 at index 18) is a deliberate spike — the classic xianxia
+// bottleneck — after which the new realm resumes its ~×1.4 climb.
 const STAGE_XP = [
   0, // stage 0 (unused)
   100, 160, 256, 410, 655, 1050, 1680, 2690, // QC1->2 .. QC8->9
   6000, // QC9 -> FE1 (realm barrier)
   8600, 12000, 16800, 23500, 33000, 46000, 64000, 90000, // FE1->2 .. FE8->9
+  200000, // FE9 -> CF1 (realm barrier — Core Formation, the great bottleneck)
+  260000, 360000, 500000, 700000, 980000, 1360000, 1900000, 2650000, // CF1->2 .. CF8->9
 ];
 
 export function xpForBreakthrough(stage) {

@@ -62,6 +62,34 @@ export const TECHNIQUES = {
     effect: { damage: 0.35, armor: -0.25 }, duration: 60_000, qiCost: 15,
     desc: 'Abandon defense for slaughter. +35% Damage, −25% Armor.',
   },
+  spiritSeverance: {
+    id: 'spiritSeverance', name: 'Spirit-Severing Palm', category: 'Special', tier: 3,
+    minStage: 14, cost: 2, prereqs: ['berserkFervor'],
+    effect: { attack: 0.15, damage: 0.20, hp: 0.15 }, duration: 60_000, qiCost: 22,
+    desc: 'Sever an enemy from their own Qi. +15% Attack, +20% Damage, +15% Max HP.',
+  },
+
+  // --- Core Formation techniques (tier 4, gated to the 3rd realm, GDD §9.1).
+  // The capstone arts: a formed Golden Core lets a cultivator channel far more
+  // potent buffs, at a steep Qi cost. Each requires its category's tier-3 art. ---
+  voidRendingFist: {
+    id: 'voidRendingFist', name: 'Void-Rending Fist', category: 'Offense', tier: 4,
+    minStage: 19, cost: 3, prereqs: ['heavenStrike'],
+    effect: { attack: 0.40, damage: 0.35 }, duration: 60_000, qiCost: 32,
+    desc: 'A blow that tears the space between stars. +40% Attack, +35% Damage.',
+  },
+  immortalGoldenBody: {
+    id: 'immortalGoldenBody', name: 'Immortal Golden Body', category: 'Defense', tier: 4,
+    minStage: 19, cost: 3, prereqs: ['adamantBody'],
+    effect: { defense: 0.25, armor: 0.40, hp: 0.30 }, duration: 60_000, qiCost: 32,
+    desc: 'Flesh tempered into an immortal vessel. +25% Defense, +40% Armor, +30% Max HP.',
+  },
+  goldenCoreAscendance: {
+    id: 'goldenCoreAscendance', name: 'Golden Core Ascendance', category: 'Special', tier: 4,
+    minStage: 19, cost: 3, prereqs: ['spiritSeverance'],
+    effect: { attack: 0.22, damage: 0.22, armor: 0.22, hp: 0.22 }, duration: 45_000, qiCost: 42,
+    desc: 'Unleash the full turning of your core — every aspect surges. +22% to Attack, Damage, Armor, and Max HP.',
+  },
 };
 
 export function get(id) {

@@ -43,6 +43,7 @@ import * as Techniques from './techniques.js';
 import { rollCardDrop, acquireCard, cardBonuses, CARDS } from './cards.js';
 import { createMarketProvider, emptyMarket } from './market.js';
 import { createGuildProvider, guildBuffs } from './guild.js';
+import { createBountyProvider } from './bounties.js';
 import { saveLoadout, applyLoadout, deleteLoadout } from './loadouts.js';
 import { BOSS, emptyBossState, maybeManifestBoss, onBossDefeated } from './boss.js';
 import { recordAchievements } from './achievements.js';
@@ -113,6 +114,9 @@ export function createGame() {
   // The Sect / Warband provider (GDD §4.3) — hired disciples live on the player,
   // so it just wraps that persisted membership list.
   state.guildProvider = createGuildProvider(state);
+  // The Hunt-bounty provider — offered board is deterministic from the clock;
+  // accepted bounties live on the player, so it just wraps that.
+  state.bountyProvider = createBountyProvider(state);
 
   state.loadedFromSave = !!loaded;
   if (loaded) {
@@ -710,6 +714,33 @@ export function dismissDisciple(state, personaId) {
   const res = state.guildProvider.dismiss(personaId);
   if (res.ok) {
     addLog(state, `${res.persona?.name ?? 'A disciple'} departs your sect.`);
+    saveGame(state);
+  } else if (res.reason) {
+    addLog(state, res.reason);
+  }
+  return res;
+}
+
+// --- Hunt bounties. Thin wrappers over the BountyProvider that log outcomes,
+// apply the claim reward through the shared XP/stone path, and persist. ---
+
+export function acceptBounty(state, bountyId, now = Date.now()) {
+  const res = state.bountyProvider.accept(bountyId, now);
+  if (res.ok) {
+    addLog(state, `Bounty accepted: slay ${res.bounty.target} ${res.bounty.name}.`);
+    saveGame(state);
+  } else if (res.reason) {
+    addLog(state, res.reason);
+  }
+  return res;
+}
+
+export function claimBounty(state, bountyId) {
+  const res = state.bountyProvider.claim(bountyId);
+  if (res.ok) {
+    state.player.spiritStones += res.reward.stones;
+    addLog(state, `Bounty complete — ${res.target} ${res.name} slain: +${res.reward.stones} spirit stones, +${res.reward.xp} XP.`);
+    grantXp(state, res.reward.xp); // applies breakthroughs + logs
     saveGame(state);
   } else if (res.reason) {
     addLog(state, res.reason);

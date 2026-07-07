@@ -34,6 +34,8 @@ import {
   forgeReforge,
   forgeUpgrade,
   forgeRepair,
+  acceptBounty,
+  claimBounty,
 } from './game.js';
 import {
   renderPlayerBar,
@@ -60,6 +62,7 @@ import { exportSave, importSave } from './save.js';
 import { initProfile } from './profile.js';
 import { initAchievements, updateAchievementBadge, showAchievementToasts } from './achievements.js';
 import { initForge } from './crafting.js';
+import { initBounties, renderBounties, updateBountyBadge } from './bounties.js';
 import { initDebug } from './debug.js'; // TESTING ONLY (strip before demo)
 
 const state = createGame();
@@ -151,6 +154,7 @@ function renderAll() {
   updatePavilionBadge(state);
   renderLoadouts(state);
   updateAchievementBadge(state);
+  updateBountyBadge(state);
   showAchievementToasts(unlocked);
 }
 
@@ -297,6 +301,10 @@ initForge(state, {
   reforge: (id) => { forgeReforge(state, id); renderAll(); },
   upgrade: (id) => { forgeUpgrade(state, id); renderAll(); },
   repair: (id) => { forgeRepair(state, id); renderAll(); },
+});
+initBounties(state, {
+  accept: (id) => { acceptBounty(state, id); renderBounties(state); renderAll(); },
+  claim: (id) => { claimBounty(state, id); renderBounties(state); renderAll(); },
 });
 initDebug(state, renderAll); // TESTING ONLY (strip before demo)
 renderAll();

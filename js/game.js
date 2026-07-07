@@ -45,7 +45,7 @@ import { createMarketProvider, emptyMarket } from './market.js';
 import { createGuildProvider, guildBuffs } from './guild.js';
 import { createBountyProvider } from './bounties.js';
 import { saveLoadout, applyLoadout, deleteLoadout } from './loadouts.js';
-import { BOSS, emptyBossState, maybeManifestBoss, onBossDefeated } from './boss.js';
+import { normalizeBossState, maybeManifestBoss, onBossDefeated, bossHints } from './boss.js';
 import { recordAchievements } from './achievements.js';
 import * as Trials from './trials.js';
 import { saveGame, loadGame, clearSave } from './save.js';
@@ -103,7 +103,7 @@ export function createGame() {
   if (!state.player.cards) state.player.cards = {};
   if (!state.player.guild) state.player.guild = { members: [] };
   if (!state.player.loadouts) state.player.loadouts = [];
-  if (!state.player.boss) state.player.boss = emptyBossState();
+  normalizeBossState(state.player); // create {} for new saves; migrate old single-boss shape
   if (!state.player.achievements) state.player.achievements = [];
   if (!state.player.trials) state.player.trials = { lastDay: -1, plays: 0, wins: 0 };
   if (state.lastStoneTick == null) state.lastStoneTick = Date.now();
@@ -270,24 +270,22 @@ export function addLog(state, msg) {
   if (state.log.length > 30) state.log.pop();
 }
 
-// Manifest the Ancient Terror when the player has just arrived at (or loaded
-// onto) its lair and the calamity is ready (stage-gated + off cooldown).
-// Announces the manifestation once. Called from move/travel/load.
+// Manifest whichever calamity's lair the player has just arrived at (or loaded
+// onto) when it's ready (stage-gated + off cooldown). Announces it once. Called
+// from move/travel/load.
 export function manifestBoss(state, now = Date.now()) {
-  if (maybeManifestBoss(state, now)) {
-    addLog(state, `The air curdles cold. ${BOSS.name} uncoils from beneath the Gorge — a calamity has manifested.`);
+  const boss = maybeManifestBoss(state, now);
+  if (boss) {
+    addLog(state, `The air curdles cold. ${boss.name} uncoils from its lair — a calamity has manifested.`);
     return true;
   }
   return false;
 }
 
-// One-time breadcrumb pointing an eligible cultivator toward the lair, so the
-// endgame encounter is discoverable without a dedicated quest.
+// One-time breadcrumbs pointing an eligible cultivator toward each lair in the
+// current zone, so the endgame encounters are discoverable without a quest.
 function maybeBossHint(state) {
-  const rec = state.player.boss;
-  if (rec.hintShown || state.zoneId !== BOSS.lair.zoneId || state.player.level < BOSS.minStage) return;
-  rec.hintShown = true;
-  addLog(state, `A dread pressure bleeds from the deepest reach of the Gorge, near (${BOSS.lair.x}, ${BOSS.lair.y}). Something ancient has taken notice of you.`);
+  for (const msg of bossHints(state)) addLog(state, msg);
 }
 
 // Wall-clock Qi regen: accrue whole Qi for elapsed time since the last tick.

@@ -1,0 +1,72 @@
+/* Theme system (task AA). Loaded AFTER style.css so these overrides win.
+   The DARK palette is the default and remains defined in style.css `:root`
+   (single source of truth for dark). This sheet adds:
+     1. the LIGHT palette — token overrides only, under :root[data-theme="light"];
+     2. a few targeted surface fixes for elements in style.css that hardcode a
+        colour (buttons/inputs/insets), which token overrides alone can't reach.
+   Switching themes is just flipping `data-theme` on <html> (js/theme.js). */
+
+/* 1 ─ Light palette: re-point the design tokens. Everything that reads a
+   var(--…) reskins automatically. Radii/rings/etc. inherit from :root. */
+:root[data-theme="light"] {
+  --bg: #ece7db;          /* warm parchment */
+  --panel: #f7f2e7;       /* raised card */
+  --panel-edge: #d6ccb6;
+  --edge-hi: #c4b89c;
+  --text: #2a2721;        /* dark ink */
+  --dim: #6f6857;
+  --gold: #977619;        /* darker gold — legible on light */
+  --gold-soft: rgba(151, 118, 25, 0.45);
+  --qi: #1c7ea6;
+  --win: #3f8f45;
+  --loss: #c0392b;
+  --draw: #8a7420;
+  /* Map danger bands stay green → amber → red, as light tints. */
+  --danger-1: #d7e7cf;
+  --danger-2: #efe2c2;
+  --danger-3: #f1d6cf;
+  --shadow-soft: 0 2px 10px rgba(60, 50, 30, 0.18);
+  --shadow-modal: 0 12px 48px rgba(40, 33, 20, 0.32);
+}
+
+/* 2 ─ Surface fixes for hardcoded colours in style.css (light theme only). */
+
+/* The page backdrop's radial glow hardcodes a dark centre. */
+:root[data-theme="light"] body {
+  background: radial-gradient(1200px 760px at 50% -12%, #f6f1e6, var(--bg)) fixed;
+}
+
+/* Controls hardcode a dark `#262a38` fill; text on them is var(--text) = dark
+   ink, so on a dark fill they'd be unreadable in light mode. Re-fill light. */
+:root[data-theme="light"] button,
+:root[data-theme="light"] input,
+:root[data-theme="light"] textarea,
+:root[data-theme="light"] select,
+:root[data-theme="light"] .item-slot,
+:root[data-theme="light"] .dbg-select,
+:root[data-theme="light"] .dbg-num {
+  background: #e7e0cf;
+}
+
+:root[data-theme="light"] button:disabled { background: #ded7c6; }
+
+/* Dark inset panels → light insets so their var(--text) content stays legible. */
+:root[data-theme="light"] #combat-log { background: #f2ecdf; }
+:root[data-theme="light"] .dur-bar { background: #cfc6b2; }
+
+/* The player glyph is hardcoded white; darken it for light tiles. */
+:root[data-theme="light"] .player-marker { color: #23324a; }
+
+/* Slightly deepen the modal scrim tint for light mode (the dark scrim is fine,
+   but a touch less opaque reads better against a light page). */
+:root[data-theme="light"] #codex-overlay,
+:root[data-theme="light"] #pavilion-overlay,
+:root[data-theme="light"] #sect-overlay,
+:root[data-theme="light"] #profile-overlay,
+:root[data-theme="light"] #settings-overlay,
+:root[data-theme="light"] #backup-overlay,
+:root[data-theme="light"] #bounty-overlay,
+:root[data-theme="light"] #achievements-overlay,
+:root[data-theme="light"] #forge-overlay {
+  background: rgba(30, 26, 16, 0.55);
+}

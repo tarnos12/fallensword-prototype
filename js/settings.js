@@ -14,11 +14,15 @@
 // (replay tutorial); the relocated controls stay bound by their original code,
 // which keeps this a genuinely low-conflict, additive feature.
 
+import { initThemeControl } from './theme.js';
+
 const $ = (id) => document.getElementById(id);
 
 export function initSettings() {
   const overlay = $('settings-overlay');
   if (!overlay) return;
+
+  initThemeControl(); // Appearance section: light/dark theme toggle (task AA)
 
   const open = () => overlay.classList.remove('hidden');
   const close = () => overlay.classList.add('hidden');

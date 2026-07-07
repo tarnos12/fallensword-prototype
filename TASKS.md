@@ -86,7 +86,7 @@ meridians, **U** gems) all add an independent additive line in the same
 | K | **Itch.io packaging & store page** (GDD §5) — `docs/STORE.md` draft (description, feature list, screenshot checklist), proper `<title>`/meta/OG + favicon, a one-file build/zip note, a `LICENSE`. | `docs/` *(new)*, `LICENSE`, `README.md` | `index.html` `<head>` only | `AVAILABLE` | — | — | — | — |
 | L | **Accessibility & keyboard input** — arrow/WASD tile movement, number/Esc hotkeys for modals, `:focus-visible` audit, ARIA roles on map/modals. | `js/input.js` *(new)* | `js/main.js` (wire), `css/style.css`, light `index.html` (aria) | `AVAILABLE` | — | — | — | — |
 | M | **Salvage / materials** — right-click "salvage" breaks unwanted gear into crafting materials (feeds task A). Materials are a stackable item type on `player`. | `js/salvage.js` *(new)* | `js/items.js` (material item shape), `js/game.js` (salvage wrapper), `js/ui.js` (context-menu entry), `css` | `AVAILABLE` | — | — | — | — |
-| N | **Meridian talent tree** — a permanent passive point tree (earned per breakthrough, separate from stat points) that feeds `effectiveStats`. Own ☯ modal. | `js/meridians.js` *(new)* | `js/progression.js` (one add-line in `effectiveStats` + a points grant on breakthrough), `js/actors.js` (`player.meridians`), `index.html`/`css`/`main.js` | `AVAILABLE` | — | — | — | — |
+| N | **Meridian talent tree** — a permanent passive point tree (earned per breakthrough, separate from stat points) that feeds `effectiveStats`. Own ☯ modal. | `js/meridians.js` *(new)* | `js/progression.js` (one add-line in `effectiveStats` + a points grant on breakthrough), `js/actors.js` (`player.meridians`), `css`/`main.js` (init) — **self-contained modal, no `index.html`/`ui.js`** | `CLAIMED` | choose-task-fxtfot | `claude/meridian-tree` | — | 2026-07-07 |
 | O | **Daily trials** — a rotating (wall-clock daily) challenge encounter with bonus rewards; one attempt per reset. | `js/trials.js` *(new)* | `js/game.js` (spawn/reward hook), `js/actors.js` (`player.trials` timestamp), `index.html`/`css`/`main.js` | `IN REVIEW` | pick-your-task-wakee5 | `claude/daily-trials` | #18 | 2026-07-07 |
 | P | **Hunt bounties** — a bounty board: "slay N of creature X" for stone/XP rewards, refreshed on a timer. Reads the existing bestiary kill counts. | `js/bounties.js` *(new)* | `js/game.js` (claim hook), `js/actors.js` (`player.bounties`), `index.html`/`css`/`main.js` | `DONE` | pick-your-task-aj14ny | `claude/hunt-bounties` | #16 | 2026-07-06 |
 | Q | **Sect disciple missions** — send hired disciples (task S sect) on timed wall-clock missions that return spirit stones / materials. Extends the Sect. | `js/sectmissions.js` *(new)* | `js/game.js` (tick + claim), `js/guild.js` (read members — no edit), `index.html`/`css`/`main.js` | `AVAILABLE` | — | — | — | — |
@@ -248,6 +248,18 @@ Format: `- [YYYY-MM-DD · session <id>] <comment>`.
 - [initial] New `js/salvage.js` + a stackable "material" item type. Right-click a pack item → "Salvage" → destroys it for materials scaled by rarity/level. Feeds task A (Crafting) — coordinate the material shape with whoever owns A (leave a note). Shared: `items.js` (material item), `game.js` (wrapper), `ui.js` (context-menu entry).
 
 ### Task N — Meridian talent tree
+- [2026-07-07 · session choose-task-fxtfot] Claimed (branch `claude/meridian-tree`).
+  Plan: `js/meridians.js` owns a small **node catalog** (flat stat nodes:
+  attack/defense/damage/armor/hp, ranked) + `meridianBonuses(player)` → flat
+  stat object, and its own ☯ modal (own button injected into `#nav-menu`, own DOM
+  — like `crafting.js`; **no `index.html`/`ui.js`**). Integration: **one add-line**
+  in `progression.js` `effectiveStats` (flat, alongside gear/cards, per the
+  reserved hook) + a **1 meridian point per breakthrough** grant in
+  `applyBreakthroughs`; `player.meridians = { points, nodes:{id:rank} }` on
+  `createPlayer`, back-filled in `createGame`. Game-layer `allocateMeridian`
+  wrapper. **Heads-up for B (sets) / U (gems):** my `effectiveStats` edit is one
+  additive block — keep yours a separate hunk. No `index.html`/`ui.js` touch.
+  Verify headless (points→node→effectiveStats delta) + real-Chromium.
 - [initial] New `js/meridians.js`: a permanent passive tree (nodes give flat/%% stats or Qi/economy perks), points granted on breakthrough (separate pool from stat points). ONE `effectiveStats` add-line in `progression.js`, `player.meridians` on the player (back-filled). Own ☯ modal. Read the conventions doc — passive sources plug into `effectiveStats`.
 
 ### Task O — Daily trials

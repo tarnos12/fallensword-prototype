@@ -13,7 +13,7 @@
 
 ## ▶ ACTIVE TASK — U · Gem sockets / enchanting
 
-- **Status:** `NOT STARTED` — starting now (Y → PR #27, Z → PR #32, both IN REVIEW).
+- **Status:** `IN REVIEW — PR #33`. **Queue now empty — awaiting a refill from #1.** (Y → PR #27, Z → PR #32, U → PR #33; all IN REVIEW.)
 - **Branch:** `claude/gem-sockets` (off latest `master`)
 - **Owned files (yours):** `js/sockets.js` *(new)*, `css/sockets.css` *(new)*
 - **Shared (edit minimally):** `js/items.js` (`sockets` on templates + a gem item
@@ -53,6 +53,32 @@
 
 ## Worker Log (append-only, newest first — you own this section)
 
+- [2026-07-07] **U done → PR #33.** New `js/sockets.js` + `css/sockets.css`
+  (owned; **`style.css` untouched**). Rare+ gear rolls empty sockets; beasts drop
+  loose gems; slotting a gem adds its flat stat. `sockets.js` owns the gem system
+  + a self-contained 💎 Jewelcraft modal (button injected into `#nav-menu`, like
+  Forge/Meridians) — slot/unslot happen there, NOT the right-click menu (cleaner
+  than coupling `ui.js` to the modal). **Shared-file hunks for #1's rebase:**
+  • `progression.js` `effectiveStats` — ONE add-line `socketBonuses(player)` right
+    after the meridian block (fifth flat source; honours broken-gear rule). Import
+    `socketBonuses` after the `meridians.js` import.
+  • `items.js` — import `{ socketCountFor, generateGem, GEM_DROP_CHANCE }` from
+    `./sockets.js` (one-directional, no cycle); `sockets` spread onto the object in
+    `generateItem` + `mintNamedItem`; a gem branch in `rollDrop` (gems ride the
+    existing loot path).
+  • `ui.js` — **same shared item-tooltip region as Task Y** (that's why U is mine):
+    (a) import line after the `itemcompare.js` import; (b) a gem branch at the top
+    of `itemTooltip` + `${socketLine(item)}` between `${stats}${dur}` and
+    `${compareRows(item)}`; (c) a gem branch in `makeItemSlot` (gem icon, no dura
+    bar); (d) a gem guard in `renderGear`'s inventory loop (no equip-on-click).
+  • `save.js` — persist a `gem` id counter alongside `item`/`creature` (additive,
+    old saves default 0).
+  • `main.js` — `initSockets(state, {slot,unslot})` + its import (+ `INVENTORY_SIZE`
+    from `items.js` for the unslot pack-full check).
+  • `index.html` — `<link rel="stylesheet" href="css/sockets.css">` (before
+    `responsive.css` if Z merges first, so responsive stays last).
+  Verified 37 headless + 9 Chromium DOM + 7 live-game checks, 0 console errors.
+  **This empties my queue — pinging #1 for the next assignment.**
 - [2026-07-07] **Z done → PR #32.** New `css/responsive.css` (owned; **`style.css`
   untouched**), linked **last** in `index.html` `<head>` so its media rules win.
   Presentation-only — **no `js`/`ui.js`** (tiles/nav are already `<button>`s, so

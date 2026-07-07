@@ -213,6 +213,11 @@ export function createProfileProvider(state) {
 
 let provider = null;
 let showRivalPicker = false;
+// Optional "Spar" handler injected by the game layer (Sparring / PvP-preview,
+// task D). Kept as an injected callback rather than a direct import so profile.js
+// stays free of a duel.js dependency (no module cycle).
+let onSpar = null;
+export function setSparHandler(fn) { onSpar = fn; }
 
 function fmtAgo(min) {
   if (min < 60) return `${min}m ago`;
@@ -277,6 +282,12 @@ function renderRivals() {
   for (const r of rivals) {
     const row = el('div', 'prof-social-row');
     row.appendChild(el('span', 'prof-social-name', personaLabelSafe(r)));
+    if (onSpar) {
+      const spar = el('button', 'claim-btn prof-mini-btn', 'Spar');
+      spar.title = 'Spar this rival — a friendly duel through the combat resolver';
+      spar.addEventListener('click', () => onSpar(r.id));
+      row.appendChild(spar);
+    }
     const btn = el('button', 'danger-btn prof-mini-btn', 'Unmark');
     btn.addEventListener('click', () => { provider.removeRival(r.id); refresh(); });
     row.appendChild(btn);

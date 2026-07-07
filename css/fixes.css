@@ -1,0 +1,33 @@
+/* Desktop horizontal-overflow fix.
+   Owned by this task; loaded AFTER css/responsive.css in index.html so this
+   desktop-scoped override wins where intended. Never edit css/style.css or
+   css/responsive.css — this sheet layers on top of them.
+
+   Root cause: css/style.css sets the pack grid to a FIXED track —
+     #inventory-list { grid-template-columns: repeat(6, 54px); }
+   Six 54px columns + five 8px gaps = 364px of un-shrinkable width. Inside the
+   flexible #char-panel / #side-panel columns this fixed track can push the
+   whole layout wider than the viewport, producing ~15px of desktop
+   horizontal overflow (a stray horizontal scrollbar).
+
+   Fix: let the track COUNT adapt to the container instead of pinning it to 6.
+   auto-fill + minmax(48px, 1fr) keeps the existing slot look (48px floor,
+   growing to fill) but wraps to as many columns as actually fit, so the grid
+   can never exceed its container. Scoped to >=621px so it does NOT disturb
+   css/responsive.css's <=620px mobile bottom-dock / grid behaviour (that sheet
+   is intentionally loaded last for mobile). */
+
+@media (min-width: 621px) {
+  #inventory-list {
+    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  }
+
+  /* Defensive belt-and-braces guard: even if some future fixed-width child
+     tries to over-extend a column, the page itself must never scroll
+     sideways. `clip` (unlike `hidden`) still allows vertical scroll and does
+     not create a scroll container, so it hides nothing legitimate — the real
+     fix above already keeps content within bounds; this only backstops it. */
+  html, body {
+    overflow-x: clip;
+  }
+}

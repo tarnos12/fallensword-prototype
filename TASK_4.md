@@ -11,41 +11,46 @@
 
 ---
 
-## ▶ ACTIVE TASK — X · Unified toast / feedback system
+## ▶ ACTIVE TASK — L · Accessibility & keyboard input
 
-- **Status:** `IN REVIEW — PR #22`
-- **Branch:** `claude/toast-system` (off latest `master`)
-- **Owned files (yours):** `js/toast.js` *(new)*, `css/toast.css` *(new)*
-- **Shared (edit minimally):** `js/main.js` — route a few high-signal events
-  through `toast(...)`; `index.html` `<head>` — add
-  `<link rel="stylesheet" href="css/toast.css">`.
-- **Goal:** one queue-based toast API `toast(message, type)` where `type ∈
-  {info, success, warn, error}`. Today feedback is buried in the Chronicle log;
-  surface the high-signal moments — drops, breakthroughs, purchases, quest/bounty
-  claims, and **errors** ("not enough spirit stones", "pack full") — as toasts.
-- **Constraints:** **coordinate with the existing achievements toast** (in
-  `js/achievements.js`) — either absorb it into your system or match its visual
-  language so there aren't two competing toast styles (note which you chose in
-  your Worker Log). No new save fields. Own a new sheet — do **not** append to
-  `css/style.css`.
-- **Verify (cloud — no localhost link):** headless queue logic (enqueue/dequeue,
-  types, no overlap) + real-Chromium (trigger a drop / an error → toast appears
-  and auto-dismisses, achievements still toast, 0 console errors). Tell the author
-  how to run locally in the PR body.
+**#1 refill (2026-07-07):** X and AA both merged (PR #22, #24) — excellent, clean
+work. New assignment below, staying in your UX-infrastructure lane.
 
-## ⏭ QUEUE (do these next, in order — no need to wait on #1)
+- **Status:** `ASSIGNED` → set to `IN REVIEW — PR #NN` here when your PR is open.
+- **Branch:** `claude/keyboard-a11y` (off latest `master`)
+- **Owned files (yours):** `js/input.js` *(new)* (+ a small `css/a11y.css` if you
+  need focus/skip-link styles — own sheet, link in `<head>`, don't append to `style.css`)
+- **Shared (edit minimally):** `js/main.js` (wire the input module once, near the
+  other `init*` calls — reuse the existing `tryMove`/modal-close functions, don't
+  duplicate them), light `index.html` (ARIA roles/labels on the map grid + modals;
+  a skip link).
+- **Goal:** make the game keyboard-playable and screen-reader-friendlier —
+  **arrow/WASD** move to the adjacent tile (reuse `tryMove`), **Esc** closes the
+  open modal, **digit keys** open the nav panels, a `:focus-visible` audit (build
+  on the polish-pass ring), and ARIA roles/labels on the map + the seven-plus modals.
+- **⚠ Coordinate with Task Z (mobile/touch, owner #2):** Z also adds map
+  interaction + a `main.js` input hook and may add a nav dock. Keep **keyboard**
+  (yours) and **touch** (Z) in **separate modules/hunks** and note your exact
+  `main.js` wiring line in your Worker Log so #1 can rebase whichever lands second.
+  You two don't need to sync directly — just stay in your own files.
+- **Verify (cloud — no localhost):** headless (key→move maps to `tryMove`; Esc
+  closes) + real Chromium (arrow keys move ☯, Esc closes a modal, focus ring
+  visible on Tab, 0 console errors). Tell the author how to run locally in the PR.
 
-1. ~~**AA · Theme system (light/dark)**~~ — ✅ **IN REVIEW — PR #24**
-   (`claude/theme-system`). Done.
+## ⏭ QUEUE (do next — no need to wait on #1)
 
-**⚑ QUEUE EMPTY — @#1 please refill.** Both assigned tasks are shipped and in
-review (X · toast → PR #22, AA · theme → PR #24). I'm idle and ready for the next
-assignment; drop it in the ACTIVE TASK slot above and I'll pick it up. (Per
-protocol I'm **not** grabbing a board row myself.) Suggested fits for this
-session's "global UX infrastructure" focus if useful: **W · combat juice**,
-**Y · item-comparison tooltips**, or **Z · mobile/touch overhaul** — your call.
+1. **K · Itch.io packaging & store page** — branch `claude/itch-packaging`. Owns
+   `docs/STORE.md` (store description, feature bullets, screenshot shot-list),
+   `LICENSE`, `README.md`. Shared: `index.html` `<head>` only (title/meta/OG —
+   **don't regress the inline ☯ favicon** the polish pass added). A short
+   "how to zip & upload to itch.io" note. Lowest-conflict task on the board.
 
 *(When the queue empties, ping #1 for a refill — don't grab a board row yourself.)*
+
+## ✅ COMPLETED THIS SESSION
+
+- **X · Unified toast / feedback system** — **MERGED, PR #22** (`claude/toast-system`).
+- **AA · Theme system (light/dark)** — **MERGED, PR #24** (`claude/theme-system`).
 
 ---
 

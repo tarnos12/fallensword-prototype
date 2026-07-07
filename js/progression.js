@@ -54,6 +54,12 @@ export const POINT_VALUE = { attack: 1, defense: 1, damage: 1, armor: 1, hp: 4 }
 
 export const ALLOC_STATS = ['attack', 'defense', 'damage', 'armor', 'hp'];
 
+// Ascension / New Game+ (task V): each completed ascension grants a permanent
+// +8% to every effective stat, applied as the final global scalar in
+// effectiveStats. Read straight off `player.ascension` (a plain integer) so
+// progression.js stays free of an ascension.js import (no module cycle).
+export const ASCENSION_STAT_PER_TIER = 0.08;
+
 // --- Stat-modifier aggregation pipeline (GDD §7.3). Effective stats are
 // always derived, never mutated in place:
 //   base + allocated points + gear + Spirit Cards + active technique buffs.
@@ -118,6 +124,15 @@ export function effectiveStats(player, now = Date.now()) {
     for (const [stat, pct] of Object.entries(buff.effect)) {
       const key = stat === 'hp' ? 'maxHp' : stat;
       eff[key] = Math.max(1, Math.round(eff[key] * (1 + pct)));
+    }
+  }
+  // Ascension / New Game+ (task V): a permanent global scalar over the fully
+  // resolved stats — the prestige power that makes each NG+ run stronger.
+  const asc = player.ascension ?? 0;
+  if (asc > 0) {
+    const m = 1 + ASCENSION_STAT_PER_TIER * asc;
+    for (const k of ['attack', 'defense', 'damage', 'armor', 'maxHp']) {
+      eff[k] = Math.max(1, Math.round(eff[k] * m));
     }
   }
   return eff;

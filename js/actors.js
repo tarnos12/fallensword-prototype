@@ -91,5 +91,6 @@ export function createPlayer() {
     learnedTechniques: [], // technique ids (GDD §6.4)
     activeBuffs: [], // { techniqueId, effect, expiresAt } — timed technique buffs
     stats: {}, // lifetime counters (task S3): fightsWon/Lost/Drawn, stonesWon, itemsLooted, msPlayed
+    ascension: 0, // Ascension / New Game+ tier (task V): permanent +stat% per tier
   };
 }

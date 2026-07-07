@@ -21,17 +21,32 @@ import { setLine, setSetsContext } from './sets.js'; // task B: gear set progres
 
 const $ = (id) => document.getElementById(id);
 
+// HUD (board task AB): the chip-* spans carry the value text; the bar-* fills
+// visualise Qi and breakthrough progress as meters. `barWidth` is defensive so
+// renderPlayerBar still works if a layout omits the bar elements.
+const pct = (a, b) => (b > 0 ? Math.max(0, Math.min(100, (a / b) * 100)) : 0);
+function barWidth(id, ratio) {
+  const el = $(id);
+  if (el) el.style.width = ratio + '%';
+}
+
 export function renderPlayerBar(state) {
   const p = state.player;
   const eff = effectiveStats(p);
   const need = xpForBreakthrough(p.level);
+  const atPeak = p.level >= MAX_STAGE;
+  const qi = state.qi;
+  const qiMax = maxQi(p);
   $('chip-level').textContent = stageName(p.level);
-  $('chip-xp').textContent = p.level >= MAX_STAGE ? `XP ${p.xp} (peak)` : `XP ${p.xp}/${need}`;
-  $('chip-points').textContent = `✦ ${p.statPoints} pts`;
+  $('chip-xp').textContent = atPeak ? `${p.xp} · peak` : `${p.xp} / ${need}`;
+  $('chip-points').textContent = `✦ ${p.statPoints}`;
   $('chip-points').classList.toggle('attention', p.statPoints > 0);
   $('chip-stones').textContent = `◆ ${p.spiritStones}`;
-  $('chip-hp').textContent = `HP ${eff.maxHp}`;
-  $('chip-qi').textContent = `Qi ${state.qi}/${maxQi(p)}`;
+  $('chip-hp').textContent = eff.maxHp;
+  $('chip-qi').textContent = `${qi} / ${qiMax}`;
+  // Meter fills.
+  barWidth('bar-xp', atPeak ? 100 : pct(p.xp, need));
+  barWidth('bar-qi', pct(qi, qiMax));
 }
 
 export function renderMap(state, onTileClick) {

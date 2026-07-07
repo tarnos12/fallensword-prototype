@@ -1,0 +1,206 @@
+/* Navigation & HUD redesign (board task AB). Own sheet — style.css untouched.
+   Linked AFTER style.css/theme.css so it restyles the HUD + nav, but BEFORE
+   css/responsive.css so that sheet's ≤620px mobile rules (the fixed bottom nav
+   dock authored in task Z) still win. Everything reads the style.css design
+   tokens, so it reskins for light/dark for free.
+
+   Two pieces:
+   1. The top HUD (#player-bar): the flat stat-chips become labelled stat tiles,
+      with Qi and breakthrough progress shown as real meters (fills driven by
+      renderPlayerBar's bar-qi / bar-xp width). chip-* ids are preserved as the
+      value/text spans, so bindings + the tutorial spotlight are unchanged.
+   2. The nav (#nav-menu): the ad-hoc button grid becomes a titled, auto-fit
+      dock of uniform tiles — works for both the static buttons and the ones
+      modules inject at runtime (Forge/Meridians/Jewelcraft/Chronicle/…). */
+
+/* ===== 1. HUD ===== */
+
+/* Give the header room for the richer HUD and let it wrap gracefully. */
+#header {
+  align-items: center;
+  padding: 8px 18px;
+  gap: 10px 18px;
+}
+
+#player-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 8px;
+}
+
+/* A stat tile: small caps label above a bold value. */
+.hud-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 64px;
+  padding: 4px 11px;
+  border: 1px solid var(--panel-edge);
+  border-top-color: var(--edge-hi);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, #23262f, #1b1e27);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), var(--shadow-soft);
+}
+
+.hud-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--dim);
+  line-height: 1;
+}
+
+.hud-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  color: var(--text, #e8e4d8);
+}
+
+.hud-gold { color: var(--gold); }
+.hud-key .hud-value { color: var(--gold); letter-spacing: 0.3px; }
+
+/* The unspent-points tile pulses gold when there's something to spend. */
+.hud-value.attention {
+  color: var(--gold);
+  animation: hud-attention 1.6s ease-in-out infinite;
+}
+@keyframes hud-attention {
+  0%, 100% { text-shadow: none; }
+  50% { text-shadow: 0 0 8px rgba(212, 175, 55, 0.7); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hud-value.attention { animation: none; text-shadow: 0 0 6px rgba(212, 175, 55, 0.6); }
+}
+
+/* Meter tiles (Qi, breakthrough): a filled track with the value centred over it. */
+.hud-meter { min-width: 150px; flex: 1 1 150px; max-width: 240px; }
+
+.hud-track {
+  position: relative;
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.hud-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  border-radius: 999px;
+  transition: width 0.35s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hud-fill { transition: none; }
+}
+
+.hud-fill-qi { background: linear-gradient(90deg, #2a7ea8, var(--qi)); }
+.hud-fill-xp { background: linear-gradient(90deg, #9c7a1e, var(--gold)); }
+
+.hud-meter-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  letter-spacing: 0.3px;
+}
+
+/* ===== 2. Nav dock ===== */
+
+#nav-menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  gap: 8px;
+  align-content: start;
+  padding-top: 10px;
+}
+
+.nav-dock-title {
+  grid-column: 1 / -1;
+  margin: 0 0 2px;
+  font-size: 0.66rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--dim);
+  border-bottom: 1px solid var(--panel-edge);
+  padding-bottom: 6px;
+}
+
+#nav-menu button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  min-height: 46px;
+  margin: 0;
+  padding: 8px 9px;
+  font-size: 0.8rem;
+  text-align: center;
+  line-height: 1.15;
+  color: var(--gold);
+  border: 1px solid var(--gold-soft);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, #23262f, #1b1e27);
+  transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+#nav-menu button:hover:not(:disabled) {
+  border-color: var(--gold);
+  background: #2b2f3d;
+  transform: translateY(-1px);
+}
+#nav-menu button:active:not(:disabled) { transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  #nav-menu button { transition: none; }
+  #nav-menu button:hover:not(:disabled) { transform: none; }
+}
+
+/* Badges (mail counts, claimable counts, day markers) ride the top-right corner
+   so they don't shove the label around. */
+#nav-menu button .mail-badge:not(.hidden) {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.62rem;
+  border-radius: 999px;
+  background: var(--loss);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* ===== 3. Mobile reconciliation with css/responsive.css (task Z) =====
+   responsive.css (linked after this) turns #nav-menu into a fixed bottom dock at
+   ≤620px and wins on layout; here we only hide the dock title (which would be an
+   odd flex item in that bar) and tighten the HUD tiles for small screens. */
+@media (max-width: 620px) {
+  .nav-dock-title { display: none; }
+  #player-bar { gap: 6px; width: 100%; }
+  .hud-stat { min-width: 0; padding: 3px 9px; flex: 1 1 auto; }
+  .hud-value { font-size: 0.85rem; }
+  .hud-meter { flex: 1 1 120px; min-width: 110px; }
+  .hud-track { height: 16px; }
+}
+
+/* Very small phones: let the tiles pack two-up instead of overflowing. */
+@media (max-width: 380px) {
+  .hud-label { font-size: 0.55rem; }
+  .hud-value { font-size: 0.8rem; }
+}

@@ -73,6 +73,7 @@ import { stageName } from './progression.js';
 import { recordFight, initReplay, getLastFight, setReplayVisible } from './replay.js';
 import { initInput } from './input.js';
 import { initStats } from './stats.js';
+import { initEventBanner, renderEventBanner } from './events.js';
 import { initDebug } from './debug.js'; // TESTING ONLY (strip before demo)
 
 const state = createGame();
@@ -376,6 +377,7 @@ initMeridians(state, {
 initToasts(); // unified toast/feedback host (task X)
 initReplay(state, { onReplay: (result) => runPlayback(result) });
 initStats(state); // 📊 Chronicle of Deeds (lifetime stats)
+initEventBanner(); // world-events HUD strip under the header (task R)
 initDebug(state, renderAll); // TESTING ONLY (strip before demo)
 renderAll();
 initTutorial(); // first-run onboarding overlay (+ ❔ Help button); after renderAll so targets exist
@@ -388,6 +390,7 @@ initInput({ move: (dx, dy) => onTileClick(state.pos.x + dx, state.pos.y + dy) })
 // (once per second).
 setInterval(() => {
   tickPlaytime(state); // accrue active playtime for the Chronicle (task S3)
+  renderEventBanner(); // refresh the world-event HUD countdown (task R)
   const qiBefore = state.qi;
   tickQi(state);
   const stonesGained = tickStones(state); // spirit-stones/hour Spirit Cards

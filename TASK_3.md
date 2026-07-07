@@ -43,6 +43,14 @@
    `js/game.js` (one guarded multiplier line in the reward path), `js/main.js`/css
    (a HUD banner showing the active event + time remaining). Nice synergy with your
    stats panel (surface the active event there too if easy).
+2. **C · Alchemy / consumables** (GDD §6.4) — branch `claude/alchemy-consumables`.
+   Owns `js/alchemy.js` (+ own css). Brew pills from drops + spirit stones →
+   timed buff / instant Qi / instant XP, stored in a `player.consumables` pouch
+   (additive on `createPlayer`, back-filled, no VERSION bump), used from a 🜁 modal.
+   Reuse the existing `activeBuffs`/technique-buff shape for timed pills so they
+   flow through `effectiveStats` for free. Shared: `js/game.js` (brew/use wrappers
+   + a tick if a buff expires), `js/actors.js` (`player.consumables`),
+   `index.html`/css/`js/main.js` (button + modal init). Self-contained; no `ui.js`.
 
 *(When the queue empties, ping #1 for a refill — don't grab a board row yourself.)*
 

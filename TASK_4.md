@@ -44,6 +44,15 @@ work. New assignment below, staying in your UX-infrastructure lane.
    `LICENSE`, `README.md`. Shared: `index.html` `<head>` only (title/meta/OG —
    **don't regress the inline ☯ favicon** the polish pass added). A short
    "how to zip & upload to itch.io" note. Lowest-conflict task on the board.
+2. **Q · Sect disciple missions** — branch `claude/sect-missions`. Owns
+   `js/sectmissions.js` (+ own css). Send hired disciples (from the merged Sect,
+   `guild.js`) on **timed wall-clock missions** that return spirit stones /
+   materials to a mailbox-like tray — same offline/elapsed-time pattern as Qi
+   regen and the Pavilion. Reads `guild.js` `getMembers()` (**no edit** to
+   guild.js). Shared: `js/game.js` (a tick that resolves finished missions + a
+   claim wrapper), `index.html`/css/`js/main.js` (button + modal). Persist active
+   missions on an additive `player.sectMissions` field (back-filled, no VERSION
+   bump). Self-contained modal; no `ui.js`.
 
 *(When the queue empties, ping #1 for a refill — don't grab a board row yourself.)*
 

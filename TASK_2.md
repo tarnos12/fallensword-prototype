@@ -39,6 +39,15 @@
    small screens, tap-to-move map (reuse `tryMove`), `env(safe-area-inset-*)`,
    zero horizontal overflow at 320px. Build on the polish pass's ≤900/≤620px
    breakpoints, don't fight them.
+2. **U · Gem sockets / enchanting** — branch `claude/gem-sockets`. Owns
+   `js/sockets.js` (+ own css). Higher-rarity gear rolls `sockets`; slotting a
+   dropped "gem" item adds flat stats via **one add-line in `progression.js`
+   `effectiveStats`** (like the merged meridians/cards sources — keep it a separate
+   hunk). Shared: `js/items.js` (`sockets` on templates + a gem item type),
+   `js/ui.js` (show sockets/gems in the item tooltip — **this is the same tooltip
+   region as your Task Y, which is why U is yours**: keep both tooltip edits in
+   this session so no other session touches that `ui.js` code). Coordinate the
+   `effectiveStats` add-line ordering only if Task B (sets) is also in flight.
 
 *(When the queue empties, ping #1 for a refill — don't grab a board row yourself.)*
 

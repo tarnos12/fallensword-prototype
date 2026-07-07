@@ -1,0 +1,124 @@
+/* Mobile / touch & responsive overhaul (Stage 3, board task Z).
+   Owned by this task. Linked LAST in <head> so its media-query rules override
+   the base sheet + the polish pass's ≤900/≤620 breakpoints (which this builds
+   on, not against). Everything here is presentation-only — no markup or JS
+   needed: the map tiles and nav buttons are already real <button>s, so tap =
+   click and tap-to-move works natively. */
+
+/* --- Global touch niceties (all viewports) --- */
+
+/* Kill the 300ms tap delay + give a themed tap flash on interactive elements. */
+button, a, .tile, .item-slot, .pav-tab, input, select, textarea, label {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(212, 175, 55, 0.18);
+}
+
+/* Belt-and-braces against horizontal overflow on small screens. */
+html { overflow-x: hidden; }
+img, svg, textarea { max-width: 100%; }
+
+/* The map grid's columns are set inline to `repeat(N, 1fr)` by renderMap; `1fr`
+   (= minmax(auto,1fr)) refuses to shrink a tile below its content, which forces
+   the whole grid wider than a phone. Letting a tile shrink to 0 min-width lets
+   the tracks collapse so the grid always fits its container — the CSS-only fix
+   (no ui.js change). Harmless on desktop, where the grid has a fixed width. */
+.tile { min-width: 0; }
+#map-grid { max-width: 100%; }
+
+/* --- Phone layout (≤620px): single column + a fixed bottom nav dock --- */
+@media (max-width: 620px) {
+  /* The base sheet gives the side/char columns a min-width (320/280px) for the
+     desktop 3-column layout; on a phone that forces horizontal overflow, so
+     collapse them to full-width single-column. */
+  #map-panel, #side-panel, #char-panel { min-width: 0; max-width: 100%; width: 100%; }
+
+  /* Respect notches/rounded corners top & sides. */
+  #header {
+    padding-top: calc(8px + env(safe-area-inset-top));
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+  #layout {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    /* Clear space for the fixed bottom dock so the last panel isn't hidden. */
+    padding-bottom: calc(68px + env(safe-area-inset-bottom));
+  }
+
+  /* Bigger, thumb-friendly tap targets. */
+  button { min-height: 40px; }
+  .item-slot { touch-action: manipulation; }
+  .monster-row button, .combat-buttons button { min-height: 42px; }
+
+  /* The nav-menu becomes a fixed bottom dock — persistent, thumb-reachable.
+     Reuses the existing feature buttons (Codex/Pavilion/Sect/… + any a later
+     session injects), so it never needs new markup. Horizontal-scrolls if the
+     button count outgrows the width. */
+  #nav-menu {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 45;
+    display: flex;
+    grid-template-columns: none; /* override the polish grid */
+    gap: 6px;
+    margin: 0;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    border: 0;
+    border-top: 1px solid var(--gold-soft, rgba(212, 175, 55, 0.5));
+    border-radius: 0;
+    background: linear-gradient(0deg, var(--bg, #14161d), #1b1e28);
+    box-shadow: 0 -3px 14px rgba(0, 0, 0, 0.45);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  #nav-menu::-webkit-scrollbar { display: none; }
+  #nav-menu button {
+    flex: 0 0 auto;
+    width: auto;
+    margin: 0;
+    white-space: nowrap;
+    min-height: 44px;
+    font-size: 0.8rem;
+  }
+
+  /* Modals: use the full small screen; keep them clear of the notch + dock. */
+  [id$='-overlay'] {
+    padding: 12px 8px calc(12px + env(safe-area-inset-bottom)) !important;
+    align-items: flex-start;
+  }
+  [id$='-panel'] { max-width: 100% !important; padding: 14px 14px 18px !important; }
+
+  /* Let long names/rows wrap instead of pushing the page wide. */
+  .pav-name, .forge-name, .mer-name, .sect-name, .codex-title, .cmp-head { overflow-wrap: anywhere; }
+  .pav-row, .forge-row, .mer-row, .sect-row { flex-wrap: wrap; }
+
+  /* Slightly larger body text for readability on small screens. */
+  .empty-note, .tt-line, .quest-text { font-size: 0.85rem; }
+}
+
+/* --- Very small phones (≤380px): tighten so nothing overflows at 320px. --- */
+@media (max-width: 380px) {
+  #header h1 { font-size: 1.05rem; }
+  #player-bar { gap: 5px; }
+  .stat-chip { padding: 3px 7px; font-size: 0.8rem; }
+  #layout { padding-left: 8px; padding-right: 8px; }
+  #inventory-list { grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); }
+  #nav-menu button { font-size: 0.74rem; padding: 8px 7px; }
+}
+
+/* Tablet band (621–900px): the columns still sit side-by-side, but the pack's
+   fixed `repeat(6, 54px)` grid (~370px) can overflow the narrowed char column.
+   Make it auto-fill so it wraps to fit — the phone (≤620) already gets polish's
+   48px auto-fill, so scope this above that to leave it untouched. */
+@media (min-width: 621px) and (max-width: 900px) {
+  #inventory-list { grid-template-columns: repeat(auto-fill, 54px); }
+}
+
+/* Wider phones / small tablets in landscape keep the desktop columns but never
+   let a fixed-width child force a scrollbar. */
+@media (max-width: 900px) {
+  #combat-log, #event-list { max-width: 100%; }
+}

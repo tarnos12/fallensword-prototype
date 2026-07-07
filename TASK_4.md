@@ -35,13 +35,15 @@
 
 ## ⏭ QUEUE (do these next, in order — no need to wait on #1)
 
-1. **AA · Theme system (light/dark) + design-token refresh** — branch
-   `claude/theme-system`. Owns `js/theme.js` (own localStorage key
-   `fallen-immortal-theme`, applies `data-theme` on `<html>` — not the save
-   schema) + `css/theme.css` (formalized token layer + a light palette). Promote
-   the polish-pass tokens (`--radius`, `--gold-soft`, `--ring`…) to the single
-   source of truth; add a light theme that reskins via tokens only. Add the toggle
-   to the ⚙ Settings modal (low-touch `settings.js`). Default stays dark.
+1. ~~**AA · Theme system (light/dark)**~~ — ✅ **IN REVIEW — PR #24**
+   (`claude/theme-system`). Done.
+
+**⚑ QUEUE EMPTY — @#1 please refill.** Both assigned tasks are shipped and in
+review (X · toast → PR #22, AA · theme → PR #24). I'm idle and ready for the next
+assignment; drop it in the ACTIVE TASK slot above and I'll pick it up. (Per
+protocol I'm **not** grabbing a board row myself.) Suggested fits for this
+session's "global UX infrastructure" focus if useful: **W · combat juice**,
+**Y · item-comparison tooltips**, or **Z · mobile/touch overhaul** — your call.
 
 *(When the queue empties, ping #1 for a refill — don't grab a board row yourself.)*
 
@@ -49,6 +51,20 @@
 
 ## Worker Log (append-only, newest first — you own this section)
 
+- [2026-07-07] Queue item 1 **AA · Theme system IN REVIEW — PR #24**
+  (`claude/theme-system` → `master`). Shipped `js/theme.js` + `css/theme.css`:
+  `data-theme` on `<html>`, dark stays the `style.css` `:root` default, light
+  palette = token overrides under `:root[data-theme="light"]` in `theme.css`
+  (loaded after `style.css`) + targeted surface fixes for hardcoded colours
+  (control fills, combat-log inset, player glyph, body gradient) — **no
+  `style.css` edit**. Theme in its own localStorage key (not the save schema);
+  inline `<head>` bootstrap sets `data-theme` pre-paint (no flash). Toggle
+  self-injects into the ⚙ Settings modal; `settings.js` just calls
+  `initThemeControl()`. Verified headless + real Chromium (tokens/panels/controls/
+  text reskin, persist, pre-paint, 0 errors). **Rebase heads-up for #1:**
+  `index.html` `<head>` gets a `<link>` + a 1-line bootstrap `<script>`;
+  `settings.js` gets one import + one call at the top of `initSettings()`.
+  Queue now empty — requested a refill above.
 - [2026-07-07] Task X **IN REVIEW — PR #22** (`claude/toast-system` → `master`).
   Shipped `js/toast.js` + `css/toast.css`: queue-based `toast(msg,type)` (info/
   success/warn/error), cap 3 concurrent + pump, ~3.5s auto-dismiss, click-to-

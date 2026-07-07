@@ -24,6 +24,7 @@ import {
 import {
   rollDrop,
   generateItem,
+  mintNamedItem,
   RARITIES,
   degradeEquipment,
   equipItem as equip,
@@ -524,7 +525,11 @@ export function claimQuest(state) {
   }
   if (r.stones) p.spiritStones += r.stones;
   if (r.item) {
-    const item = generateItem(r.item.slot, r.item.level, r.item.rarity, state.worldRng);
+    // A reward may name a specific hand-authored artifact (epic quest chain,
+    // GDD §5) or specify slot/level/rarity for a rolled one.
+    const item = r.item.named
+      ? mintNamedItem(r.item.named)
+      : generateItem(r.item.slot, r.item.level, r.item.rarity, state.worldRng);
     p.inventory.push(item);
     addLog(state, `Quest reward: ${item.name}.`);
   }

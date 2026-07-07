@@ -76,6 +76,51 @@ export const QUESTS = [
     target: { stage: 10 },
     reward: { stones: 800, item: { slot: 'weapon', level: 8, rarity: 'rare' } },
   },
+  // --- Epic saga: The Heaven-Severing Blade (GDD §5). A multi-step endgame
+  // chain that opens once the player has established their Foundation, spanning
+  // both zones and culminating in a hand-authored Legendary artifact. Reward
+  // items with an `item.named` key mint a fixed NAMED_ITEMS artifact instead of
+  // a random roll (see game.js claimQuest + items.js mintNamedItem). ---
+  {
+    id: 'epic-omens',
+    title: 'Omens in the Vale',
+    text: 'A blind sect oracle wakes screaming of a blade sealed beneath the ash. She bids you gather death-omens first: slay 8 Bone Serpents in Azuremist Vale, that their grave-chill may point the way.',
+    type: 'kill',
+    target: { typeId: 'boneSerpent', count: 8 },
+    reward: { stones: 500, xp: 600 },
+  },
+  {
+    id: 'epic-fragment',
+    title: 'The Cinderbound Fragment',
+    text: 'The omens converge on the deepest scar of Cindervein Gorge. Journey to the ember-cracked altar at (9, 9) and recover the first fragment of the seal.',
+    type: 'reach',
+    target: { zone: 'cindervein', x: 9, y: 9 },
+    reward: { stones: 300, xp: 400, item: { named: 'ashenAegis' } },
+  },
+  {
+    id: 'epic-trial',
+    title: 'Trial of Ash and Iron',
+    text: 'The fragment must be tempered in golem-fire. Break 10 Cinder Golems upon the anvil of the Gorge and quench the seal in their molten cores.',
+    type: 'kill',
+    target: { typeId: 'cinderGolem', count: 10 },
+    reward: { stones: 700, xp: 800 },
+  },
+  {
+    id: 'epic-sentinel',
+    title: "The Sentinel's Vigil",
+    text: 'One guardian yet stands between you and the blade. Face the Ashen Revenant that keeps the deep Gorge — measure your resolve against the wall of the realm.',
+    type: 'face',
+    target: { typeId: 'ashenRevenant', count: 1 },
+    reward: { stones: 500, xp: 1200 },
+  },
+  {
+    id: 'epic-reforge',
+    title: "Reforging Heaven's Edge",
+    text: 'The seal is broken, but the blade will answer only to a cultivator of true Foundation. Ascend to Foundation Establishment 5, and Skyfracture — the Heaven-Severing Blade — is yours.',
+    type: 'stage',
+    target: { stage: 14 },
+    reward: { stones: 2000, item: { named: 'heavenSeverer' } },
+  },
 ];
 
 export function createQuestState() {

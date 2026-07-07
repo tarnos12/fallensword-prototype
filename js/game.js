@@ -48,6 +48,7 @@ import { saveLoadout, applyLoadout, deleteLoadout } from './loadouts.js';
 import { normalizeBossState, maybeManifestBoss, onBossDefeated, bossHints } from './boss.js';
 import { recordAchievements } from './achievements.js';
 import * as Trials from './trials.js';
+import { eventReward } from './events.js';
 import { saveGame, loadGame, clearSave } from './save.js';
 
 // --- Qi (stamina) tuning. Prototype regen is fast so playtesting isn't
@@ -451,6 +452,10 @@ export function attack(state, monsterId) {
       // never replaces an item drop.
       cardId = rollCardDrop(monster.typeId, state.worldRng);
     }
+    // World event (task R): the active calendar event's global reward multipliers.
+    const ev = eventReward();
+    xp = Math.round(xp * ev.xpMult);
+    stones = Math.round(stones * ev.stoneMult);
     p.spiritStones += stones;
     trackKill(state, monster);
     Quests.onKill(state.quests, monster.typeId);

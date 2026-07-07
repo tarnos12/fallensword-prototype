@@ -1632,3 +1632,85 @@ button[title="Close"]:hover:not(:disabled) {
 @media (max-width: 620px) {
   .forge-actions { flex-direction: row; flex-wrap: wrap; width: 100%; }
 }
+
+/* --- Stage 3: Hunt bounties --- */
+
+.bounties-btn { width: 100%; margin-top: 8px; color: var(--gold); border-color: var(--gold); position: relative; }
+
+#bounty-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(8, 9, 13, 0.78);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  overflow-y: auto;
+}
+
+#bounty-panel {
+  background: var(--panel);
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 560px;
+  padding: 16px 20px 22px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+}
+
+#bounty-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--panel-edge);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+#bounty-header h2 { margin: 0; color: var(--gold); font-weight: normal; letter-spacing: 1px; }
+
+.bounty-note { font-size: 0.8rem; color: var(--dim); margin: 0 0 12px; line-height: 1.5; }
+
+#bounty-body h3 {
+  margin: 14px 0 8px;
+  font-size: 0.9rem;
+  color: var(--gold);
+  font-weight: normal;
+  letter-spacing: 1px;
+}
+
+.bounty-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid var(--panel-edge);
+  border-radius: 6px;
+  background: var(--bg);
+  margin-bottom: 8px;
+}
+
+.bounty-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+
+.bounty-name { font-size: 0.9rem; }
+
+.bounty-sub { font-size: 0.78rem; }
+
+.bounty-reward-chip {
+  display: inline-block;
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  border-radius: 4px;
+  padding: 1px 8px;
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+
+.bounty-row button { white-space: nowrap; }
+
+.accept-btn { color: var(--gold); border-color: var(--gold); }
+
+.bounty-progress-btn { color: var(--dim); }

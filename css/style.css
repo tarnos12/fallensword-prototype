@@ -1906,3 +1906,86 @@ button[title="Close"]:hover:not(:disabled) {
 .trial-attempt-btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
 
 .trial-note { font-size: 0.78rem; color: var(--dim); margin: 10px 0 0; text-align: center; }
+
+/* --- Stage 3: Meridian talent tree (GDD §5) --- */
+
+#meridian-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(8, 9, 13, 0.78);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  overflow-y: auto;
+}
+
+#meridian-panel {
+  background: var(--panel);
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 560px;
+  padding: 16px 20px 22px;
+  box-shadow: var(--shadow-modal, 0 8px 40px rgba(0, 0, 0, 0.7));
+}
+
+#meridian-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--panel-edge);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+#meridian-header h2 { margin: 0; color: var(--gold); font-weight: normal; letter-spacing: 1px; }
+
+.mer-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+
+.mer-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 11px;
+  border: 1px solid var(--panel-edge);
+  border-radius: 6px;
+  background: var(--bg);
+  flex-wrap: wrap;
+}
+
+.mer-info { flex: 1 1 200px; min-width: 180px; }
+
+.mer-name { font-weight: bold; font-size: 0.9rem; }
+
+.mer-desc { font-size: 0.75rem; font-style: italic; margin: 2px 0; line-height: 1.4; }
+
+.mer-bonus { font-size: 0.8rem; }
+
+.mer-cur { color: var(--gold); font-weight: bold; }
+
+.mer-pips { display: flex; gap: 4px; flex: 0 0 auto; }
+
+.mer-pip {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1px solid var(--panel-edge);
+  background: #262a38;
+}
+
+.mer-pip.on {
+  border-color: var(--gold);
+  background: radial-gradient(circle at 40% 35%, #f4d774, var(--gold));
+  box-shadow: 0 0 5px rgba(212, 175, 55, 0.5);
+}
+
+.mer-open-btn { font-size: 0.76rem; padding: 5px 10px; white-space: nowrap; color: var(--gold); border-color: var(--gold-soft, var(--panel-edge)); flex: 0 0 auto; }
+.mer-open-btn:hover:not(:disabled) { border-color: var(--gold); }
+
+@media (max-width: 620px) {
+  .mer-pips { order: 3; width: 100%; }
+}

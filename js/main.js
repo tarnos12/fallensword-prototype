@@ -59,13 +59,14 @@ import {
 import { initTutorial } from './tutorial.js';
 import { initSettings } from './settings.js';
 import { initLoadouts, renderLoadouts } from './loadouts.js';
-import { exportSave, importSave } from './save.js';
+import { exportSave, importSave, saveGame } from './save.js';
 import { initProfile, setSparHandler } from './profile.js';
 import { initDuel, openDuel } from './duel.js';
 import { initAchievements, updateAchievementBadge, showAchievementToasts } from './achievements.js';
 import { initForge } from './crafting.js';
 import { initBounties, renderBounties, updateBountyBadge } from './bounties.js';
 import { initTrials, renderTrialBadge } from './trials.js';
+import { initMeridians, allocateMeridian } from './meridians.js';
 import { initDebug } from './debug.js'; // TESTING ONLY (strip before demo)
 
 const state = createGame();
@@ -314,6 +315,12 @@ initBounties(state, {
 });
 initTrials(state, {
   onAttempt: () => { const res = attemptDailyTrial(state); renderAll(); return res; },
+});
+initMeridians(state, {
+  allocate: (id) => {
+    if (allocateMeridian(state.player, id).ok) saveGame(state);
+    renderAll(); // effective stats now reflect the opened meridian
+  },
 });
 initDebug(state, renderAll); // TESTING ONLY (strip before demo)
 renderAll();

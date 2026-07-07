@@ -1,0 +1,61 @@
+/* Fight replay & share (task T). Own sheet — no collision with style.css. */
+
+.replay-btn { color: var(--qi, #4fc3f7); border-color: var(--qi, #4fc3f7); }
+
+#replay-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(8, 9, 13, 0.78);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  overflow-y: auto;
+}
+
+#replay-panel {
+  background: var(--panel, #1d2029);
+  border: 1px solid var(--gold, #d4af37);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 540px;
+  padding: 16px 20px 22px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+}
+
+#replay-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--panel-edge, #2c3040);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+#replay-header h2 { margin: 0; color: var(--gold, #d4af37); font-weight: normal; letter-spacing: 1px; }
+
+#btn-close-replay { padding: 2px 10px; }
+
+.replay-note { font-size: 0.82rem; color: var(--dim, #8a8778); margin: 0 0 10px; }
+
+#replay-text {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg, #14161d);
+  color: var(--text, #d6d3c8);
+  border: 1px solid var(--panel-edge, #2c3040);
+  border-radius: 4px;
+  padding: 8px;
+  font-family: monospace;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.replay-actions { display: flex; gap: 8px; margin-top: 10px; }
+
+.replay-status { min-height: 1.2em; margin: 6px 0 0; font-size: 0.82rem; }
+.replay-ok { color: var(--win, #6fbf73); }
+.replay-error { color: var(--loss, #e57373); }

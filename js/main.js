@@ -69,6 +69,7 @@ import { initTrials, renderTrialBadge } from './trials.js';
 import { initMeridians, allocateMeridian } from './meridians.js';
 import { toast, initToasts } from './toast.js';
 import { stageName } from './progression.js';
+import { recordFight, initReplay, getLastFight, setReplayVisible } from './replay.js';
 import { initDebug } from './debug.js'; // TESTING ONLY (strip before demo)
 
 const state = createGame();
@@ -184,17 +185,31 @@ function onTileClick(x, y) {
   renderAll();
 }
 
+// Drive combat playback for a result (a fresh fight or a replay of a stored one).
+// A replay is purely visual — rewards were already applied when the fight first
+// resolved, so this just re-runs the presentation (and the task-W fx layer).
+function runPlayback(result, onDone) {
+  if (inCombat) return;
+  inCombat = true;
+  setReplayVisible(false); // hide replay controls during live playback
+  renderPlayerBar(state);
+  playCombat(state, result, () => {
+    inCombat = false;
+    setReplayVisible(true); // fight finished — offer replay/share
+    renderAll();
+    if (onDone) onDone(); // fresh-fight-only side effects (reward toasts); replays pass nothing
+  });
+}
+
 function onAttack(monsterId) {
   if (inCombat) return;
   const levelBefore = state.player.level;
   const result = attack(state, monsterId);
   if (!result) return;
-  inCombat = true;
-  renderPlayerBar(state);
-  playCombat(state, result, () => {
-    inCombat = false;
-    renderAll();
+  recordFight(result); // remember it for replay/share (task T)
+  runPlayback(result, () => {
     // Surface the fight's high-signal rewards once the playback finishes.
+    // (Only the fresh fight toasts — a replay passes no onDone, so no re-toast.)
     const drop = result.rewards?.itemDrop;
     if (drop) toast(`Loot: ${drop.name} (Lv ${drop.level})`, 'success');
     const card = result.cardDrop;
@@ -356,6 +371,7 @@ initMeridians(state, {
   },
 });
 initToasts(); // unified toast/feedback host (task X)
+initReplay(state, { onReplay: (result) => runPlayback(result) });
 initDebug(state, renderAll); // TESTING ONLY (strip before demo)
 renderAll();
 initTutorial(); // first-run onboarding overlay (+ ❔ Help button); after renderAll so targets exist

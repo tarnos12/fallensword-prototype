@@ -160,3 +160,67 @@
 }
 
 .title-row.unlocked .title-detail { font-style: italic; }
+
+/* --- Player-selectable active title (additive) --------------------------- */
+
+/* Let the info block grow so the pick button parks on the right edge. */
+.title-info { flex: 1 1 auto; }
+
+/* "Auto (highest earned)" toggle beneath the banner. */
+.titles-auto-btn {
+  margin-top: 10px;
+  padding: 4px 14px;
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--gold, #d4af37);
+  font-size: 0.76rem;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.titles-auto-btn:hover,
+.titles-auto-btn:focus-visible {
+  border-color: var(--gold, #d4af37);
+  background: rgba(212, 175, 55, 0.16);
+  outline: none;
+}
+
+.titles-auto-btn.on {
+  background: rgba(212, 175, 55, 0.18);
+  border-color: var(--gold, #d4af37);
+  cursor: default;
+}
+
+/* Per-earned-row "Display" / "● Active" selector. */
+.title-pick {
+  flex: 0 0 auto;
+  align-self: center;
+  padding: 4px 12px;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--gold, #d4af37);
+  font-size: 0.74rem;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.title-pick:hover,
+.title-pick:focus-visible {
+  border-color: var(--gold, #d4af37);
+  background: rgba(212, 175, 55, 0.18);
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.25);
+  outline: none;
+}
+
+.title-pick.active {
+  background: rgba(212, 175, 55, 0.22);
+  border-color: var(--gold, #d4af37);
+  color: var(--gold, #d4af37);
+  cursor: default;
+  box-shadow: none;
+}

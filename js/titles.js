@@ -12,6 +12,25 @@ import { MAX_STAGE, REALMS } from './progression.js';
 import { CREATURE_TYPES } from './actors.js';
 import { CARDS, ownedCardCount } from './cards.js';
 import { achievementProgress } from './achievements.js';
+import { setBonuses } from './sets.js';
+import { MERIDIAN_NODES } from './meridians.js';
+
+// Display-preference storage for the player-chosen active title. This is a pure
+// cosmetic choice (mirrors theme.js / audio.js), NOT part of the save schema —
+// it lives in its own localStorage key so it survives export/import/reset and
+// never needs a VERSION bump. localStorage can throw (private mode / quota), so
+// every access is guarded.
+const TITLE_PREF_KEY = 'fallen-immortal-title';
+
+export function getPreferredTitleId() {
+  try { return localStorage.getItem(TITLE_PREF_KEY) || null; } catch { return null; }
+}
+export function setPreferredTitleId(id) {
+  try {
+    if (id) localStorage.setItem(TITLE_PREF_KEY, id);
+    else localStorage.removeItem(TITLE_PREF_KEY);
+  } catch { /* storage unavailable — the pick just won't persist */ }
+}
 
 const TOTAL_CREATURES = Object.keys(CREATURE_TYPES).length;
 const TOTAL_CARDS = Object.keys(CARDS).length;
@@ -38,6 +57,20 @@ function bossDefeats(p) {
 }
 function achievementsEarned(p) {
   return achievementProgress(p).earned;
+}
+// A full gear set is worn when setBonuses returns any non-zero stat (a matched
+// weapon+robe pair equipped). Pure read of player.equipment via sets.js.
+function fullSetWorn(p) {
+  const b = setBonuses(p);
+  return Object.values(b).some((v) => v > 0);
+}
+// A meridian is fully opened when any node's rank has reached its maxRank (5).
+// Pure read of player.meridians.nodes; tolerant of old saves that lack the field.
+function hasMaxedMeridian(p) {
+  const nodes = p.meridians?.nodes ?? {};
+  return Object.entries(nodes).some(
+    ([id, rank]) => (rank || 0) >= (MERIDIAN_NODES[id]?.maxRank ?? Infinity),
+  );
 }
 
 // --- The ladder (data) — ordered LEAST → MOST prestigious. activeTitle() picks
@@ -114,11 +147,32 @@ export const TITLES = [
     test: (p) => ownedCardCount(p) >= TOTAL_CARDS,
   },
   {
+    id: 'meridian_paragon',
+    name: 'Meridian Paragon',
+    flavor: 'One of your eight extraordinary channels runs open to its very floor — power flows unhindered.',
+    hint: 'Open a meridian channel to its highest rank.',
+    test: (p) => hasMaxedMeridian(p),
+  },
+  {
+    id: 'regalia_bearer',
+    name: 'Regalia-Bearer',
+    flavor: 'A matched set of heaven-forged artifacts girds you head to heel, resonating as one.',
+    hint: 'Equip a complete gear set at once.',
+    test: (p) => fullSetWorn(p),
+  },
+  {
     id: 'illustrious',
     name: 'Illustrious Immortal',
     flavor: 'Your deeds are legion; the heavens themselves keep a ledger of your name.',
     hint: 'Unlock 10 achievements.',
     test: (p) => achievementsEarned(p) >= 10,
+  },
+  {
+    id: 'grand_luminary',
+    name: 'Grand Luminary',
+    flavor: 'A score of legendary deeds are carved into the annals — few names shine so bright.',
+    hint: 'Unlock 20 achievements.',
+    test: (p) => achievementsEarned(p) >= 20,
   },
   {
     id: 'peak',
@@ -134,6 +188,20 @@ export const TITLES = [
     hint: 'Ascend at least once (New Game+).',
     test: (p) => (p.ascension ?? 0) >= 1,
   },
+  {
+    id: 'thrice_reborn',
+    name: 'Thrice-Reborn Exalt',
+    flavor: 'Three times you burned your foundation to ash and rose anew — mortality is a habit you have broken.',
+    hint: 'Ascend three times (New Game+).',
+    test: (p) => (p.ascension ?? 0) >= 3,
+  },
+  {
+    id: 'eternal_sovereign',
+    name: 'Eternal Sovereign',
+    flavor: 'Five cycles of ruin and rebirth lie behind you; the wheel of ascension turns only at your word.',
+    hint: 'Ascend five times (New Game+).',
+    test: (p) => (p.ascension ?? 0) >= 5,
+  },
 ];
 
 // Every title the player currently qualifies for, ladder order preserved.
@@ -143,11 +211,21 @@ export function earnedTitles(player) {
   });
 }
 
-// The single most prestigious earned title (highest ladder index). Always at
-// least the entry title, since its test is unconditional.
+// The player's displayed title. If they've picked a preferred title AND still
+// qualify for it, honour that pick; otherwise fall back to the single most
+// prestigious earned title (highest ladder index). Always returns a valid title
+// (at least the entry title, whose test is unconditional) so the chip and any
+// external caller never see undefined. A stale/garbage preferred id (an unearned
+// or removed title) is simply ignored — same signature, same guarantees.
 export function activeTitle(player) {
   const earned = earnedTitles(player);
-  return earned.length ? earned[earned.length - 1] : TITLES[0];
+  const highest = earned.length ? earned[earned.length - 1] : TITLES[0];
+  const prefId = getPreferredTitleId();
+  if (prefId) {
+    const picked = earned.find((t) => t.id === prefId);
+    if (picked) return picked;
+  }
+  return highest;
 }
 
 // =====================================================================
@@ -263,7 +341,10 @@ export function renderTitles(state) {
   const earnedSet = new Set(earnedTitles(p).map((t) => t.id));
   const active = activeTitle(p);
 
-  // Active-title banner.
+  const prefId = getPreferredTitleId();
+  const autoMode = !prefId || !earnedSet.has(prefId);
+
+  // Active-title banner + the "display mode" control (Auto vs a chosen title).
   const banner = document.getElementById('titles-active');
   if (banner) {
     banner.innerHTML = `
@@ -271,6 +352,17 @@ export function renderTitles(state) {
       <div class="titles-active-name">${active.name}</div>
       <div class="titles-active-flavor">${active.flavor}</div>
       <div class="titles-active-count">${earnedSet.size} / ${TITLES.length} honorifics earned</div>`;
+    const auto = document.createElement('button');
+    auto.type = 'button';
+    auto.className = `titles-auto-btn${autoMode ? ' on' : ''}`;
+    auto.textContent = autoMode ? '✓ Auto (highest earned)' : 'Use Auto (highest earned)';
+    auto.title = 'Always display your most prestigious earned title';
+    auto.addEventListener('click', () => {
+      setPreferredTitleId(null);
+      renderTitles(state);
+      updateTitleChip(state);
+    });
+    banner.append(auto);
   }
 
   // Full ladder — most prestigious first so the goal reads top-down.
@@ -301,6 +393,25 @@ export function renderTitles(state) {
     info.append(name, detail);
 
     row.append(mark, info);
+
+    // Earned titles are pickable; locked ones are not. The active row shows a
+    // marker instead of a button.
+    if (unlocked) {
+      const pick = document.createElement('button');
+      pick.type = 'button';
+      pick.className = `title-pick${isActive ? ' active' : ''}`;
+      pick.textContent = isActive ? '● Active' : 'Display';
+      pick.title = isActive ? 'This title is currently displayed' : `Display “${t.name}” as your title`;
+      if (!isActive) {
+        pick.addEventListener('click', () => {
+          setPreferredTitleId(t.id);
+          renderTitles(state);
+          updateTitleChip(state);
+        });
+      }
+      row.append(pick);
+    }
+
     body.append(row);
   }
 }

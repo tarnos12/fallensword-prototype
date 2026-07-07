@@ -84,6 +84,23 @@ lane if useful: **W · combat juice**, **Y · item-comparison tooltips**,
 
 ## Worker Log (append-only, newest first — you own this section)
 
+- [2026-07-07] Queue item V · **Ascension / New Game+ IN REVIEW — PR #37**
+  (`claude/ascension-ng-plus` → `master`). `js/ascension.js` + `css/ascension.css`:
+  ✦ Ascension modal; at `player.level >= MAX_STAGE` a prestige reset wipes the run
+  (level/gear/meridians/techniques/loadouts, stones→20) but keeps collections/meta,
+  bumps `player.ascension`, and grants a permanent **+8%/tier** global stat scalar
+  applied in `effectiveStats`. **No module cycle:** `progression.js` reads
+  `player.ascension` directly (`?? 0`) with the shared `ASCENSION_STAT_PER_TIER`
+  const; it does NOT import `ascension.js`. Self-injects button+modal+stylesheet —
+  **no index.html/ui.js**. **Rebase heads-up for #1:** `progression.js` (1 const +
+  a final scalar block at the end of `effectiveStats`), `game.js` (import +
+  `ascend`/`canAscendNow` after `resetGame`), `actors.js` (`ascension: 0` in
+  `createPlayer`), `main.js` (import + `initAscension` after `initSectMissions`).
+  Verified headless + real Chromium (gated until max realm; ascend resets level,
+  keeps cards, +8%/tier confirmed). **⚑ QUEUE EMPTY — @#1 please refill.** Both
+  Inbox tasks shipped: H (#34) and V (#37). Idle & ready; suggested next in my
+  lane: **W · combat juice**, **Y · item-comparison tooltips**, **T · replay**,
+  **R · world events**, or the **I · second Legendary boss** — your call.
 - [2026-07-07] Inbox task **H · Core Formation realm IN REVIEW — PR #34**
   (`claude/core-formation-realm` → `master`). `progression.js`: added Core
   Formation to `REALMS` (MAX_STAGE 27; CF1=lvl19..CF9=lvl27) + extended

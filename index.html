@@ -3,12 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fallen Immortal — Stage 1 MVP</title>
+  <meta name="theme-color" content="#14161d">
+  <meta name="description" content="Fallen Immortal — an offline xianxia stat-crawler RPG. Cultivate toward immortality, hunt demonic beasts, and ascend the realms.">
+  <title>Fallen Immortal</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.92em' font-size='92'%3E%E2%98%AF%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header id="header">
-    <h1>Fallen Immortal <span class="subtitle">Stage 1 MVP</span></h1>
+    <h1>Fallen Immortal <span class="subtitle">Cultivate · Hunt · Ascend</span></h1>
     <div id="player-bar">
       <span class="stat-chip" id="chip-level" title="Cultivation stage"></span>
       <span class="stat-chip" id="chip-xp" title="Cultivation progress toward next breakthrough"></span>
@@ -23,6 +26,11 @@
     <section id="map-panel">
       <div id="map-grid"></div>
       <p class="hint">Click an adjacent tile to move — orthogonal costs 1 Qi, diagonal costs 2 Qi. ☯ is you; red dots are demonic beasts. Return to the Sect Gate to repair and sell.</p>
+
+      <div id="event-log" class="panel-box">
+        <h2>Chronicle</h2>
+        <ul id="event-list"></ul>
+      </div>
     </section>
 
     <section id="side-panel">
@@ -46,11 +54,6 @@
         <h2>Sect Missions</h2>
         <div id="quest-body"></div>
       </div>
-
-      <div id="event-log" class="panel-box">
-        <h2>Chronicle</h2>
-        <ul id="event-list"></ul>
-      </div>
     </section>
 
     <section id="char-panel">
@@ -72,11 +75,11 @@
         <div id="tech-list"></div>
       </div>
 
-      <div class="panel-box">
+      <div id="nav-menu" class="panel-box">
         <button id="btn-codex" type="button" class="codex-btn" title="Beast Codex & Spirit Cards">📖 Beast Codex</button>
         <button id="btn-pavilion" type="button" class="pavilion-btn" title="Treasure Pavilion — buy & sell artifacts">🏛 Treasure Pavilion <span id="pavilion-mail-count" class="mail-badge hidden"></span></button>
         <button id="btn-sect" type="button" class="sect-btn" title="Your Sect — recruit disciples for passive buffs">⛩ Sect</button>
-        <button id="btn-profile" type="button" class="profile-btn" title="Your Profile — active buffs, rivals & recently-active cultivators">👤 Profile & Rivals</button>
+        <button id="btn-profile" type="button" class="profile-btn" title="Your Profile — active buffs, rivals & recently-active cultivators">👤 Profile &amp; Rivals</button>
         <button id="btn-achievements" type="button" class="achievements-btn" title="Achievements — cultivation milestones">🏆 Achievements <span id="achievements-badge" class="dim"></span></button>
         <button id="btn-settings" type="button" class="settings-btn" title="Settings — display preferences, tutorial & save">⚙ Settings</button>
       </div>

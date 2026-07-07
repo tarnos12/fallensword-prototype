@@ -15,6 +15,14 @@
   --win: #6fbf73;
   --loss: #e57373;
   --draw: #b0a06a;
+  /* Polish pass (task 5): shared elevation, radii, motion, focus ring. */
+  --gold-soft: rgba(212, 175, 55, 0.5);
+  --edge-hi: #363b4e;
+  --radius: 8px;
+  --radius-sm: 5px;
+  --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.32);
+  --shadow-modal: 0 12px 48px rgba(0, 0, 0, 0.72);
+  --ring: 2px solid var(--gold);
 }
 
 * { box-sizing: border-box; }
@@ -1397,3 +1405,159 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 #settings-body .instant-toggle { margin: 0 0 4px; }
 
 .settings-hint { color: var(--dim); font-size: 0.78rem; margin: 4px 0 0; line-height: 1.5; }
+
+/* ==========================================================================
+   Stage 2 — Visual / UI polish pass (task 5). Additive, appended last so these
+   refinements layer over the feature styles above without touching game logic.
+   Themes: shared elevation & motion, keyboard focus, a HUD-like header/bar, a
+   tidy nav menu, richer map tiles, and a responsive layout that holds together
+   from ultrawide down to a phone.
+   ========================================================================== */
+
+/* Subtle depth on the page itself — a faint glow from the top, fixed so it
+   doesn't scroll. Keeps the flat dark from reading as "unfinished". */
+body {
+  background: radial-gradient(1200px 760px at 50% -12%, #1a1d27, var(--bg)) fixed;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Motion: gentle transitions on everything interactive (respecting reduced-motion). */
+button, .tile, .stat-chip, .item-slot, .pav-tab, .card-slot,
+input, textarea, select, .travel-btn, .claim-btn {
+  transition: border-color 0.15s ease, color 0.15s ease,
+    background-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+button:active:not(:disabled) { transform: translateY(1px); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+/* Keyboard focus — the app was mouse-only before. A clear gold ring on every
+   focusable control (outline is separate from the tiles' box-shadow markers). */
+:focus-visible { outline: var(--ring); outline-offset: 2px; }
+button:focus-visible, .tile:focus-visible, .item-slot:focus-visible,
+.pav-tab:focus-visible, input:focus-visible, textarea:focus-visible,
+select:focus-visible, a:focus-visible { outline: var(--ring); outline-offset: 2px; }
+
+/* Header: a HUD strip that stays put while the long right column scrolls. */
+#header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: linear-gradient(180deg, #1b1e28, #14161d);
+  box-shadow: 0 1px 0 var(--gold-soft), 0 4px 16px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+}
+#header h1 { text-shadow: 0 1px 10px rgba(212, 175, 55, 0.25); }
+.subtitle { font-style: italic; letter-spacing: 0.5px; opacity: 0.85; }
+
+/* Player-bar chips: a little depth + tabular figures so numbers don't jitter. */
+.stat-chip {
+  background: linear-gradient(180deg, #23262f, #1b1e27);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), var(--shadow-soft);
+  font-variant-numeric: tabular-nums;
+}
+#chip-stones { color: var(--gold); border-color: var(--gold-soft); }
+#chip-level { color: var(--gold); border-color: var(--gold-soft); }
+
+/* Panels: unified soft elevation + a hairline highlight on the top edge. */
+.panel-box {
+  box-shadow: var(--shadow-soft);
+  border-top-color: var(--edge-hi);
+}
+
+/* Buttons: a gentle vertical gradient reads as a raised control. */
+button {
+  background: linear-gradient(180deg, #2a2f3d, #232734);
+}
+
+/* Constrain and center the whole layout so it doesn't sprawl on ultrawide. */
+#layout { max-width: 1440px; margin: 0 auto; width: 100%; }
+
+/* Chronicle now lives under the map — match its width and give it a cap. */
+#map-panel { display: flex; flex-direction: column; gap: 12px; }
+#map-panel .hint {
+  margin: 0;
+  padding-left: 10px;
+  border-left: 2px solid var(--panel-edge);
+  line-height: 1.5;
+}
+#map-panel #event-log { width: 100%; }
+
+/* Map tiles: keep the danger semantics (green→amber→red) but give each band a
+   subtle gradient so the grid looks crafted, and lift the hovered tile. */
+.band-1 { background: linear-gradient(155deg, #24361f, #1b2a1c); }
+.band-2 { background: linear-gradient(155deg, #3a331d, #2b2716); }
+.band-3 { background: linear-gradient(155deg, #3e232a, #2d1a1f); }
+.tile:hover { outline: 1px solid var(--gold); z-index: 2; }
+.tile.player-here { z-index: 3; }
+.monster-dots { font-size: 0.6rem; text-shadow: 0 0 3px rgba(0, 0, 0, 0.8); }
+
+/* Nav menu: the six feature buttons become a tidy, uniform 2-column grid that
+   reads as an intentional menu rather than a mismatched stack. */
+#nav-menu {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+#nav-menu button {
+  width: 100%;
+  margin: 0;
+  padding: 9px 8px;
+  font-size: 0.82rem;
+  text-align: center;
+  color: var(--gold);
+  border-color: var(--gold-soft);
+  background: linear-gradient(180deg, #23262f, #1b1e27);
+}
+#nav-menu button:hover:not(:disabled) {
+  border-color: var(--gold);
+  background: #2b2f3d;
+}
+
+/* Backup button: match the nav menu's accent so the whole column feels of a piece. */
+.backup-btn { width: 100%; color: var(--gold); border-color: var(--gold-soft); }
+
+/* Every modal's ✕ close control, styled consistently in one place. */
+button[title="Close"] {
+  padding: 2px 9px;
+  font-size: 0.95rem;
+  line-height: 1.2;
+  border-radius: var(--radius-sm);
+}
+button[title="Close"]:hover:not(:disabled) {
+  color: var(--loss);
+  border-color: var(--loss);
+}
+
+/* Modal backdrops: a touch of blur so the panel reads as focused/foreground.
+   All overlays share the same fixed full-screen scrim, so one rule covers them. */
+#codex-overlay, #pavilion-overlay, #sect-overlay, #profile-overlay,
+#achievements-overlay, #settings-overlay, #backup-overlay {
+  backdrop-filter: blur(3px);
+}
+
+/* --- Responsive: hold the layout together as the viewport narrows. --- */
+
+/* Tablet / small laptop: let the columns breathe and the map go fluid. */
+@media (max-width: 900px) {
+  #layout { gap: 12px; padding: 12px; }
+  #map-grid { width: min(480px, 92vw); }
+  #side-panel, #char-panel { max-width: none; }
+  #map-panel { flex: 1 1 320px; }
+}
+
+/* Phone: single column, full-width map, one-per-row nav. */
+@media (max-width: 620px) {
+  #header { padding: 8px 12px; }
+  #header h1 { font-size: 1.1rem; }
+  #map-grid { width: 100%; }
+  #map-panel { flex-basis: 100%; }
+  #nav-menu { grid-template-columns: 1fr; }
+  .panel-box { padding: 11px 12px; }
+  #inventory-list { grid-template-columns: repeat(auto-fill, 48px); }
+  .item-slot { width: 48px; height: 48px; font-size: 1.35rem; }
+}

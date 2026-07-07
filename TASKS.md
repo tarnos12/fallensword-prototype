@@ -76,7 +76,7 @@ meridians, **U** gems) all add an independent additive line in the same
 | A | **Crafting & Forge** (GDD §5) — spend materials + spirit stones to upgrade/reforge gear (add a stat roll, repair-to-max, reroll within a rarity cap). ⚒ modal. | `js/crafting.js` *(new)* | `js/game.js` (wrappers), `js/items.js` (additive helpers), `css/style.css`/`js/main.js` (init) — **no `index.html`/`ui.js` touch** | `IN REVIEW` | choose-task-fxtfot | `claude/crafting-forge` | #15 | 2026-07-07 |
 | B | **Gear set bonuses** (GDD §5) — item `setId` + N-piece set-bonus definitions that plug into the reserved `effectiveStats` hook. | `js/sets.js` *(new)* | `js/items.js` (add `setId` to some templates), `js/progression.js` (one add-set-bonuses line in `effectiveStats`), `js/ui.js` (tooltip shows set progress) | `AVAILABLE` | — | — | — | — |
 | C | **Alchemy / consumables** (GDD §6.4) — brew pills from drops + stones: timed buff / instant Qi / instant XP, stored in a consumables pouch, used from the HUD. 🜁 modal. | `js/alchemy.js` *(new)* | `js/game.js` (wrappers + tick), `js/actors.js` (`player.consumables`), `index.html`/`css`/`js/main.js` | `AVAILABLE` | — | — | — | — |
-| D | **Sparring / offline PvP-preview** (GDD §4.1, §6.5) — synthesize deterministic Actor stat-sheets for personas and let the player "spar" a Rival through the existing pure `resolveCombat`. The PvP hook, still offline. | `js/duel.js` *(new)*, `js/rivals.js` *(new)* | `js/profile.js` (a "Spar" button on rival rows — coordinate w/ owner), `index.html`/`css`/`js/main.js` | `AVAILABLE` | — | — | — | — |
+| D | **Sparring / offline PvP-preview** (GDD §4.1, §6.5) — synthesize deterministic Actor stat-sheets for personas and let the player "spar" a Rival through the existing pure `resolveCombat`. The PvP hook, still offline. | `js/duel.js` *(new)*, `js/rivals.js` *(new)* | `js/profile.js` (a "Spar" button on rival rows — coordinate w/ owner), `index.html`/`css`/`js/main.js` | `CLAIMED` | pick-your-task-aj14ny | `claude/sparring-pvp-preview` | — | 2026-07-07 |
 | E | **World-data modularization (enabling refactor)** — extract `ZONES` from `map.js` into per-zone modules (`js/zones/*.js`) + a creature registry, so new zones/creatures are new files, not edits to shared `map.js`/`actors.js`. Unblocks conflict-free zone authoring. | `js/map.js` (refactor), `js/zones/` *(new dir)* | `js/actors.js` (creature registry), `js/game.js` (imports) | `AVAILABLE` | — | — | — | — |
 | F | **Third zone — Core Formation tier** — a new area gated behind FE9, 3 new creatures + their Spirit Cards + a portal. **Do after E** (then it's just new files). | `js/zones/<zone>.js` *(new, after E)* | `js/actors.js`/`js/cards.js`/`js/map.js` (if E not yet landed), `js/progression.js` (realm gate — coordinate w/ H) | `AVAILABLE` | — | — | — | — |
 | G | **Epic quest chain** (GDD §5) — one multi-step "epic quest" with a strong named (Epic/Legendary) reward, spanning existing zones. | `js/quests.js` (append the chain) | `js/items.js` (named reward item, additive) | `IN REVIEW` | pick-your-task-wakee5 | `claude/epic-quest-chain` | #14 | 2026-07-07 |
@@ -139,6 +139,19 @@ Format: `- [YYYY-MM-DD · session <id>] <comment>`.
 - [initial] New `js/alchemy.js`: recipes (stones + a dropped material → a pill). Pills are consumables on `player.consumables` (additive, back-fill in `createGame`); using one grants a timed buff (reuse the `activeBuffs`/technique-buff shape so it flows through `effectiveStats`), or instant Qi/XP. Own 🜁 modal + a "use" affordance. Coordinate the buff shape with the technique buff list. GDD §6.4.
 
 ### Task D — Sparring / offline PvP-preview
+- [2026-07-07 · session pick-your-task-aj14ny] Claimed. Branch
+  `claude/sparring-pvp-preview` off latest master. **Note: I am also the owner of
+  `js/profile.js` (task 3, merged PR #8)**, so the "coordinate w/ owner" for the
+  Spar button on rival rows is self-resolved — I'll add it cleanly. Plan:
+  `js/rivals.js` = pure deterministic level-scaled Actor stat-sheets for personas
+  (seeded from persona id, same roster as everywhere), in the one-Actor shape
+  `resolveCombat` expects. `js/duel.js` = a spar modal that calls the PURE
+  `resolveCombat(playerCombatActor(player), rivalActor, seed)` and reuses the
+  existing playback/instant presentation — NO game state leaks into `combat.js`.
+  No stakes for 1.0 (bragging rights + a win/loss tally on the profile). Hooks: a
+  "Spar" button on Profile rival rows (in `js/profile.js`, mine) that opens the
+  duel modal for that persona. Shared: `index.html` (duel overlay), `css`,
+  `js/main.js` (init). Self-contained rendering; does not touch `js/ui.js`.
 - [initial] `js/rivals.js`: deterministic level-scaled Actor stat-sheets for personas (same roster). `js/duel.js`: a spar screen that calls the PURE `resolveCombat(playerCombatActor, rivalActor, seed)` — do NOT leak game state into combat.js. No stakes for 1.0 (bragging rights) or a tiny stone wager. Hook a "Spar" button onto the Profile rival rows — leave a note here + coordinate if `profile.js` is being actively edited. GDD §4.1 (PvP hook), §6.5.
 
 ### Task E — World-data modularization (enabling)

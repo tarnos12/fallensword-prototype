@@ -1,72 +1,17 @@
-// Grid map (GDD §3, §6.6). Multiple named zones, each with its own grid,
-// danger bands, and spawn table. Zones are connected by portals. Danger
-// scales with distance from a zone's haven tile; each tile holds 0-3
-// creatures; cleared tiles repopulate after a respawn delay when re-entered.
+// Grid map (GDD §3, §6.6). map.js is now loader + grid logic only: zone
+// definitions (grid size, danger bands, spawn tables, portals) and creatures
+// live per-zone under js/zones/ and are composed by the zone registry (task E).
+// Zones are connected by portals; danger scales with distance from a zone's
+// haven tile; each tile holds 0-3 creatures; cleared tiles repopulate after a
+// respawn delay when re-entered.
 
 import { spawnCreature } from './actors.js';
+// ZONES is composed from the per-zone modules; re-exported here so every
+// existing `import { ZONES } from './map.js'` is unchanged (behaviour-identical).
+import { ZONES } from './zones/registry.js';
+export { ZONES };
 
 export const RESPAWN_MS = 30_000;
-
-// Zone definitions. `start` is the safe haven (no spawns, offers services);
-// `bands` map Chebyshev distance from the haven to a danger tier; `portals`
-// connect zones (looked up by position, not stored per-tile, so saves stay
-// small and new portals apply to old saves automatically).
-export const ZONES = {
-  azuremist: {
-    id: 'azuremist',
-    name: 'Azuremist Vale',
-    size: 10,
-    realm: 'Qi Condensation',
-    start: { x: 0, y: 0 },
-    startLabel: 'Sect Gate',
-    bands: [
-      { max: 3, band: 1 },
-      { max: 6, band: 2 },
-      { max: Infinity, band: 3 },
-    ],
-    spawns: {
-      1: [{ type: 'wolfSpirit', weight: 1 }],
-      2: [
-        { type: 'wolfSpirit', weight: 1 },
-        { type: 'boneSerpent', weight: 2 },
-      ],
-      3: [
-        { type: 'boneSerpent', weight: 1 },
-        { type: 'rogueCultivator', weight: 2 },
-      ],
-    },
-    portals: [
-      { x: 9, y: 9, to: 'cindervein', entryX: 0, entryY: 0, minStage: 4 },
-    ],
-  },
-  cindervein: {
-    id: 'cindervein',
-    name: 'Cindervein Gorge',
-    size: 10,
-    realm: 'Foundation Establishment',
-    start: { x: 0, y: 0 },
-    startLabel: 'Gorge Outpost',
-    bands: [
-      { max: 3, band: 1 },
-      { max: 6, band: 2 },
-      { max: Infinity, band: 3 },
-    ],
-    spawns: {
-      1: [{ type: 'emberHound', weight: 1 }],
-      2: [
-        { type: 'emberHound', weight: 1 },
-        { type: 'cinderGolem', weight: 2 },
-      ],
-      3: [
-        { type: 'cinderGolem', weight: 1 },
-        { type: 'ashenRevenant', weight: 2 },
-      ],
-    },
-    portals: [
-      { x: 0, y: 0, to: 'azuremist', entryX: 9, entryY: 9, minStage: 0 },
-    ],
-  },
-};
 
 // Movement cost: orthogonal 1 Qi, diagonal 2 Qi (GDD §3).
 export function moveCost(from, to) {

@@ -1,6 +1,12 @@
 // Shared Actor schema (GDD §4.2): the player, monsters, and any future rival/PvP
 // opponent are all the same shape. resolveCombat() only ever sees this shape.
 
+// Creature templates now live per-zone under js/zones/ and are composed by the
+// zone registry (task E). actors.js re-exports CREATURE_TYPES so every existing
+// `import { CREATURE_TYPES } from './actors.js'` is unchanged.
+import { CREATURE_TYPES } from './zones/registry.js';
+export { CREATURE_TYPES };
+
 export function createActor({ id, name, level, attack, defense, damage, armor, maxHp }) {
   return {
     id,
@@ -11,93 +17,6 @@ export function createActor({ id, name, level, attack, defense, damage, armor, m
     maxHp,
   };
 }
-
-// --- Creature templates (Stage 0: three types, per-level stat scaling) ---
-
-export const CREATURE_TYPES = {
-  wolfSpirit: {
-    id: 'wolfSpirit',
-    name: 'Ravenous Wolf Spirit',
-    cardId: 'card_wolfSpirit',
-    flavor: 'A pack-beast whose spirit refused the wheel of reincarnation. It hunts the living for the warmth it lost.',
-    levels: [1, 2],
-    base: { attack: 7, defense: 5, damage: 4, armor: 1, maxHp: 12 },
-    perLevel: { attack: 1.5, defense: 1, damage: 1, armor: 0.5, maxHp: 3 },
-    xp: 8,
-    stones: 5,
-  },
-  boneSerpent: {
-    id: 'boneSerpent',
-    name: 'Bone Serpent',
-    cardId: 'card_boneSerpent',
-    flavor: 'Grave-soil coils into the shape of a serpent where too many cultivators have died. Its bite carries the chill of the tomb.',
-    levels: [3, 4],
-    base: { attack: 9, defense: 7, damage: 5, armor: 2, maxHp: 16 },
-    perLevel: { attack: 1.5, defense: 1, damage: 1, armor: 0.5, maxHp: 3 },
-    xp: 22,
-    stones: 12,
-  },
-  // Deliberately a defensive wall at Stage 0 stats: a level-1 player can
-  // neither kill it nor be killed fast, so fights hit the 20-turn draw —
-  // the "this foe is beyond you" signal (GDD §8.3).
-  // Deliberately a defensive wall at Stage 0 stats: a level-1 player can
-  // neither kill it nor be killed fast, so fights hit the 20-turn draw —
-  // the "this foe is beyond you" signal (GDD §8.3).
-  rogueCultivator: {
-    id: 'rogueCultivator',
-    name: 'Rogue Cultivator',
-    cardId: 'card_rogueCultivator',
-    flavor: 'A disciple who forsook their sect for a faster path. Heavily warded and patient, they wait for the unwary to overreach.',
-    levels: [5, 6],
-    base: { attack: 12, defense: 12, damage: 3, armor: 5, maxHp: 30 },
-    perLevel: { attack: 1.5, defense: 1.5, damage: 0.25, armor: 0.5, maxHp: 4 },
-    xp: 55,
-    stones: 30,
-  },
-
-  // --- Zone 2: Cindervein Gorge (Foundation Establishment tier). `base` is
-  // the level-1 baseline; effective stats are base + perLevel*(level-1), so
-  // these are tuned to land at the intended values at each creature's own
-  // level band (verified in the zone-2 balance sim). ---
-  // Band 1, farmable from arrival (~QC4-5): a fast striker with low defenses.
-  emberHound: {
-    id: 'emberHound',
-    name: 'Ember Hound',
-    cardId: 'card_emberHound',
-    flavor: 'Born in the coal-fires of the Gorge, it burns through its own life to strike fast. Fragile, but it hits before you are ready.',
-    levels: [7, 8],
-    base: { attack: 5, defense: 9, damage: 3, armor: 1, maxHp: 18 },
-    perLevel: { attack: 1, defense: 1, damage: 1, armor: 0.3, maxHp: 4 },
-    xp: 90,
-    stones: 45,
-  },
-  // Band 2, mid wall: tanky armor/HP that better gear grinds down.
-  cinderGolem: {
-    id: 'cinderGolem',
-    name: 'Cinder Golem',
-    cardId: 'card_cinderGolem',
-    flavor: 'Slag and spirit-ash bound by a dead forge-master\'s will. It does not tire, and it does not hurry.',
-    levels: [9, 10],
-    base: { attack: 6, defense: 10, damage: 4, armor: 3, maxHp: 25 },
-    perLevel: { attack: 1, defense: 1, damage: 0.8, armor: 0.5, maxHp: 5 },
-    xp: 150,
-    stones: 80,
-  },
-  // Band 3 wall: high defense + armor; under-geared cultivators draw against
-  // it the way QC1 players drew against the Rogue Cultivator. The FE1 quest
-  // weapon is what cracks it.
-  ashenRevenant: {
-    id: 'ashenRevenant',
-    name: 'Ashen Revenant',
-    cardId: 'card_ashenRevenant',
-    flavor: 'What remains when a cultivator burns their own foundation for one last breakthrough — and fails. Armoured in grief, slow to fall.',
-    levels: [11, 12],
-    base: { attack: 8, defense: 10, damage: 5, armor: 3, maxHp: 30 },
-    perLevel: { attack: 1, defense: 1.2, damage: 0.5, armor: 0.6, maxHp: 5 },
-    xp: 240,
-    stones: 130,
-  },
-};
 
 // The scaled stat block a creature type presents at a given level (defaults to
 // the low end of its level band). Pure derivation from the template — used by

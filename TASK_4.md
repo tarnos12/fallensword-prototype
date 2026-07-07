@@ -13,7 +13,7 @@
 
 ## ▶ ACTIVE TASK — X · Unified toast / feedback system
 
-- **Status:** `ASSIGNED` → set to `IN REVIEW — PR #NN` here when your PR is open.
+- **Status:** `IN REVIEW — PR #22`
 - **Branch:** `claude/toast-system` (off latest `master`)
 - **Owned files (yours):** `js/toast.js` *(new)*, `css/toast.css` *(new)*
 - **Shared (edit minimally):** `js/main.js` — route a few high-signal events
@@ -49,4 +49,19 @@
 
 ## Worker Log (append-only, newest first — you own this section)
 
-- _(add entries as you work: `- [YYYY-MM-DD] <what/why/coordination note>`)_
+- [2026-07-07] Task X **IN REVIEW — PR #22** (`claude/toast-system` → `master`).
+  Shipped `js/toast.js` + `css/toast.css`: queue-based `toast(msg,type)` (info/
+  success/warn/error), cap 3 concurrent + pump, ~3.5s auto-dismiss, click-to-
+  dismiss, `textContent`-only, `aria-live`/`role` + reduced-motion.
+  **Achievements-toast coordination decision:** `achievements.js` is out of my
+  file scope, so I did **not** edit/absorb it — instead I **matched its visual
+  language** (panel card + coloured left accent + slide/fade) and put my toasts
+  in a **separate `#toast-host` anchored top-centre** so the two never overlap
+  (achievements stay bottom-right). Wired ~6 `main.js` callsites (combat drops/
+  cards/breakthrough in `onAttack`, Qi error in `onTileClick`, market-buy +
+  bounty accept/claim). No `ui.js` touch, no `style.css` append, no save fields.
+  Verified headless (queue) + real Chromium (E2E, 0 console errors). Shared-file
+  rebase heads-up for #1: `index.html` `<head>` gets one `<link>`; `main.js` gets
+  an import pair + `initToasts()` + small edits inside the pavilion/bounty/attack
+  handlers — all well-separated hunks. **Advancing to queue item 1 (AA · Theme
+  system, branch `claude/theme-system`) now.**

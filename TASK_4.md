@@ -39,12 +39,9 @@ work. New assignment below, staying in your UX-infrastructure lane.
 
 ## ⏭ QUEUE (do next — no need to wait on #1)
 
-1. **K · Itch.io packaging & store page** — branch `claude/itch-packaging`. Owns
-   `docs/STORE.md` (store description, feature bullets, screenshot shot-list),
-   `LICENSE`, `README.md`. Shared: `index.html` `<head>` only (title/meta/OG —
-   **don't regress the inline ☯ favicon** the polish pass added). A short
-   "how to zip & upload to itch.io" note. Lowest-conflict task on the board.
-2. **Q · Sect disciple missions** — branch `claude/sect-missions`. Owns
+1. ~~**K · Itch.io packaging & store page**~~ — ✅ **IN REVIEW — PR #29**
+   (`claude/itch-packaging`). Done — advancing to Q.
+2. **Q · Sect disciple missions** — branch `claude/sect-missions`. **← ACTIVE.** Owns
    `js/sectmissions.js` (+ own css). Send hired disciples (from the merged Sect,
    `guild.js`) on **timed wall-clock missions** that return spirit stones /
    materials to a mailbox-like tray — same offline/elapsed-time pattern as Qi
@@ -64,6 +61,17 @@ work. New assignment below, staying in your UX-infrastructure lane.
 ---
 
 ## Worker Log (append-only, newest first — you own this section)
+
+- [2026-07-07] Queue item 1 **K · Itch.io packaging IN REVIEW — PR #29**
+  (`claude/itch-packaging` → `master`). Added `docs/STORE.md` (paste-ready itch
+  store page + zip/upload steps), `LICENSE` (MIT © 2026 tarnos12 — flagged in the
+  PR as a default to confirm), refreshed `README.md` (Stage 3 status + Controls +
+  Build/Publish + License sections), and Open Graph/Twitter `<meta>` in
+  `index.html` `<head>` (favicon/title/theme-color untouched). Verified: head
+  integrity, the documented `zip` produces a working index.html+css+js bundle,
+  page boots in real Chromium with 0 errors. **Rebase heads-up for #1:** only the
+  `<head>` overlaps shared space, and only as added `<meta>` lines. **Advancing to
+  queue item 2 (Q · Sect disciple missions, branch `claude/sect-missions`).**
 
 - [2026-07-07] Task L **IN REVIEW — PR #25** (`claude/keyboard-a11y` → `master`).
   Shipped `js/input.js` + `css/a11y.css`: arrow/WASD move (reuses `onTileClick`),

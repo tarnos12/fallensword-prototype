@@ -109,6 +109,31 @@ const CUES = {
   info: { gain: 0.3, voices: [
     { type: 'sine', freq: 620, start: 0, dur: 0.09 },
   ] },
+  // ── combat cues (task: wire SFX into combat playback) ──────────────────────
+  // short percussive thud — a normal hit landing. Punchy, not harsh.
+  hit: { gain: 0.4, voices: [
+    { type: 'triangle', freq: 180, start: 0, dur: 0.08, glideTo: 90 },
+  ] },
+  // bigger, brighter version of hit — reads as a "big swing" crit.
+  crit: { gain: 0.5, voices: [
+    { type: 'triangle', freq: 260, start: 0,    dur: 0.11, glideTo: 120 },
+    { type: 'square',   freq: 520, start: 0,    dur: 0.06 },
+  ] },
+  // soft airy miss — very quiet, quick blip.
+  whiff: { gain: 0.15, voices: [
+    { type: 'triangle', freq: 900, start: 0, dur: 0.06, glideTo: 1300 },
+  ] },
+  // triumphant rising arpeggio (win).
+  victory: { gain: 0.42, voices: [
+    { type: 'sine', freq: 523, start: 0,    dur: 0.16 },
+    { type: 'sine', freq: 659, start: 0.12, dur: 0.16 },
+    { type: 'sine', freq: 784, start: 0.24, dur: 0.20 },
+  ] },
+  // somber descending two-note tone (loss).
+  defeat: { gain: 0.4, voices: [
+    { type: 'sine',     freq: 330, start: 0,    dur: 0.18, glideTo: 262 },
+    { type: 'triangle', freq: 196, start: 0.16, dur: 0.20, glideTo: 147 },
+  ] },
 };
 
 /**

@@ -9,6 +9,8 @@
 // Motion is gated behind prefers-reduced-motion (numbers still show; shakes and
 // tweens are suppressed), matching the polish-pass convention.
 
+import { sfx } from './audio.js';
+
 const REDUCE = typeof window !== 'undefined' && window.matchMedia
   ? window.matchMedia('(prefers-reduced-motion: reduce)')
   : { matches: false };
@@ -108,10 +110,12 @@ function applySwing(target, swing) {
   if (!swing) return;
   if (!swing.hit) {
     floatNum(target, 'MISS', 'miss');
+    sfx('whiff');
     return;
   }
   const crit = swing.dmg >= target.max * CRIT_FRACTION;
   floatNum(target, `-${swing.dmg}`, crit ? 'crit' : 'dmg');
+  sfx(crit ? 'crit' : 'hit');
   strike(target);
 }
 
@@ -157,6 +161,8 @@ export function endFx(result) {
     result.outcome === 'win' ? '★ VICTORY ★' : result.outcome === 'loss' ? 'DEFEAT' : 'UNRESOLVED';
   const flash = el('div', 'cfx-flourish', label);
   arena.root.append(flash);
+  if (result.outcome === 'win') sfx('victory');
+  else if (result.outcome === 'loss') sfx('defeat');
 }
 
 function teardown() {

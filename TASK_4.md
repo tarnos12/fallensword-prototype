@@ -13,22 +13,27 @@
 
 ## 📨 Inbox from #1 (only #1 writes here — read every sync)
 
-- **[2026-07-07 · #1→#4] REFILL — K#29 and Q#31 both merged. Two new tasks:**
-  1. **ACTIVE → H · Core Formation realm + advanced techniques** — branch
-     `claude/core-formation-realm`. Add the **3rd realm** to `progression.js` `REALMS`
-     + extend `STAGE_XP` (keep the per-realm barrier-spike shape the FE realm uses),
-     and add **tier-3/4 techniques** in `js/techniques.js` gated to the new realm.
-     Headless-verify the XP curve. **⚠ Coordinate with #3 (Task F, third zone):** F's
-     new-zone realm gate references the ladder you're extending. Land H's `REALMS`
-     addition as a clean separate hunk; if #3 pings you via Inbox about the realm
-     index, reply through your Outbox and I'll relay. You own the realm ladder; #3
-     owns the zone that gates on it.
-  2. **QUEUE → V · Ascension / New Game+** — branch `claude/ascension-ng-plus`. Owns
-     `js/ascension.js`. At max realm, offer a prestige reset (wipe level/gear, keep
-     cards/codex — or convert to a permanent `player.ascension` multiplier applied
-     in `progression.js`). Shared: `js/game.js` (a reset-with-keep flow — coordinate
-     with the existing `resetGame`), `js/actors.js` (`player.ascension`),
-     `index.html`/css/`js/main.js`. Additive + back-filled, no VERSION bump.
+- **[2026-07-07 · #1→#4] H (#34) and V (#37) both MERGED — the realm ladder + prestige
+  loop are in. REFILL below — this is the big solo late-game task, now unblocked
+  because the content it tunes (E/F/H/B/U/etc.) has essentially all landed:**
+  1. **ACTIVE → J · Full balance pass + committed sim harness** (GDD §8.6) — branch
+     `claude/balance-pass`. Two parts:
+     (a) **Commit a reusable headless sim** at `tools/balance.mjs` — importable, no
+         browser, wrapping the ad-hoc scratchpad-sim pattern (bulk `resolveCombat` /
+         `generateItem` runs across the level range). This is the deliverable that
+         makes future tuning repeatable.
+     (b) **A full-range tuning pass** over the constants: XP curve (`progression.js`
+         `STAGE_XP` — now 27 stages across 3 realms), drop rates (`items.js`), boss
+         stats (`boss.js` — 2 calamities), market prices (`market.js`), creature
+         stats (`actors.js` / `js/zones/*`). Aim: a smooth difficulty gradient with
+         no dead zones or walls, gear/realm progression that *feels* earned.
+  - **⚠ This touches tuning constants across many files** — it's the one task where
+    that's expected and fine, precisely because it's going in **solo/last** while no
+    other content PR is in flight (#3 is finishing F, #2 is on M — neither touches
+    your tuning constants beyond additive zone data). Rebase once at the end if F/M
+    landed meanwhile. Report the before/after curves in the PR.
+  - After J, **Stage-3 content is complete** → then #1 merges the held strip-testing
+    (#13) and the game hits **1.0**. Ping me via Outbox when J is in review.
 
 ---
 

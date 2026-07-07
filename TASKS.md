@@ -56,16 +56,20 @@ thread is in this file's git history on `coordination`.
 
 Goal (GDD §5): a complete, shippable single-player 1.0 — more world, full quest
 content, crafting + set bonuses, more Legendary encounters, a full balance pass,
-and itch.io packaging. **Stage-3 task IDs are letters (A–L)** to stay distinct
+and itch.io packaging. **Stage-3 task IDs are letters (A–V)** to stay distinct
 from the Stage-2 numeric IDs referenced in the session log.
 
-**🟢 Parallel-safe starter batch (grab these first — each owns a NEW module, no
-cross-dependencies, minimal shared-file overlap):** **A, B, C, D, K, L**. Four
-sessions can take four of these right now and not collide beyond the usual
-`index.html`/`css`/`main.js` button+modal+init neighbourhood (both-add, trivial
-rebase). Content tasks **E–J** touch shared data files (`map`/`actors`/`quests`/
+**🟢 Parallel-safe batch (each owns a NEW module, no cross-dependencies beyond the
+usual `index.html`/`css`/`main.js` button+modal+init neighbourhood — both-add,
+trivial rebase):** **A, B, C, D, K, L, M, N, O, P, Q, R, S3, T, U, V**. That's
+16 concurrently-claimable tasks — plenty for 4+ sessions to run without stepping
+on each other; the integrator merges PRs one at a time and resolves rebases.
+Content/systems tasks **E–J** touch shared data files (`map`/`actors`/`quests`/
 `progression`/`cards`) — read their Notes for ordering (task **E** is a
-foundational refactor that makes **F** conflict-free).
+foundational refactor that makes **F** conflict-free; **J** balance is `BLOCKED`
+until content lands). A few flat-`effectiveStats` tasks (**B** sets, **N**
+meridians, **U** gems) all add an independent additive line in the same
+`progression.js` function — fine in parallel, just keep them separate hunks.
 
 | # | Task | Owned files (yours to edit freely) | Shared files (edit minimally, expect to rebase) | Status | Owner | Branch | PR | Claimed |
 |---|---|---|---|---|---|---|---|---|
@@ -81,6 +85,16 @@ foundational refactor that makes **F** conflict-free).
 | J | **Full balance pass + committed sim harness** (GDD §8.6) — commit a reusable headless balance-sim (`tools/`), then a full-range tuning pass (XP curve, drop rates, boss stats, market prices). Mostly **solo & late** — touches tuning constants across files. | `tools/balance.mjs` *(new)* | tuning constants in `progression.js`/`items.js`/`actors.js`/`boss.js` | `BLOCKED` | — | — | — | Do near the end, once most content (F–I) is in — otherwise you tune a moving target. |
 | K | **Itch.io packaging & store page** (GDD §5) — `docs/STORE.md` draft (description, feature list, screenshot checklist), proper `<title>`/meta/OG + favicon, a one-file build/zip note, a `LICENSE`. | `docs/` *(new)*, `LICENSE`, `README.md` | `index.html` `<head>` only | `AVAILABLE` | — | — | — | — |
 | L | **Accessibility & keyboard input** — arrow/WASD tile movement, number/Esc hotkeys for modals, `:focus-visible` audit, ARIA roles on map/modals. | `js/input.js` *(new)* | `js/main.js` (wire), `css/style.css`, light `index.html` (aria) | `AVAILABLE` | — | — | — | — |
+| M | **Salvage / materials** — right-click "salvage" breaks unwanted gear into crafting materials (feeds task A). Materials are a stackable item type on `player`. | `js/salvage.js` *(new)* | `js/items.js` (material item shape), `js/game.js` (salvage wrapper), `js/ui.js` (context-menu entry), `css` | `AVAILABLE` | — | — | — | — |
+| N | **Meridian talent tree** — a permanent passive point tree (earned per breakthrough, separate from stat points) that feeds `effectiveStats`. Own ☯ modal. | `js/meridians.js` *(new)* | `js/progression.js` (one add-line in `effectiveStats` + a points grant on breakthrough), `js/actors.js` (`player.meridians`), `index.html`/`css`/`main.js` | `AVAILABLE` | — | — | — | — |
+| O | **Daily trials** — a rotating (wall-clock daily) challenge encounter with bonus rewards; one attempt per reset. | `js/trials.js` *(new)* | `js/game.js` (spawn/reward hook), `js/actors.js` (`player.trials` timestamp), `index.html`/`css`/`main.js` | `AVAILABLE` | — | — | — | — |
+| P | **Hunt bounties** — a bounty board: "slay N of creature X" for stone/XP rewards, refreshed on a timer. Reads the existing bestiary kill counts. | `js/bounties.js` *(new)* | `js/game.js` (claim hook), `js/actors.js` (`player.bounties`), `index.html`/`css`/`main.js` | `AVAILABLE` | — | — | — | — |
+| Q | **Sect disciple missions** — send hired disciples (task S sect) on timed wall-clock missions that return spirit stones / materials. Extends the Sect. | `js/sectmissions.js` *(new)* | `js/game.js` (tick + claim), `js/guild.js` (read members — no edit), `index.html`/`css`/`main.js` | `AVAILABLE` | — | — | — | — |
+| R | **World events / calendar** — scheduled wall-clock buffs (e.g. "double drops", "bonus XP") that toggle on a repeating clock and surface in the HUD. | `js/events.js` *(new)* | `js/game.js` (apply the active event's multiplier in the reward path), `js/main.js`/`css` (HUD banner) | `AVAILABLE` | — | — | — | — |
+| S3 | **Statistics / lifetime summary** — a read-only 📊 panel: total kills, stones earned, fights won/lost/drawn, time played, cards/codex %. Mostly derivable; add a couple of lifetime counters. | `js/stats.js` *(new)* | `js/game.js` (increment a few lifetime counters), `js/actors.js` (`player.stats`), `index.html`/`css`/`main.js` | `AVAILABLE` | — | — | — | — |
+| T | **Fight replay & share** (GDD §8.6) — persist the last fight's `turns[]`, add a "replay" button + an export-shareable-log string (resolution is already decoupled from playback). | `js/replay.js` *(new)* | `js/ui.js` (a replay button on the combat panel), `js/main.js`, `css` | `AVAILABLE` | — | — | — | — |
+| U | **Gem sockets / enchanting** — sockets on higher-rarity gear; slot gems (a dropped item type) for flat bonuses that flow through `effectiveStats`. | `js/sockets.js` *(new)* | `js/items.js` (`sockets` on templates + gem item type), `js/progression.js` (add gem bonuses in `effectiveStats`), `js/ui.js` (tooltip), `css` | `AVAILABLE` | — | — | — | — |
+| V | **Ascension / New Game+** — at max realm, reset progression for a permanent "ascension" multiplier (kept across resets). A prestige loop for replay. | `js/ascension.js` *(new)* | `js/game.js` (reset-with-keep flow), `js/progression.js` (apply the multiplier), `js/actors.js` (`player.ascension`), `index.html`/`css`/`main.js` | `AVAILABLE` | — | — | — | — |
 
 > **Parallelism note:** A–D, K, L each own a distinct new module → run concurrently. The shared-file neighbourhood (`index.html` button-panel + a pre-`</body>` overlay, a CSS section appended at EOF, a `main.js` import+init) is the same one every Stage-2 feature used — both-add merges, cheap rebase, integrator merges one PR at a time. E–I touch core data; sequence via their Notes (E→F; F & H coordinate on the realm/zone). J is last.
 
@@ -126,6 +140,36 @@ Format: `- [YYYY-MM-DD · session <id>] <comment>`.
 
 ### Task L — Accessibility & keyboard input
 - [initial] New `js/input.js`: arrow/WASD → move to the adjacent tile (reuse `tryMove`), Esc closes the open modal, digit keys open panels. Audit `:focus-visible` (the polish pass added a ring — build on it) and add ARIA roles/labels to the map grid + modals. Wire from `main.js`; light `css`. GDD polish / a11y.
+
+### Task M — Salvage / materials
+- [initial] New `js/salvage.js` + a stackable "material" item type. Right-click a pack item → "Salvage" → destroys it for materials scaled by rarity/level. Feeds task A (Crafting) — coordinate the material shape with whoever owns A (leave a note). Shared: `items.js` (material item), `game.js` (wrapper), `ui.js` (context-menu entry).
+
+### Task N — Meridian talent tree
+- [initial] New `js/meridians.js`: a permanent passive tree (nodes give flat/%% stats or Qi/economy perks), points granted on breakthrough (separate pool from stat points). ONE `effectiveStats` add-line in `progression.js`, `player.meridians` on the player (back-filled). Own ☯ modal. Read the conventions doc — passive sources plug into `effectiveStats`.
+
+### Task O — Daily trials
+- [initial] New `js/trials.js`: a wall-clock daily challenge (one attempt per real day, `player.trials` last-attempt timestamp — same pattern as Qi regen). Reuses `resolveCombat`/spawn; bonus reward on win. Own modal + a HUD entry.
+
+### Task P — Hunt bounties
+- [initial] New `js/bounties.js`: a board of "slay N of X" bounties refreshed on a timer, tracked against the existing `bestiary` kill counts (read-only) with a `player.bounties` progress/claim ledger. Own modal.
+
+### Task Q — Sect disciple missions
+- [initial] New `js/sectmissions.js`: send hired disciples (from task-S `guild.js`, read `getMembers()` — no edit) on timed wall-clock missions returning stones/materials to a mailbox-like tray. Own modal + a `game.js` tick. Nice synergy with the Sect + Salvage (M) material economy.
+
+### Task R — World events / calendar
+- [initial] New `js/events.js`: a deterministic repeating calendar (wall-clock buckets) of global buffs — "double drops", "+50% XP", "cheap repairs". The active event applies a multiplier in `game.js`'s reward path (one guarded line) + a HUD banner. No persistence (derive from the clock).
+
+### Task S3 — Statistics / lifetime summary
+- [initial] New `js/stats.js`: a read-only 📊 panel. Most values derive from the save (bestiary totals, cards/codex %, spirit stones); add a few lifetime counters to `player.stats` (fights won/lost/drawn, stones earned, ms played) incremented in `game.js`. Own modal.
+
+### Task T — Fight replay & share
+- [initial] New `js/replay.js`: the combat result already carries the full `turns[]` (resolution is decoupled from playback, GDD §8.6). Persist the last result, add a "Replay" button to the combat panel, and an "export log" string. Touches `ui.js` combat panel lightly.
+
+### Task U — Gem sockets / enchanting
+- [initial] New `js/sockets.js` + a "gem" drop item type. Higher-rarity gear rolls `sockets`; slotting a gem adds flat stats through `effectiveStats` (one add-line in `progression.js`, like set bonuses). Coordinate the `effectiveStats` hook ordering with tasks B (sets) and N (meridians) — they all add flat sources there; keep them independent, additive lines.
+
+### Task V — Ascension / New Game+
+- [initial] New `js/ascension.js`: at max realm, offer a prestige reset (wipe level/gear, keep cards/codex or convert to an "ascension" multiplier on `player.ascension`) applied in `progression.js`. A replay loop. Touches `game.js` reset flow — coordinate with the reset handler.
 
 ---
 

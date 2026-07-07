@@ -55,6 +55,106 @@ function openNavPanel(index) {
   buttons[index]?.click();
 }
 
+// --- Keyboard-shortcuts help overlay ("?") -------------------------------
+// A self-contained modal listing the real key bindings. Injected once into
+// <body>; its id ends in `-overlay` and it starts `.hidden`, so the existing
+// closeTopModal()/Esc handling and the shared modal CSS pick it up for free.
+let shortcutsOverlay = null;
+
+// One shortcut row: a set of <kbd> keys + a description. Built with the DOM API
+// (no HTML interpolation) so nothing here can be an injection vector.
+function shortcutRow(keys, desc) {
+  const row = document.createElement('div');
+  row.className = 'shortcut-row';
+
+  const keyWrap = document.createElement('div');
+  keyWrap.className = 'shortcut-keys';
+  keys.forEach((k) => {
+    // '/' and '–' are visual dividers between key groups, not keys themselves.
+    if (k === '/' || k === '–') {
+      const sep = document.createElement('span');
+      sep.className = 'shortcut-sep';
+      sep.textContent = k;
+      keyWrap.appendChild(sep);
+      return;
+    }
+    const kbd = document.createElement('kbd');
+    kbd.textContent = k;
+    keyWrap.appendChild(kbd);
+  });
+
+  const label = document.createElement('div');
+  label.className = 'shortcut-desc';
+  label.textContent = desc;
+
+  row.appendChild(keyWrap);
+  row.appendChild(label);
+  return row;
+}
+
+// Build + inject the overlay once. Guarded against double-injection.
+export function buildShortcutsOverlay() {
+  if (shortcutsOverlay || document.getElementById('shortcuts-overlay')) {
+    shortcutsOverlay = document.getElementById('shortcuts-overlay');
+    return shortcutsOverlay;
+  }
+
+  const overlay = document.createElement('div');
+  overlay.id = 'shortcuts-overlay';
+  overlay.className = 'hidden';
+
+  const panel = document.createElement('div');
+  panel.id = 'shortcuts-panel';
+  // ARIA set directly (this runs after applyA11y, so the shared pass won't see it).
+  panel.setAttribute('role', 'dialog');
+  panel.setAttribute('aria-modal', 'true');
+  panel.setAttribute('aria-label', 'Keyboard shortcuts');
+
+  const header = document.createElement('div');
+  header.className = 'shortcuts-header';
+  const h2 = document.createElement('h2');
+  h2.textContent = 'Keyboard Shortcuts';
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.id = 'btn-close-shortcuts';
+  close.title = 'Close';
+  close.textContent = '✕';
+  header.appendChild(h2);
+  header.appendChild(close);
+
+  const body = document.createElement('div');
+  body.className = 'shortcuts-body';
+  body.appendChild(shortcutRow(['↑', '↓', '←', '→', '/', 'W', 'A', 'S', 'D'], 'Move around the map'));
+  body.appendChild(shortcutRow(['1', '–', '9'], 'Open panels (Codex, Pavilion, Sect…)'));
+  body.appendChild(shortcutRow(['Esc'], 'Close the open dialog'));
+  body.appendChild(shortcutRow(['?'], 'Show / hide this help'));
+
+  panel.appendChild(header);
+  panel.appendChild(body);
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
+
+  close.addEventListener('click', () => overlay.classList.add('hidden'));
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.add('hidden'); });
+
+  shortcutsOverlay = overlay;
+  return overlay;
+}
+
+// Toggle the help. Opens it (even from the map); if it's already open, closes
+// it. If a DIFFERENT modal is open we leave it alone — keeps things simple and
+// avoids stacking. Never throws.
+function toggleShortcuts() {
+  const overlay = shortcutsOverlay || buildShortcutsOverlay();
+  if (!overlay) return;
+  if (!overlay.classList.contains('hidden')) {
+    overlay.classList.add('hidden');
+    return;
+  }
+  if (isModalOpen()) return; // another dialog is up; don't stack over it
+  overlay.classList.remove('hidden');
+}
+
 // Set dialog semantics on every modal and a descriptive label on the map. Done
 // here (not in index.html) so it stays in one place and covers modals injected
 // at runtime. Labels are read from each overlay's heading when present.
@@ -78,6 +178,7 @@ export function applyA11y() {
 
 export function initInput({ move }) {
   applyA11y();
+  buildShortcutsOverlay(); // inject the "?" help modal once, after the ARIA pass
 
   document.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey) return; // leave browser shortcuts alone
@@ -85,6 +186,14 @@ export function initInput({ move }) {
 
     if (e.key === 'Escape') {
       if (closeTopModal()) e.preventDefault();
+      return;
+    }
+
+    // "?" (Shift+/) toggles the keyboard-shortcuts help — works from the map;
+    // if the help is already up it closes it (Esc/✕ also close it).
+    if (e.key === '?') {
+      e.preventDefault();
+      toggleShortcuts();
       return;
     }
 

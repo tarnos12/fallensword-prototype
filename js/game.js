@@ -44,6 +44,7 @@ import { rollCardDrop, acquireCard, cardBonuses, CARDS } from './cards.js';
 import { createMarketProvider, emptyMarket } from './market.js';
 import { createGuildProvider, guildBuffs } from './guild.js';
 import { createBountyProvider } from './bounties.js';
+import { createSectMissionProvider } from './sectmissions.js';
 import { saveLoadout, applyLoadout, deleteLoadout } from './loadouts.js';
 import { normalizeBossState, maybeManifestBoss, onBossDefeated, bossHints } from './boss.js';
 import { recordAchievements } from './achievements.js';
@@ -124,6 +125,9 @@ export function createGame() {
   // The Hunt-bounty provider — offered board is deterministic from the clock;
   // accepted bounties live on the player, so it just wraps that.
   state.bountyProvider = createBountyProvider(state);
+  // Sect-dispatch provider — timed disciple missions on the player, resolved by
+  // wall-clock (so they complete offline like Qi regen / the Pavilion).
+  state.sectMissionProvider = createSectMissionProvider(state);
 
   state.loadedFromSave = !!loaded;
   if (loaded) {
@@ -880,6 +884,42 @@ export function claimBounty(state, bountyId) {
     saveGame(state);
   } else if (res.reason) {
     addLog(state, res.reason);
+  }
+  return res;
+}
+
+// --- Sect disciple missions. Thin wrappers over the SectMissionProvider: assign
+// a mission, resolve finished ones on the wall-clock tick, and collect the
+// returned rewards through the shared XP/stone path. ---
+
+export function startSectMission(state, personaId, typeId) {
+  const res = state.sectMissionProvider.assign(personaId, typeId);
+  if (res.ok) {
+    addLog(state, `${res.discipleName} sets out on “${res.typeName}” (${res.minutes}m).`);
+    saveGame(state);
+  } else if (res.reason) {
+    addLog(state, res.reason);
+  }
+  return res;
+}
+
+// Called from the wall-clock tick; moves finished missions to the returned tray.
+export function tickSectMissions(state, now = Date.now()) {
+  const done = state.sectMissionProvider.resolveDue(now);
+  if (done.length) {
+    for (const m of done) addLog(state, `${m.discipleName} returns from “${m.typeName}” — reward waiting in Sect Dispatch.`);
+    saveGame(state);
+  }
+  return { changed: done.length > 0 };
+}
+
+export function collectSectMissions(state) {
+  const res = state.sectMissionProvider.collect();
+  if (res.count > 0) {
+    state.player.spiritStones += res.stones;
+    addLog(state, `Collected ${res.count} disciple reward(s): +${res.stones} spirit stones, +${res.xp} XP.`);
+    grantXp(state, res.xp); // applies breakthroughs + logs
+    saveGame(state);
   }
   return res;
 }

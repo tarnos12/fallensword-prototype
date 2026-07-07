@@ -41,6 +41,9 @@ import {
   brewPill,
   usePill,
   tickPillBuffs,
+  startSectMission,
+  tickSectMissions,
+  collectSectMissions,
 } from './game.js';
 import {
   renderPlayerBar,
@@ -69,6 +72,7 @@ import { initDuel, openDuel } from './duel.js';
 import { initAchievements, updateAchievementBadge, showAchievementToasts } from './achievements.js';
 import { initForge } from './crafting.js';
 import { initBounties, renderBounties, updateBountyBadge } from './bounties.js';
+import { initSectMissions, renderSectMissions, updateSectMissionBadge } from './sectmissions.js';
 import { initTrials, renderTrialBadge } from './trials.js';
 import { initAlchemy, renderPillBar } from './alchemy.js';
 import { initMeridians, allocateMeridian } from './meridians.js';
@@ -170,6 +174,7 @@ function renderAll() {
   renderLoadouts(state);
   updateAchievementBadge(state);
   updateBountyBadge(state);
+  updateSectMissionBadge(state);
   showAchievementToasts(unlocked);
   renderTrialBadge(state);
   renderPillBar(state);
@@ -370,6 +375,19 @@ initBounties(state, {
     else if (r?.reason) toast(r.reason, 'error');
   },
 });
+initSectMissions(state, {
+  start: (personaId, typeId) => {
+    const r = startSectMission(state, personaId, typeId);
+    renderSectMissions(state); renderAll();
+    if (r?.ok) toast(`${r.discipleName} dispatched: ${r.typeName} (${r.minutes}m)`, 'info');
+    else if (r?.reason) toast(r.reason, 'error');
+  },
+  collect: () => {
+    const r = collectSectMissions(state);
+    renderSectMissions(state); renderAll();
+    if (r?.count > 0) toast(`Collected ${r.count} disciple reward(s): +${r.stones} ◆, +${r.xp} XP`, 'success');
+  },
+});
 initTrials(state, {
   onAttempt: () => { const res = attemptDailyTrial(state); renderAll(); return res; },
 });
@@ -404,6 +422,7 @@ setInterval(() => {
   tickQi(state);
   const stonesGained = tickStones(state); // spirit-stones/hour Spirit Cards
   const market = tickMarket(state); // rotate Pavilion listings + resolve sales
+  const sect = tickSectMissions(state); // resolve finished disciple missions (wall-clock)
   const buffExpired = tickBuffs(state);
   const pillExpired = tickPillBuffs(state); // expire timed Alchemy pill buffs (task C)
   renderPillBar(state); // keep the pill-buff countdown ticking every second
@@ -414,8 +433,8 @@ setInterval(() => {
     if (qiChanged || stonesGained || market.changed) renderPlayerBar(state);
     return;
   }
-  if (qiChanged || buffExpired || pillExpired || stonesGained || market.changed) {
-    renderAll(); // Qi regen, passive stones, market activity, or a fading buff
+  if (qiChanged || buffExpired || pillExpired || stonesGained || market.changed || sect.changed) {
+    renderAll(); // Qi regen, passive stones, market/sect activity, or a fading buff
   } else if (hasBuffs) {
     refreshLive(); // just tick the countdown + buffed stats
   }

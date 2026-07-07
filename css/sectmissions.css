@@ -1,0 +1,85 @@
+/* Sect disciple missions (task Q). Own sheet — injected by sectmissions.js.
+   Reuses the shared design tokens (--panel, --gold, --panel-edge, --bg, --dim,
+   --win) defined on :root in style.css, so it themes for free (light/dark). */
+
+.sectmissions-nav-btn { width: 100%; margin-top: 8px; color: var(--gold); border-color: var(--gold); position: relative; }
+
+#sectmissions-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(8, 9, 13, 0.78);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  overflow-y: auto;
+}
+
+#sectmissions-panel {
+  background: var(--panel);
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 560px;
+  padding: 16px 20px 22px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+}
+
+#sectmissions-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--panel-edge);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+#sectmissions-header h2 { margin: 0; color: var(--gold); font-weight: normal; letter-spacing: 1px; }
+
+.sm-note { font-size: 0.8rem; color: var(--dim); margin: 0 0 12px; line-height: 1.5; }
+
+#sectmissions-body h3 {
+  margin: 14px 0 8px;
+  font-size: 0.9rem;
+  color: var(--gold);
+  font-weight: normal;
+  letter-spacing: 1px;
+}
+
+.sm-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid var(--panel-edge);
+  border-radius: 6px;
+  background: var(--bg);
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.sm-info { flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: 2px; }
+.sm-name { font-size: 0.9rem; }
+.sm-sub { font-size: 0.76rem; }
+
+.sm-reward {
+  display: inline-block;
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  border-radius: 4px;
+  padding: 1px 8px;
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+
+.sm-missions { display: flex; gap: 6px; flex-wrap: wrap; }
+.sm-assign { font-size: 0.76rem; padding: 3px 8px; }
+
+.sm-status { white-space: nowrap; }
+.sm-timer { font-size: 0.8rem; color: var(--qi); font-variant-numeric: tabular-nums; }
+.sm-ready { font-size: 0.8rem; color: var(--win); }
+
+.sm-collect { margin: 4px 0 6px; }

@@ -4,24 +4,50 @@
 It is the shared ledger that lets multiple Claude Code sessions work in parallel
 without colliding. `master` stays code-only; this branch is the meeting point.
 
-New session? Do this **before writing any code**:
-1. `git fetch origin coordination && git checkout -B coordination origin/coordination`
-2. Read the **Task Board** below **and the Task Notes** for anything you'd touch.
-   Pick a row marked `AVAILABLE`.
-3. Claim it (see **Claim protocol**). If your claim push is rejected, someone
-   beat you — re-fetch, and either pick another task or redo the claim.
-4. **Always make a new branch for a new feature, and name the branch to match
-   the feature** — e.g. `claude/crafting-forge`, `claude/set-bonuses` — never
-   a generic session id like `claude/pick-your-task-xxxx`. Branch off `master`,
-   then open a PR into `master`.
-5. Keep your row's status current: `CLAIMED` → `IN REVIEW` → `DONE`, **and jot
-   any decisions/gotchas/handoff context in that task's Notes** (see below).
+## ⚡ Coordination model — CENTRAL DISPATCH (read this first)
 
-The board's columns are the machine-readable status (who owns what, right now).
-The **Task Notes** section is the human layer — freeform comments sessions leave
-each other: why a choice was made, what's half-done, a shared-file edit to watch
-for, a dependency, anything the next session needs. Treat it like the comment
-thread on the task.
+There is **no self-claiming anymore** (that caused a push-race where sessions
+blocked each other on this one file). Instead work is **assigned** by a single
+manager session, so no two sessions ever pick the same task and nobody waits on a
+claim.
+
+**Sessions have fixed identities:**
+
+| Session | Role |
+|---|---|
+| **#1** | **Task Manager / PR Merger / Conflict Resolver.** Owns `TASKS.md` (this board). Assigns tasks, merges PRs, resolves rebases/conflicts, keeps the board current. |
+| **#2** | Worker. Reads **`TASK_2.md`** for its assignment. |
+| **#3** | Worker. Reads **`TASK_3.md`** for its assignment. |
+| **#4** | Worker. Reads **`TASK_4.md`** for its assignment. |
+
+**If you are a worker session (#2/#3/#4):**
+1. `git fetch origin coordination && git checkout -B coordination origin/coordination`
+2. Open **your own file only** — `TASK_<n>.md`. It holds your current
+   assignment: the task, the branch name to use, your owned/shared files, and any
+   notes from #1. (You may *read* the other `TASK_*.md` / `TASKS.md` for context,
+   but you only **write** your own file.)
+3. Build on the branch #1 named for you, off `master`. Commit, push, open a PR
+   into `master`.
+4. When the PR is open, set the **Status** line at the top of *your* `TASK_<n>.md`
+   to `IN REVIEW — PR #NN` and append a one-line note in its Worker Log, then push
+   to `coordination`. That's your signal to #1. Then **wait for your next
+   assignment** in the same file (or ask #1).
+5. **Never edit `TASKS.md` or another session's `TASK_*.md`.** That's what keeps
+   writes conflict-free: each session writes exactly one file.
+
+**If you are #1 (manager):** you own `TASKS.md` + you write each worker's
+`TASK_<n>.md` *assignment* section. Assign from the board's `AVAILABLE`/`ASSIGNED`
+pool, pick the branch name, merge PRs one-at-a-time (rebase + resolve), then flip
+the board row to `DONE` and drop the worker's next task into their file.
+
+Because each session writes a **different file**, claims and status updates never
+collide — the only shared write left is #1 merging PRs into `master`, which is
+serial by design.
+
+The board table below is the **catalog + live status** (what every task is, who's
+assigned, current state). The **Task Notes** section is the human layer — freeform
+cross-session comments: why a choice was made, what's half-done, a shared-file
+edit to watch for, a dependency.
 
 ---
 
@@ -29,9 +55,10 @@ thread on the task.
 
 | Status | Meaning |
 |---|---|
-| `AVAILABLE` | Unclaimed. Fair game. |
-| `CLAIMED` | A session owns it and is working. Do **not** start it. |
-| `IN REVIEW` | Work done, PR open, awaiting merge. |
+| `AVAILABLE` | In the pool, not yet assigned. #1 may hand it to a worker. |
+| `ASSIGNED` | #1 has dispatched it to a worker session (see Owner col + their `TASK_<n>.md`). |
+| `CLAIMED` | Legacy — an older self-claiming session owns it and is finishing. |
+| `IN REVIEW` | Work done, PR open, awaiting #1's merge. |
 | `DONE` | Merged into `master`. |
 | `BLOCKED` | Not startable yet — see the reason in Notes. |
 
@@ -92,7 +119,7 @@ meridians, **U** gems) all add an independent additive line in the same
 | Q | **Sect disciple missions** — send hired disciples (task S sect) on timed wall-clock missions that return spirit stones / materials. Extends the Sect. | `js/sectmissions.js` *(new)* | `js/game.js` (tick + claim), `js/guild.js` (read members — no edit), `index.html`/`css`/`main.js` | `AVAILABLE` | — | — | — | — |
 | R | **World events / calendar** — scheduled wall-clock buffs (e.g. "double drops", "bonus XP") that toggle on a repeating clock and surface in the HUD. | `js/events.js` *(new)* | `js/game.js` (apply the active event's multiplier in the reward path), `js/main.js`/`css` (HUD banner) | `AVAILABLE` | — | — | — | — |
 | S3 | **Statistics / lifetime summary** — a read-only 📊 panel: total kills, stones earned, fights won/lost/drawn, time played, cards/codex %. Mostly derivable; add a couple of lifetime counters. | `js/stats.js` *(new)* | `js/game.js` (increment a few lifetime counters), `js/actors.js` (`player.stats`), `index.html`/`css`/`main.js` | `AVAILABLE` | — | — | — | — |
-| T | **Fight replay & share** (GDD §8.6) — persist the last fight's `turns[]`, add a "replay" button + an export-shareable-log string (resolution is already decoupled from playback). | `js/replay.js` *(new)* | `js/ui.js` (a replay button on the combat panel), `js/main.js`, `css` | `AVAILABLE` | — | — | — | — |
+| T | **Fight replay & share** (GDD §8.6) — persist the last fight's `turns[]`, add a "replay" button + an export-shareable-log string (resolution is already decoupled from playback). | `js/replay.js` *(new)* | `js/ui.js` (a replay button on the combat panel), `js/main.js`, `css` | `ASSIGNED` | #3 (queued) | `claude/fight-replay` | — | 2026-07-07 |
 | U | **Gem sockets / enchanting** — sockets on higher-rarity gear; slot gems (a dropped item type) for flat bonuses that flow through `effectiveStats`. | `js/sockets.js` *(new)* | `js/items.js` (`sockets` on templates + gem item type), `js/progression.js` (add gem bonuses in `effectiveStats`), `js/ui.js` (tooltip), `css` | `AVAILABLE` | — | — | — | — |
 | V | **Ascension / New Game+** — at max realm, reset progression for a permanent "ascension" multiplier (kept across resets). A prestige loop for replay. | `js/ascension.js` *(new)* | `js/game.js` (reset-with-keep flow), `js/progression.js` (apply the multiplier), `js/actors.js` (`player.ascension`), `index.html`/`css`/`main.js` | `AVAILABLE` | — | — | — | — |
 
@@ -102,11 +129,11 @@ meridians, **U** gems) all add an independent additive line in the same
 
 | # | Task | Owned files (yours to edit freely) | Shared files (edit minimally, expect to rebase) | Status | Owner | Branch | PR | Claimed |
 |---|---|---|---|---|---|---|---|---|
-| W | **Combat feedback & "juice"** — floating damage / heal / crit numbers, hit-flash + subtle shake on the struck actor, HP bars that animate down during playback, a victory/defeat flourish. Makes fights *feel* like fights. | `js/combatfx.js` *(new)*, `css/combatfx.css` *(new)* | `js/ui.js` (`playCombat` — one hook to emit an fx event per turn), `index.html` `<head>` (css link) | `AVAILABLE` | — | — | — | — |
-| X | **Unified toast / feedback system** — one queue-based toast (`toast(msg,type)`) for drops, breakthroughs, purchases, quest/bounty completion, and *errors* (right now most feedback is buried in the Chronicle log). A consistent, legible feedback language other modules call. | `js/toast.js` *(new)*, `css/toast.css` *(new)* | `js/main.js` (route a few key state changes through it), `index.html` `<head>`. **Coexist with / absorb** the existing achievements toast | `AVAILABLE` | — | — | — | — |
-| Y | **Item comparison tooltips + inventory UX** — hover an unequipped artifact → tooltip shows **stat deltas vs the equipped piece** (▲green / ▼red), rarity-tinted borders/glow, clear equipped/locked markers, tidier right-click actions. The single biggest gear-decision UX gap. | `js/itemcompare.js` *(new)*, `css/itemcompare.css` *(new)* | `js/ui.js` (tooltip render — one hook), `index.html` `<head>` | `AVAILABLE` | — | — | — | — |
-| Z | **Mobile / touch & responsive overhaul** — mobile-first pass: larger tap targets, a bottom nav dock on small screens, tap-to-move map, safe-area insets, zero horizontal overflow down to 320px. Build on the polish pass's breakpoints, don't fight them. | `css/responsive.css` *(new — link LAST so it overrides)* | light `index.html` (viewport meta + a dock container), `js/main.js` (optional dock wiring) | `AVAILABLE` | — | — | — | — |
-| AA | **Theme system (light/dark) + design-token refresh** — a persisted theme toggle in ⚙ Settings, a refined color/spacing/type token layer, consistent elevation & iconography. The polish pass seeded tokens (`--radius`, `--gold-soft`…); formalize them and add a light theme. | `js/theme.js` *(new)*, `css/theme.css` *(new token layer)* | `js/settings.js` (toggle control — coordinate w/ owner), `index.html` `<head>` | `AVAILABLE` | — | — | — | — |
+| W | **Combat feedback & "juice"** — floating damage / heal / crit numbers, hit-flash + subtle shake on the struck actor, HP bars that animate down during playback, a victory/defeat flourish. Makes fights *feel* like fights. | `js/combatfx.js` *(new)*, `css/combatfx.css` *(new)* | `js/ui.js` (`playCombat` — one hook to emit an fx event per turn), `index.html` `<head>` (css link) | `ASSIGNED` | #3 | `claude/combat-juice` | — | 2026-07-07 |
+| X | **Unified toast / feedback system** — one queue-based toast (`toast(msg,type)`) for drops, breakthroughs, purchases, quest/bounty completion, and *errors* (right now most feedback is buried in the Chronicle log). A consistent, legible feedback language other modules call. | `js/toast.js` *(new)*, `css/toast.css` *(new)* | `js/main.js` (route a few key state changes through it), `index.html` `<head>`. **Coexist with / absorb** the existing achievements toast | `ASSIGNED` | #4 | `claude/toast-system` | — | 2026-07-07 |
+| Y | **Item comparison tooltips + inventory UX** — hover an unequipped artifact → tooltip shows **stat deltas vs the equipped piece** (▲green / ▼red), rarity-tinted borders/glow, clear equipped/locked markers, tidier right-click actions. The single biggest gear-decision UX gap. | `js/itemcompare.js` *(new)*, `css/itemcompare.css` *(new)* | `js/ui.js` (tooltip render — one hook), `index.html` `<head>` | `ASSIGNED` | #2 | `claude/item-compare-tooltips` | — | 2026-07-07 |
+| Z | **Mobile / touch & responsive overhaul** — mobile-first pass: larger tap targets, a bottom nav dock on small screens, tap-to-move map, safe-area insets, zero horizontal overflow down to 320px. Build on the polish pass's breakpoints, don't fight them. | `css/responsive.css` *(new — link LAST so it overrides)* | light `index.html` (viewport meta + a dock container), `js/main.js` (optional dock wiring) | `ASSIGNED` | #2 (queued) | `claude/mobile-responsive` | — | 2026-07-07 |
+| AA | **Theme system (light/dark) + design-token refresh** — a persisted theme toggle in ⚙ Settings, a refined color/spacing/type token layer, consistent elevation & iconography. The polish pass seeded tokens (`--radius`, `--gold-soft`…); formalize them and add a light theme. | `js/theme.js` *(new)*, `css/theme.css` *(new token layer)* | `js/settings.js` (toggle control — coordinate w/ owner), `index.html` `<head>` | `ASSIGNED` | #4 (queued) | `claude/theme-system` | — | 2026-07-07 |
 | AB | **Navigation & HUD redesign** *(high-touch — solo & late)* — replace the button-grid nav with a proper dock/menu and redesign the top HUD (Qi / HP / realm / spirit-stones as clear labelled meters, sticky action bar). Structural, so it touches shared markup — do it **after** W–AA land to minimize rebases. | `css/hud.css` *(new)* | `index.html` (HUD + nav structure), `js/ui.js` (`renderPlayerBar`), `js/main.js` | `AVAILABLE` | — | — | — | — |
 
 > **Parallelism note:** A–D, K, L each own a distinct new module → run concurrently. The shared-file neighbourhood (`index.html` button-panel + a pre-`</body>` overlay, a CSS section appended at EOF, a `main.js` import+init) is the same one every Stage-2 feature used — both-add merges, cheap rebase, integrator merges one PR at a time. E–I touch core data; sequence via their Notes (E→F; F & H coordinate on the realm/zone). J is last.
@@ -356,45 +383,63 @@ Format: `- [YYYY-MM-DD · session <id>] <comment>`.
 
 ---
 
-## Claim protocol (the atomic part)
+## Dispatch protocol (central assignment — no claim race)
 
-Claiming is a push race against this branch. **First push wins.** The whole ritual:
+Roles are fixed (see the **Coordination model** at the top). **Only #1** manages
+the board, merges PRs, and resolves conflicts. Workers (#2/#3/#4) build the task
+in **their own** `TASK_<n>.md`, open a PR, and **never merge**. Because each
+session writes a *different* file, there is nothing to race.
+
+### Worker loop (#2 / #3 / #4)
 
 ```bash
-# 1. Get the latest board
+# 1. Sync the coordination branch and read YOUR file only.
 git fetch origin coordination
 git checkout -B coordination origin/coordination
+#    open TASK_<n>.md -> it lists your ACTIVE task + a QUEUE of your next tasks.
 
-# 2. Edit ONLY this file: set your task's Status to CLAIMED and fill in
-#    Owner (your session URL/short id), Branch (the feature branch you'll use),
-#    and Claimed (UTC date). Then:
-git add TASKS.md
-git commit -m "claim: task <ID> (<session-id>)"
-
-# 3. Push. This is the lock.
-git push origin coordination
-#    - Success  -> the task is yours. Go build.
-#    - Rejected (non-fast-forward) -> someone else pushed first:
-git fetch origin coordination
-git reset --hard origin/coordination     # take their board
-#      Re-read the board. If YOUR task is now taken, pick another and redo.
-#      If a DIFFERENT task was claimed, redo your edit for your task and re-push.
-```
-
-Then build the actual feature on a **separate** branch off `master`:
-
-```bash
+# 2. Build the ACTIVE task on the branch #1 named for you, off master.
 git fetch origin master
-# Name the branch after the FEATURE, not the session (e.g. claude/crafting-forge).
-git checkout -B claude/<feature-name> origin/master
-# ... implement, commit, push, open a PR into master ...
+git checkout -B claude/<feature-name-from-your-file> origin/master
+# ... implement, commit, push, OPEN a PR into master ...
+
+# 3. Report back: edit ONLY TASK_<n>.md — set its Status line to
+#    "IN REVIEW — PR #NN" and append one line to its Worker Log. Then:
+git checkout -B coordination origin/coordination   # (re-sync, your file only)
+git add TASK_<n>.md
+git commit -m "task <ID>: IN REVIEW (PR #NN) [session #<n>]"
+git push origin coordination
+#    A push rejection here is rare (only #1 or another worker's *different* file
+#    changed) and NEVER a content conflict on your file — just:
+#      git fetch origin coordination && git rebase origin/coordination   # trivial
+#    then push again.
+
+# 4. Do NOT wait idle. Advance to the NEXT task in your file's queue and go to
+#    step 2. (Your queue is disjoint from every other worker's, pre-assigned by
+#    #1, so "next" never collides with anyone.) If your queue is empty, ping #1
+#    for a refill — do not grab a row off the board yourself.
 ```
 
-When your PR is open, flip your row to `IN REVIEW` (+ PR number) and push to
-`coordination` again (same race rules). When it merges, flip to `DONE`.
+**Workers never:** merge a PR, edit `TASKS.md`, edit another session's
+`TASK_*.md`, or resolve cross-PR conflicts. If your PR has a merge conflict, #1
+handles it (or asks you a targeted question). You *may* rebase your **own**
+feature branch on the latest `master` if #1 asks.
 
-**Abandoning a task?** Set your row back to `AVAILABLE` (clear Owner/Branch) and
-push, so it frees up for someone else.
+### Manager loop (#1)
+
+1. Keep `TASKS.md` current (the catalog + status). Assign work by writing the
+   **Assignment** section of a worker's `TASK_<n>.md` and setting the board row to
+   `ASSIGNED` (Owner = `#n`, Branch = the name you chose).
+2. Give each worker a short **disjoint queue** (2–3 tasks whose files/areas don't
+   overlap each other) so they never idle waiting on you and never collide.
+3. Merge PRs **one at a time**, each rebased on the latest `master`; resolve any
+   shared-file conflicts (`game.js`/`main.js`/`index.html`/`css`, or the per-task
+   `css/<name>.css` links). Then flip the board row to `DONE` and refill that
+   worker's queue.
+4. Hold PR #13 (strip-testing) until all Stage-3 dev is done.
+
+**Reassigning / freeing a task?** #1 edits the board row + the affected worker's
+file. Workers don't self-serve from the board.
 
 ---
 
@@ -424,6 +469,7 @@ The claim board stops two sessions doing the *same* task. These rules stop their
 
 Optional but helpful — a one-line breadcrumb per session so the next one has context.
 
+- 2026-07-07 — session_01Sty (#1, manager) — **switched coordination to CENTRAL DISPATCH** (no more self-claiming push-race). Fixed roles: #1 = Task Manager / PR Merger / Conflict Resolver (owns `TASKS.md`, merges all PRs, resolves conflicts); #2/#3/#4 = workers, each reading its own `TASK_<n>.md`, opening PRs but **never merging**, advancing through a disjoint pre-assigned queue. Each session writes exactly one file → claims/status never collide. Created `TASK_2/3/4.md`. First assignments (all UX, per author's "heavy UX" priority): **#2 → Y** (item-compare tooltips) then Z; **#3 → W** (combat juice) then T; **#4 → X** (toast system) then AA. Replaced the Claim protocol with a Dispatch protocol.
 - 2026-07-07 — session_01Sty (integrator) — added the **UX / UX-overhaul batch (W–AB)**: Combat juice (W), unified toasts (X), item-comparison tooltips (Y), mobile/touch overhaul (Z), theme system (AA), nav/HUD redesign (AB, solo & late). Parallel-safety rule for this batch: **each UX task owns a NEW `css/<name>.css`** linked in `<head>` instead of appending to `style.css`, so they don't collide on the two most-shared UX files (`style.css`/`ui.js`).
 - 2026-07-07 — session_01Sty (integrator) — merged PRs #14 (Epic quest, task G), #15 (Crafting & Forge, task A), #16 (Hunt bounties, task P). #16 rebased onto master (CLAUDE.md/css/main.js conflicts resolved keep-both), verified in real Chromium (bounty modal opens with 4 offers, accept works, 0 console errors). Tasks A/G/P → DONE. Strip-testing #13 still HELD until Stage 3 dev completes.
 - 2026-07-07 — pick-your-task-wakee5 — task O (Daily trials) IN REVIEW, PR #18.

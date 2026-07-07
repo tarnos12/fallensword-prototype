@@ -14,6 +14,7 @@ import { personaById, personaLabel } from './personas.js';
 import { SECT_CAPACITY } from './guild.js';
 import { TECHNIQUES, CATEGORIES, get as getTech, isLearned, canLearn, canCast, activeBuffs } from './techniques.js';
 import { BOSS_LIST, bossAtLair, bossLairStatus } from './boss.js';
+import { beginFx, turnFx, endFx } from './combatfx.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -581,6 +582,9 @@ export function playCombat(state, result, onDone) {
   log.innerHTML = '';
   $('combat-title').textContent = `You vs ${result.monster.name} (Lv ${result.monster.level})`;
 
+  // Combat "juice" layer (task W): purely presentational, reads result only.
+  beginFx(result, isInstant());
+
   const lines = result.turns.map((t) => turnLine(t, result.monster));
 
   let i = 0;
@@ -591,6 +595,7 @@ export function playCombat(state, result, onDone) {
     }
     log.insertAdjacentHTML('beforeend', lines[i]);
     log.scrollTop = log.scrollHeight;
+    turnFx(result.turns[i]); // fx for the turn just rendered
     i++;
     playback = setTimeout(showNext, TURN_MS);
   };
@@ -607,6 +612,7 @@ export function playCombat(state, result, onDone) {
     outcome.classList.remove('hidden');
     skip.classList.add('hidden');
     close.classList.remove('hidden');
+    endFx(result); // resolution flourish + final HP snap (task W)
     onDone();
   };
 

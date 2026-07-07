@@ -1,0 +1,146 @@
+/* Combat feedback / "juice" (task W). Owns its own sheet so it never collides
+   with style.css. All motion is gated behind prefers-reduced-motion below. */
+
+.cfx-arena {
+  display: flex;
+  gap: 12px;
+  margin: 4px 0 12px;
+  position: relative;
+}
+
+.cfx-actor {
+  flex: 1 1 0;
+  min-width: 0;
+  background: var(--bg, #14161d);
+  border: 1px solid var(--panel-edge, #2c3040);
+  border-radius: 6px;
+  padding: 8px 10px 10px;
+  position: relative;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, opacity 0.3s ease;
+}
+
+.cfx-you { border-left: 3px solid var(--qi, #4fc3f7); }
+.cfx-foe { border-left: 3px solid var(--loss, #e57373); }
+
+.cfx-name {
+  font-size: 0.82rem;
+  font-weight: bold;
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cfx-hpbar {
+  height: 8px;
+  background: #0d0f14;
+  border: 1px solid var(--panel-edge, #2c3040);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.cfx-hpfill {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #4fae5a, #6fbf73);
+  transition: width 0.35s ease;
+}
+
+.cfx-hpfill.cfx-low { background: linear-gradient(90deg, #c0392b, #e57373); }
+
+.cfx-hpnum {
+  font-size: 0.7rem;
+  color: var(--dim, #8a8778);
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Hit flash + shake on the struck card --- */
+.cfx-hit { border-color: var(--loss, #e57373); box-shadow: 0 0 0 2px rgba(229, 115, 115, 0.45); }
+.cfx-you.cfx-hit { border-color: var(--loss, #e57373); }
+
+@keyframes cfx-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+.cfx-shake { animation: cfx-shake 0.32s ease; }
+
+.cfx-dead { opacity: 0.5; filter: grayscale(0.6); }
+
+/* --- Floating numbers --- */
+.cfx-floats {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 4px;
+  height: 0;
+  text-align: center;
+  pointer-events: none;
+}
+
+.cfx-float {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  font-weight: bold;
+  font-size: 1.05rem;
+  text-shadow: 0 1px 2px #000, 0 0 6px #000;
+  white-space: nowrap;
+  animation: cfx-rise 0.9s ease-out forwards;
+  --cfx-dx: 0px;
+}
+
+.cfx-float.cfx-dmg { color: #ffd7d0; }
+.cfx-float.cfx-crit { color: #ff8a80; font-size: 1.5rem; }
+.cfx-float.cfx-miss { color: var(--dim, #8a8778); font-size: 0.9rem; }
+
+@keyframes cfx-rise {
+  0% { opacity: 0; transform: translateX(calc(-50% + var(--cfx-dx))) translateY(6px) scale(0.7); }
+  15% { opacity: 1; transform: translateX(calc(-50% + var(--cfx-dx))) translateY(0) scale(1.1); }
+  100% { opacity: 0; transform: translateX(calc(-50% + var(--cfx-dx))) translateY(-34px) scale(1); }
+}
+
+/* --- Resolution flourish --- */
+.cfx-flourish {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: bold;
+  letter-spacing: 3px;
+  border-radius: 6px;
+  pointer-events: none;
+  animation: cfx-pop 0.5s ease-out;
+}
+
+.cfx-victory .cfx-flourish { color: #6fbf73; background: rgba(111, 191, 115, 0.14); text-shadow: 0 0 12px rgba(111, 191, 115, 0.7); }
+.cfx-defeat .cfx-flourish { color: #e57373; background: rgba(229, 115, 115, 0.14); text-shadow: 0 0 12px rgba(229, 115, 115, 0.6); }
+.cfx-draw .cfx-flourish { color: #b0a06a; background: rgba(176, 160, 106, 0.12); }
+
+@keyframes cfx-pop {
+  0% { opacity: 0; transform: scale(0.6); }
+  60% { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@media (max-width: 480px) {
+  .cfx-name { font-size: 0.76rem; }
+  .cfx-float { font-size: 0.95rem; }
+  .cfx-float.cfx-crit { font-size: 1.3rem; }
+}
+
+/* Respect reduced-motion: keep the information (numbers, bar values, flourish)
+   but drop the shakes, tweens, and travel animations. */
+@media (prefers-reduced-motion: reduce) {
+  .cfx-hpfill { transition: none; }
+  .cfx-shake { animation: none; }
+  .cfx-float { animation: none; opacity: 1; transform: translateX(calc(-50% + var(--cfx-dx))); }
+  .cfx-flourish { animation: none; }
+}

@@ -79,7 +79,7 @@ meridians, **U** gems) all add an independent additive line in the same
 | D | **Sparring / offline PvP-preview** (GDD §4.1, §6.5) — synthesize deterministic Actor stat-sheets for personas and let the player "spar" a Rival through the existing pure `resolveCombat`. The PvP hook, still offline. | `js/duel.js` *(new)*, `js/rivals.js` *(new)* | `js/profile.js` (a "Spar" button on rival rows — coordinate w/ owner), `index.html`/`css`/`js/main.js` | `AVAILABLE` | — | — | — | — |
 | E | **World-data modularization (enabling refactor)** — extract `ZONES` from `map.js` into per-zone modules (`js/zones/*.js`) + a creature registry, so new zones/creatures are new files, not edits to shared `map.js`/`actors.js`. Unblocks conflict-free zone authoring. | `js/map.js` (refactor), `js/zones/` *(new dir)* | `js/actors.js` (creature registry), `js/game.js` (imports) | `AVAILABLE` | — | — | — | — |
 | F | **Third zone — Core Formation tier** — a new area gated behind FE9, 3 new creatures + their Spirit Cards + a portal. **Do after E** (then it's just new files). | `js/zones/<zone>.js` *(new, after E)* | `js/actors.js`/`js/cards.js`/`js/map.js` (if E not yet landed), `js/progression.js` (realm gate — coordinate w/ H) | `AVAILABLE` | — | — | — | — |
-| G | **Epic quest chain** (GDD §5) — one multi-step "epic quest" with a strong named (Epic/Legendary) reward, spanning existing zones. | `js/quests.js` (append the chain) | `js/items.js` (named reward item, additive) | `AVAILABLE` | — | — | — | — |
+| G | **Epic quest chain** (GDD §5) — one multi-step "epic quest" with a strong named (Epic/Legendary) reward, spanning existing zones. | `js/quests.js` (append the chain) | `js/items.js` (named reward item, additive) | `CLAIMED` | pick-your-task-wakee5 | `claude/epic-quest-chain` | — | 2026-07-07 |
 | H | **Core Formation realm + advanced techniques** (GDD §9.1) — add the 3rd realm to the ladder + tier-3/4 techniques for it. | `js/techniques.js` (additions) | `js/progression.js` (`REALMS` + `STAGE_XP`) — coordinate w/ F | `AVAILABLE` | — | — | — | — |
 | I | **Second Legendary boss** (GDD §5) — a new calamity beast: own lair, cooldown, Epic/Legendary drop, boss Spirit Card. Consider refactoring `boss.js` into a small registry so bosses are data. | `js/boss.js` (→ registry) or `js/bosses/*.js` *(new)* | `js/cards.js`, `js/game.js`, `js/ui.js`, `css` | `AVAILABLE` | — | — | — | — |
 | J | **Full balance pass + committed sim harness** (GDD §8.6) — commit a reusable headless balance-sim (`tools/`), then a full-range tuning pass (XP curve, drop rates, boss stats, market prices). Mostly **solo & late** — touches tuning constants across files. | `tools/balance.mjs` *(new)* | tuning constants in `progression.js`/`items.js`/`actors.js`/`boss.js` | `BLOCKED` | — | — | — | Do near the end, once most content (F–I) is in — otherwise you tune a moving target. |
@@ -136,6 +136,14 @@ Format: `- [YYYY-MM-DD · session <id>] <comment>`.
 - [initial] A new area past Cindervein, gated behind FE9 (or the Core Formation realm from task H). 3 new creatures + their Spirit Cards + a stage-gated portal. **Easiest after task E lands** (then you just add files). If you start before E, expect to rebase `map.js`/`actors.js`/`cards.js`. Coordinate the realm gate with task H. GDD §5/§9.2.
 
 ### Task G — Epic quest chain
+- [2026-07-07 · session pick-your-task-wakee5] Claimed. Appending a multi-step
+  epic quest to `js/quests.js` using the existing event-driven chain shape
+  (onKill/onStage/onFace hooks), spanning both zones, with a hand-authored named
+  Epic/Legendary reward item. Plan: add the reward as an additive template/mint
+  helper in `items.js` (no change to existing drop tables — the named item is
+  only grantable by this quest), and grant it through the existing quest-claim
+  reward path so no `game.js`/UI changes are needed. Verifying headless that the
+  chain advances and pays out. Branch `claude/epic-quest-chain`.
 - [initial] Append a multi-step epic quest to `js/quests.js` (event-driven, same shape as the existing chain) with a strong named reward (an Epic/Legendary item authored in `items.js`). Self-contained in `quests.js` + one item — low conflict. GDD §5.
 
 ### Task H — Core Formation realm + techniques
@@ -267,6 +275,7 @@ The claim board stops two sessions doing the *same* task. These rules stop their
 
 Optional but helpful — a one-line breadcrumb per session so the next one has context.
 
+- 2026-07-07 — pick-your-task-wakee5 — claimed task G (Epic quest chain); P was taken in a claim race.
 - 2026-07-06 — session_01Sty (integrator) — **Stage 2 complete** (all PRs #3,#5–#12 merged; strip #13 held until end of Stage 3). Opened the **Stage 3 (1.0) task board** above: 12 tasks A–L, with A/B/C/D/K/L as the parallel-safe starter batch for up to 4 concurrent sessions. Task E is a foundational refactor; F–I are content (sequence per Notes); J (balance) is blocked until content lands.
 - 2026-07-06 — session_01Sty (integrator) — merged PRs #9 (boss), #8 (Profile), #10 (Achievements), #11 (Settings) — each rebased onto master with conflicts resolved, verified in-browser. All Stage-2 feature tasks DONE.
 - 2026-07-06 — session_01Sty (integrator) — merged PR #7 (Combat Sets) + PR #6 (Save export, rebased & resolved); tasks 4 & 7 → DONE.

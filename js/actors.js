@@ -171,5 +171,6 @@ export function createPlayer() {
     loadouts: [], // saved equipment sets (GDD §6.2): [{ name, weapon, robe }]
     learnedTechniques: [], // technique ids (GDD §6.4)
     activeBuffs: [], // { techniqueId, effect, expiresAt } — timed technique buffs
+    stats: {}, // lifetime counters (task S3): fightsWon/Lost/Drawn, stonesWon, itemsLooted, msPlayed
   };
 }

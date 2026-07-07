@@ -106,6 +106,7 @@ export function createGame() {
   normalizeBossState(state.player); // create {} for new saves; migrate old single-boss shape
   if (!state.player.achievements) state.player.achievements = [];
   if (!state.player.trials) state.player.trials = { lastDay: -1, plays: 0, wins: 0 };
+  if (!state.player.stats) state.player.stats = {}; // lifetime counters (task S3); keys default lazily
   if (state.lastStoneTick == null) state.lastStoneTick = Date.now();
   if (!state.market) state.market = emptyMarket();
   state.offlineStones = 0;
@@ -179,6 +180,22 @@ export function checkAchievements(state) {
     saveGame(state);
   }
   return fresh;
+}
+
+// Lifetime playtime accrual (task S3). Called on the world tick; accumulates only
+// *active* time by ignoring long gaps (tab backgrounded/asleep), so it measures
+// time actually spent playing rather than wall-clock since first launch. Doesn't
+// save itself — the value persists on the next natural saveGame (cheap vanity
+// stat, so an approximate last-few-minutes loss on a hard close is fine).
+export function tickPlaytime(state, now = Date.now()) {
+  const st = state.player.stats || (state.player.stats = {});
+  if (state._lastPlayTick == null) {
+    state._lastPlayTick = now;
+    return;
+  }
+  const delta = now - state._lastPlayTick;
+  state._lastPlayTick = now;
+  if (delta > 0 && delta < 5000) st.msPlayed = (st.msPlayed || 0) + delta;
 }
 
 // Daily Trial (GDD §5): resolve today's one-attempt challenge. The foe is
@@ -438,10 +455,15 @@ export function attack(state, monsterId) {
     trackKill(state, monster);
     Quests.onKill(state.quests, monster.typeId);
     removeMonster(tile, monster.id);
+    // Lifetime stats (task S3): counters that can't be derived from save state.
+    const st = p.stats || (p.stats = {});
+    st.fightsWon = (st.fightsWon || 0) + 1;
+    st.stonesWon = (st.stonesWon || 0) + stones;
 
     if (drop) {
       if (p.inventory.length < INVENTORY_SIZE) {
         p.inventory.push(drop);
+        st.itemsLooted = (st.itemsLooted || 0) + 1;
         addLog(state, `Loot: ${drop.name} (Lv ${drop.level}).`);
       } else {
         addLog(state, `A ${drop.name} dropped, but your pack is full — it is lost.`);
@@ -464,8 +486,12 @@ export function attack(state, monsterId) {
     p.spiritStones -= stonesLost;
     p.xp -= xpLost;
     result.penalty = { stonesLost, xpLost };
+    const st = p.stats || (p.stats = {});
+    st.fightsLost = (st.fightsLost || 0) + 1;
     addLog(state, `Defeated by ${monster.name}: -${stonesLost} stones, -${xpLost} XP.`);
   } else {
+    const st = p.stats || (p.stats = {});
+    st.fightsDrawn = (st.fightsDrawn || 0) + 1;
     addLog(state, `Combat with ${monster.name} unresolved after ${MAX_TURNS} turns.`);
   }
 

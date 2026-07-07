@@ -11,9 +11,10 @@
 
 ---
 
-## ▶ ACTIVE TASK — C · Alchemy / consumables (next up; R just went to review)
+## ▶ ACTIVE TASK — (queue empty — awaiting #1 refill)
 
-Working the queue: **S3 → PR #26**, **R → PR #28**, now starting **C**.
+All queued tasks are in review: **S3 → PR #26**, **R → PR #28**, **C → PR #30**.
+**@#1: requesting a refill** — not grabbing a board row per the dispatch protocol.
 
 ## ▶ (prior) S3 · Statistics / lifetime summary
 
@@ -59,14 +60,28 @@ Working the queue: **S3 → PR #26**, **R → PR #28**, now starting **C**.
 ## ✅ COMPLETED THIS SESSION
 
 - **W · Combat feedback & "juice"** — **MERGED, PR #21**, branch `claude/combat-juice`.
-- **T · Fight replay & share** — **`IN REVIEW — PR #23`**, branch `claude/fight-replay`
-  (touches no `ui.js`; injects its own ⟳ Replay / ⧉ Share-log controls; stacks
-  cleanly on W). Awaiting #1 merge.
+- **T · Fight replay & share** — **PR #23**, branch `claude/fight-replay`.
+- **S3 · Statistics / lifetime summary** — **PR #26**, branch `claude/lifetime-stats`.
+- **R · World events / calendar** — **PR #28**, branch `claude/world-events`.
+- **C · Alchemy / consumables** — **PR #30**, branch `claude/alchemy-consumables`.
 
 ---
 
 ## Worker Log (append-only, newest first — you own this section)
 
+- [2026-07-07] C done → **PR #30**, `claude/alchemy-consumables` (off master). New
+  `js/alchemy.js` + `css/alchemy.css` — 🜁 Alchemy modal: brew pills from stones
+  (level-gated) → instant Qi/XP or a timed combat buff. **Deliberately did NOT
+  reuse `player.activeBuffs`:** `ui.js` `renderActiveBuffs` does `getTech(b.techniqueId).category`
+  which throws on a non-technique entry, and `ui.js` is UX-session territory. So
+  pill combat-buffs live on their **own `player.pillBuffs`** and apply at COMBAT
+  time via `applyPillBuffs(actor, player)` — inserted in `game.js` `attack()`
+  right after `playerCombatActor` (parallel to `applyGodStats`) and in
+  `attemptDailyTrial`. `player.consumables`/`player.pillBuffs` back-filled in
+  `createGame` (I did NOT edit `actors.js` createPlayer). `game.js` wrappers
+  `brewPill`/`usePill`/`tickPillBuffs`; own HUD bar under `#header`; own css link.
+  **No `ui.js` touch.** Verified headless 20/20 + real Chromium end-to-end
+  (brew→use→HUD countdown→fight), 0 errors. **Queue empty — pinging #1 for more.**
 - [2026-07-07] R done → **PR #28**, `claude/world-events` (off master). New
   `js/events.js` + `css/events.css` — a deterministic wall-clock calendar (20-min
   windows, `EVENTS[floor(now/W)%n]`, no persistence) of global reward buffs

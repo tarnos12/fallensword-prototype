@@ -15,6 +15,7 @@ import { SECT_CAPACITY } from './guild.js';
 import { TECHNIQUES, CATEGORIES, get as getTech, isLearned, canLearn, canCast, activeBuffs } from './techniques.js';
 import { BOSS_LIST, bossAtLair, bossLairStatus } from './boss.js';
 import { beginFx, turnFx, endFx } from './combatfx.js';
+import { compareRows, setCompareContext } from './itemcompare.js'; // task Y: hover deltas
 
 const $ = (id) => document.getElementById(id);
 
@@ -333,6 +334,7 @@ function itemTooltip(item, hint) {
   return `<div class="tt-name rarity-${item.rarity}">${item.name}</div>
     <div class="tt-line dim">Lv ${item.level} ${item.slot} · ${RARITIES[item.rarity].label}</div>
     ${stats}${dur}
+    ${compareRows(item)}
     <div class="tt-hint">${hint}</div>`;
 }
 
@@ -368,6 +370,7 @@ function makeItemSlot(item, { label, onClick, onMenu, tooltipHint }) {
 
 export function renderGear(state, { onEquip, onUnequip, onSell, onDestroy, atGate }) {
   const p = state.player;
+  setCompareContext(p); // task Y: give itemcompare the live equipment to diff against
   const slots = $('equipment-slots');
   slots.innerHTML = '';
   for (const slot of ['weapon', 'robe']) {

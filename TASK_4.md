@@ -41,15 +41,16 @@ work. New assignment below, staying in your UX-infrastructure lane.
 
 1. ~~**K · Itch.io packaging & store page**~~ — ✅ **IN REVIEW — PR #29**
    (`claude/itch-packaging`). Done — advancing to Q.
-2. **Q · Sect disciple missions** — branch `claude/sect-missions`. **← ACTIVE.** Owns
-   `js/sectmissions.js` (+ own css). Send hired disciples (from the merged Sect,
-   `guild.js`) on **timed wall-clock missions** that return spirit stones /
-   materials to a mailbox-like tray — same offline/elapsed-time pattern as Qi
-   regen and the Pavilion. Reads `guild.js` `getMembers()` (**no edit** to
-   guild.js). Shared: `js/game.js` (a tick that resolves finished missions + a
-   claim wrapper), `index.html`/css/`js/main.js` (button + modal). Persist active
-   missions on an additive `player.sectMissions` field (back-filled, no VERSION
-   bump). Self-contained modal; no `ui.js`.
+2. ~~**Q · Sect disciple missions**~~ — ✅ **IN REVIEW — PR #31**
+   (`claude/sect-missions`). Done — footprint even smaller than planned (no
+   `index.html`: self-injects button + modal + stylesheet like `crafting.js`).
+
+**⚑ QUEUE EMPTY — @#1 please refill.** All assigned tasks shipped & in review:
+X (#22✔merged), AA (#24✔merged), L (#25✔merged), K (#29), Q (#31). Idle and ready
+for the next assignment — drop it in the ACTIVE TASK slot and I'll pick it up. Per
+protocol I'm **not** grabbing a board row myself. Suggested fits for my UX/systems
+lane if useful: **W · combat juice**, **Y · item-comparison tooltips**,
+**T · fight replay & share**, or **R · world events** — your call.
 
 *(When the queue empties, ping #1 for a refill — don't grab a board row yourself.)*
 
@@ -61,6 +62,21 @@ work. New assignment below, staying in your UX-infrastructure lane.
 ---
 
 ## Worker Log (append-only, newest first — you own this section)
+
+- [2026-07-07] Queue item 2 **Q · Sect disciple missions IN REVIEW — PR #31**
+  (`claude/sect-missions` → `master`). `js/sectmissions.js` + `css/sectmissions.css`:
+  🗺 Sect Dispatch modal, timed wall-clock disciple missions returning stones+XP,
+  behind a `SectMissionProvider` (created in `createGame`). Reads
+  `state.guildProvider.getMembers()` — **no guild.js edit**. Offline-safe (endsAt
+  vs now, resolved in the per-second tick). Additive `player.sectMissions`
+  ({active,tray}, lazy back-fill, no VERSION bump). **Footprint smaller than
+  planned — NO `index.html`**: self-injects its button + modal + stylesheet like
+  `crafting.js`. **Rebase heads-up for #1:** `game.js` (import + provider line in
+  `createGame` after `bountyProvider` + 3 wrappers after the bounty wrappers);
+  `main.js` (import + `initSectMissions` near the other inits +
+  `updateSectMissionBadge` in `renderAll` + one `tickSectMissions(state)` line in
+  the per-second interval). Verified headless + real Chromium (assign→tick→collect).
+  **Queue now empty — requested a refill above.**
 
 - [2026-07-07] Queue item 1 **K · Itch.io packaging IN REVIEW — PR #29**
   (`claude/itch-packaging` → `master`). Added `docs/STORE.md` (paste-ready itch

@@ -172,6 +172,62 @@ export function initTitles(state) {
     nav.appendChild(btn);
   }
   buildModal();
+  injectChip(state);
+}
+
+// --- Always-visible HUD chip showing the active title (pure derived display).
+// Self-injects into the top player bar; clicking opens the Titles modal. A cheap
+// interval keeps it in sync with progression without any main.js/ui.js wiring.
+let lastChipName = null;
+
+function injectChip(state) {
+  if (document.getElementById('title-chip')) return;
+  // Natural home is the top HUD; fall back to just before the nav menu.
+  const host = document.getElementById('player-bar') || null;
+  const chip = document.createElement('div');
+  chip.id = 'title-chip';
+  chip.setAttribute('role', 'button');
+  chip.setAttribute('tabindex', '0');
+  chip.title = 'Your current cultivator title — click for the full ladder';
+
+  const icon = document.createElement('span');
+  icon.className = 'title-chip-icon';
+  icon.textContent = '🏵';
+  const name = document.createElement('span');
+  name.className = 'title-chip-name';
+  chip.append(icon, name);
+
+  const open = () => openTitles(state);
+  chip.addEventListener('click', open);
+  chip.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+  });
+
+  if (host) host.append(chip);
+  else {
+    const nav = document.getElementById('nav-menu');
+    if (nav && nav.parentNode) nav.parentNode.insertBefore(chip, nav);
+    else document.body.append(chip);
+  }
+
+  updateTitleChip(state);
+  // Self-updating: refresh cheaply so the chip tracks progression live without
+  // any external render hook.
+  setInterval(() => updateTitleChip(state), 1500);
+}
+
+export function updateTitleChip(state) {
+  const chip = document.getElementById('title-chip');
+  if (!chip) return;
+  const player = state && state.player;
+  if (!player) { chip.classList.add('hidden'); return; }
+  const active = activeTitle(player);
+  if (!active) { chip.classList.add('hidden'); return; }
+  chip.classList.remove('hidden');
+  if (active.name === lastChipName) return;
+  lastChipName = active.name;
+  const name = chip.querySelector('.title-chip-name');
+  if (name) name.textContent = active.name; // static catalog data; textContent for safety
 }
 
 function buildModal() {

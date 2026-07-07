@@ -49,6 +49,7 @@ import { normalizeBossState, maybeManifestBoss, onBossDefeated, bossHints } from
 import { recordAchievements } from './achievements.js';
 import * as Trials from './trials.js';
 import { eventReward } from './events.js';
+import { pillById, applyPillBuffs, cleanPillBuffs } from './alchemy.js';
 import { saveGame, loadGame, clearSave } from './save.js';
 
 // --- Qi (stamina) tuning. Prototype regen is fast so playtesting isn't
@@ -108,6 +109,8 @@ export function createGame() {
   if (!state.player.achievements) state.player.achievements = [];
   if (!state.player.trials) state.player.trials = { lastDay: -1, plays: 0, wins: 0 };
   if (!state.player.stats) state.player.stats = {}; // lifetime counters (task S3); keys default lazily
+  if (!state.player.consumables) state.player.consumables = {}; // { pillId: qty } — Alchemy (task C)
+  if (!state.player.pillBuffs) state.player.pillBuffs = []; // timed pill combat buffs
   if (state.lastStoneTick == null) state.lastStoneTick = Date.now();
   if (!state.market) state.market = emptyMarket();
   state.offlineStones = 0;
@@ -211,6 +214,7 @@ export function attemptDailyTrial(state) {
 
   const { foe, reward } = Trials.todaysTrial(p);
   const me = playerCombatActor(p);
+  applyPillBuffs(me, p); // Alchemy (task C): pill buffs apply to the daily trial too
   const result = resolveCombat(me, foe, randomSeed());
 
   p.trials.lastDay = Trials.dayNumber();
@@ -243,6 +247,60 @@ export function attemptDailyTrial(state) {
   }
   saveGame(state);
   return out;
+}
+
+// --- Alchemy (task C, GDD §6.4): brew pills from spirit stones, quaff for an
+// instant effect or a timed combat buff. Effects/expiry logic lives in
+// alchemy.js; these game-layer wrappers own the economy + persistence. ---
+
+export function brewPill(state, pillId) {
+  const p = state.player;
+  const pill = pillById(pillId);
+  if (!pill) return { ok: false };
+  if (p.level < pill.minLevel) return { ok: false, reason: `Requires cultivation stage ${pill.minLevel}.` };
+  if (p.spiritStones < pill.cost) { addLog(state, 'Not enough spirit stones to brew that pill.'); return { ok: false }; }
+  p.spiritStones -= pill.cost;
+  if (!p.consumables) p.consumables = {};
+  p.consumables[pillId] = (p.consumables[pillId] ?? 0) + 1;
+  addLog(state, `Brewed a ${pill.name} (−${pill.cost} stones).`);
+  saveGame(state);
+  return { ok: true };
+}
+
+export function usePill(state, pillId) {
+  const p = state.player;
+  const pill = pillById(pillId);
+  if (!pill || (p.consumables?.[pillId] ?? 0) <= 0) return { ok: false };
+  p.consumables[pillId] -= 1;
+
+  if (pill.kind === 'instant') {
+    if (pill.effect.qi) {
+      const before = state.qi;
+      state.qi = Math.min(maxQi(p), state.qi + pill.effect.qi);
+      addLog(state, `${pill.name}: restored ${state.qi - before} Qi.`);
+    }
+    if (pill.effect.xpPerLevel) {
+      const xp = pill.effect.xpPerLevel * p.level;
+      addLog(state, `${pill.name}: +${xp} cultivation XP.`);
+      grantXp(state, xp);
+    }
+  } else {
+    // Timed combat buff — refresh any existing stack of the same pill.
+    if (!p.pillBuffs) p.pillBuffs = [];
+    p.pillBuffs = p.pillBuffs.filter((b) => b.pillId !== pillId);
+    p.pillBuffs.push({ pillId, icon: pill.icon, name: pill.name, effect: pill.effect, expiresAt: Date.now() + pill.durationMs });
+    addLog(state, `${pill.name} takes effect (${Math.round(pill.durationMs / 1000)}s).`);
+  }
+  saveGame(state);
+  return { ok: true };
+}
+
+// Drop expired pill buffs; returns true if anything changed (for a re-render).
+export function tickPillBuffs(state, now = Date.now()) {
+  const expired = cleanPillBuffs(state.player, now);
+  for (const b of expired) addLog(state, `${b.name} fades.`);
+  if (expired.length) saveGame(state);
+  return expired.length > 0;
 }
 
 export function currentTile(state) {
@@ -422,6 +480,7 @@ export function attack(state, monsterId) {
   if (!canAttack(state)) return null;
 
   const actor = playerCombatActor(state.player);
+  applyPillBuffs(actor, state.player); // Alchemy (task C): active timed pill combat buffs
   applyGodStats(actor); // TESTING ONLY: no-op unless debug god mode is on
   const result = resolveCombat(actor, monster, randomSeed());
   state.qi -= result.staminaSpent;

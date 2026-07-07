@@ -38,6 +38,9 @@ import {
   claimBounty,
   attemptDailyTrial,
   tickPlaytime,
+  brewPill,
+  usePill,
+  tickPillBuffs,
 } from './game.js';
 import {
   renderPlayerBar,
@@ -67,6 +70,7 @@ import { initAchievements, updateAchievementBadge, showAchievementToasts } from 
 import { initForge } from './crafting.js';
 import { initBounties, renderBounties, updateBountyBadge } from './bounties.js';
 import { initTrials, renderTrialBadge } from './trials.js';
+import { initAlchemy, renderPillBar } from './alchemy.js';
 import { initMeridians, allocateMeridian } from './meridians.js';
 import { toast, initToasts } from './toast.js';
 import { stageName } from './progression.js';
@@ -168,6 +172,7 @@ function renderAll() {
   updateBountyBadge(state);
   showAchievementToasts(unlocked);
   renderTrialBadge(state);
+  renderPillBar(state);
 }
 
 // Lightweight refresh for the per-second buff countdown: updates only the
@@ -368,6 +373,10 @@ initBounties(state, {
 initTrials(state, {
   onAttempt: () => { const res = attemptDailyTrial(state); renderAll(); return res; },
 });
+initAlchemy(state, {
+  brew: (id) => { brewPill(state, id); renderAll(); },
+  use: (id) => { usePill(state, id); renderAll(); },
+});
 initMeridians(state, {
   allocate: (id) => {
     if (allocateMeridian(state.player, id).ok) saveGame(state);
@@ -396,6 +405,8 @@ setInterval(() => {
   const stonesGained = tickStones(state); // spirit-stones/hour Spirit Cards
   const market = tickMarket(state); // rotate Pavilion listings + resolve sales
   const buffExpired = tickBuffs(state);
+  const pillExpired = tickPillBuffs(state); // expire timed Alchemy pill buffs (task C)
+  renderPillBar(state); // keep the pill-buff countdown ticking every second
   const qiChanged = state.qi !== qiBefore;
   const hasBuffs = state.player.activeBuffs.length > 0;
 
@@ -403,7 +414,7 @@ setInterval(() => {
     if (qiChanged || stonesGained || market.changed) renderPlayerBar(state);
     return;
   }
-  if (qiChanged || buffExpired || stonesGained || market.changed) {
+  if (qiChanged || buffExpired || pillExpired || stonesGained || market.changed) {
     renderAll(); // Qi regen, passive stones, market activity, or a fading buff
   } else if (hasBuffs) {
     refreshLive(); // just tick the countdown + buffed stats

@@ -11,11 +11,13 @@
 
 ---
 
-## ▶ ACTIVE TASK — S3 · Statistics / lifetime summary
+## ▶ ACTIVE TASK — C · Alchemy / consumables (next up; R just went to review)
 
-**#1 refill (2026-07-07):** great work on W + T — both merged (#21, #22... W=#21, T=#23 pending merge). New assignment below.
+Working the queue: **S3 → PR #26**, **R → PR #28**, now starting **C**.
 
-- **Status:** `IN REVIEW — PR #26` (branch `claude/lifetime-stats`, off latest master). **Advancing to R next.**
+## ▶ (prior) S3 · Statistics / lifetime summary
+
+- **Status:** `IN REVIEW — PR #26` (branch `claude/lifetime-stats`, off latest master).
 - **Branch:** `claude/lifetime-stats` (off latest `master`)
 - **Owned files (yours):** `js/stats.js` *(new)*, `css/stats.css` *(new — link in `<head>`)*
 - **Shared (edit minimally):** `js/game.js` (increment a few lifetime counters at
@@ -65,6 +67,20 @@
 
 ## Worker Log (append-only, newest first — you own this section)
 
+- [2026-07-07] R done → **PR #28**, `claude/world-events` (off master). New
+  `js/events.js` + `css/events.css` — a deterministic wall-clock calendar (20-min
+  windows, `EVENTS[floor(now/W)%n]`, no persistence) of global reward buffs
+  (Serene Skies / Enlightenment +50% XP / Spirit Torrent +50% stones / Heaven's
+  Bounty +25%/+25% / Blood Moon +75% stones). **game.js touch = one guarded spot**
+  in `attack()`'s win branch: `const ev = eventReward(); xp = round(xp*ev.xpMult);
+  stones = round(stones*ev.stoneMult);` inserted right before `p.spiritStones +=
+  stones` (covers boss + normal). **Heads-up:** this is a few lines ABOVE the S3
+  (PR #26) lifetime-counter additions in the same win branch — distinct anchors,
+  trivial rebase, but merge them mindful of ordering. HUD banner injected under
+  `#header` from `events.js`, refreshed on the 1s tick in `main.js`. Verified
+  headless 14/14 (incl. reward-path applies live window's mult) + Chromium 9/9
+  (banner + live countdown), 0 console errors. **Advancing to C (Alchemy /
+  consumables), branch `claude/alchemy-consumables`.**
 - [2026-07-07] S3 done → **PR #26**, `claude/lifetime-stats` (off master). New
   `js/stats.js` + `css/stats.css` — read-only 📊 Chronicle of Deeds (Cultivation
   / Battle / Collection / Fortune / Journey). Most rows **derive** from existing

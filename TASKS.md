@@ -48,8 +48,8 @@ Task IDs are stable handles, not priority — go by the **Status** column. Featu
 | 2 | Onboarding / tutorial pass — first-run guided intro | `js/tutorial.js` *(new)* | `css/style.css` (tutorial section), `js/main.js` (init) | `DONE` | session_01Sty | `claude/onboarding-tutorial` | #5 | 2026-07-06 |
 | 3 | Profile & Rivals feed (GDD §6.5) — profile panel with active buffs, a "Rivals" list and a "Recently Active" feed, populated from the shared `personas.js` roster | `js/profile.js` *(new)* | `index.html` (button + modal), `css/style.css` (profile section), `js/main.js` (init), `js/ui.js` (optional) | `DONE` | pick-your-task-aj14ny | `claude/pick-your-task-aj14ny` | #8 | 2026-07-06 |
 | 4 | Save export / import (GDD §4.4) — export the save as a copy-paste string / file and import it back (back up without an account) | `js/save.js` (additive `exportSave`/`importSave`) | `index.html` (backup buttons), `css/style.css`, `js/main.js` (wiring) | `DONE` | pick-your-task-wakee5 | `claude/pick-your-task-wakee5` | #6 | 2026-07-06 |
-| 5 | Visual / UI polish pass | `css/style.css` | `index.html` (no `js/ui.js` touch) | `IN REVIEW` | choose-task-fxtfot | `claude/ui-polish` | #12 | 2026-07-06 |
-| 6 | Strip testing conveniences (pre-demo) | `js/debug.js` *(delete)* | `js/game.js`, `js/items.js`, `js/cards.js`, `js/main.js`, `index.html`, `css/style.css` | `BLOCKED` | — | — | — | Demo-prep only. Do **absolutely last** — after task 5 (polish) merges, since polish may want the debug tools. See CLAUDE.md "TESTING-ONLY". |
+| 5 | Visual / UI polish pass | `css/style.css` | `index.html` (no `js/ui.js` touch) | `DONE` | choose-task-fxtfot | `claude/ui-polish` | #12 | 2026-07-06 |
+| 6 | Strip testing conveniences (pre-demo) | `js/debug.js` *(delete)* | `js/game.js`, `js/items.js`, `js/cards.js`, `js/main.js`, `index.html`, `css/style.css` | `CLAIMED` | choose-task-fxtfot | `claude/strip-testing` | — | 2026-07-06 |
 | 7 | Combat Sets / loadouts (GDD §6.2) — save & swap named equipped-item sets (e.g. a leveling set vs a boss set) | `js/loadouts.js` *(new)* | `js/actors.js` (`player.loadouts`), `js/game.js` (save/apply wrappers), `js/main.js` (init + render call), `css/style.css` | `DONE` | session_01Sty | `claude/combat-sets` | #7 | 2026-07-06 |
 | 8 | Achievements / milestones — a panel tracking milestones (first breakthrough, N kills, first Epic, full codex, first sect hire…) with a toast on unlock | `js/achievements.js` *(new)* | `index.html` (button + modal), `css/style.css`, `js/main.js` (init), `js/game.js` (small record hooks) | `DONE` | pick-your-task-wakee5 | `claude/achievements-milestones` | #10 | 2026-07-06 |
 | 9 | Settings / preferences modal — consolidate display prefs (instant combat, replay tutorial, reset save) into one ⚙ panel | `js/settings.js` *(new)* | `index.html` (button + modal), `css/style.css`, `js/main.js` (init), `js/ui.js` (relocate the instant-combat toggle) | `DONE` | pick-your-task-aj14ny | `claude/settings-modal` | #11 | 2026-07-06 |
@@ -188,6 +188,17 @@ should rebase around. Format: `- [YYYY-MM-DD · session <id>] <comment>`.
   Start only after tasks 1–4 are merged.
 
 ### Task 6 — Strip testing conveniences
+- [2026-07-06 · session choose-task-fxtfot] Claimed (branch `claude/strip-testing`,
+  off master AFTER task 5 polish merged — PR #12 is in). This is the final Stage 2
+  task; all features + polish are on master. Executing the CLAUDE.md
+  "TESTING-ONLY — strip before demo" checklist: delete `js/debug.js` + its
+  `import`/`initDebug()` in `main.js`; remove the `TESTING ONLY — debug tools`
+  block in `game.js` + the `applyGodStats(actor)` call in `attack()`; drop
+  `setDropMultiplier`/`setCardDropMultiplier` (and their use in `rollDrop`/
+  `rollCardDrop`) from `items.js`/`cards.js`; remove `grantTestingKit` + the
+  quartermaster kit; lower `MAX_QI` (game.js) and `INVENTORY_SIZE` (items.js) to
+  real values; remove the debug panel markup/styles from `index.html`/`css`.
+  Will verify headless + real-Chromium after.
 - [initial] Demo-prep, do last. Full strip checklist is in `CLAUDE.md` →
   "TESTING-ONLY — strip before demo". Deletes `js/debug.js` and unwinds the
   labelled hooks in `game.js`/`items.js`/`cards.js`/`main.js`.

@@ -87,7 +87,7 @@ meridians, **U** gems) all add an independent additive line in the same
 | L | **Accessibility & keyboard input** — arrow/WASD tile movement, number/Esc hotkeys for modals, `:focus-visible` audit, ARIA roles on map/modals. | `js/input.js` *(new)* | `js/main.js` (wire), `css/style.css`, light `index.html` (aria) | `AVAILABLE` | — | — | — | — |
 | M | **Salvage / materials** — right-click "salvage" breaks unwanted gear into crafting materials (feeds task A). Materials are a stackable item type on `player`. | `js/salvage.js` *(new)* | `js/items.js` (material item shape), `js/game.js` (salvage wrapper), `js/ui.js` (context-menu entry), `css` | `AVAILABLE` | — | — | — | — |
 | N | **Meridian talent tree** — a permanent passive point tree (earned per breakthrough, separate from stat points) that feeds `effectiveStats`. Own ☯ modal. | `js/meridians.js` *(new)* | `js/progression.js` (one add-line in `effectiveStats` + a points grant on breakthrough), `js/actors.js` (`player.meridians`), `index.html`/`css`/`main.js` | `AVAILABLE` | — | — | — | — |
-| O | **Daily trials** — a rotating (wall-clock daily) challenge encounter with bonus rewards; one attempt per reset. | `js/trials.js` *(new)* | `js/game.js` (spawn/reward hook), `js/actors.js` (`player.trials` timestamp), `index.html`/`css`/`main.js` | `AVAILABLE` | — | — | — | — |
+| O | **Daily trials** — a rotating (wall-clock daily) challenge encounter with bonus rewards; one attempt per reset. | `js/trials.js` *(new)* | `js/game.js` (spawn/reward hook), `js/actors.js` (`player.trials` timestamp), `index.html`/`css`/`main.js` | `CLAIMED` | pick-your-task-wakee5 | `claude/daily-trials` | — | 2026-07-07 |
 | P | **Hunt bounties** — a bounty board: "slay N of creature X" for stone/XP rewards, refreshed on a timer. Reads the existing bestiary kill counts. | `js/bounties.js` *(new)* | `js/game.js` (claim hook), `js/actors.js` (`player.bounties`), `index.html`/`css`/`main.js` | `IN REVIEW` | pick-your-task-aj14ny | `claude/hunt-bounties` | #16 | 2026-07-06 |
 | Q | **Sect disciple missions** — send hired disciples (task S sect) on timed wall-clock missions that return spirit stones / materials. Extends the Sect. | `js/sectmissions.js` *(new)* | `js/game.js` (tick + claim), `js/guild.js` (read members — no edit), `index.html`/`css`/`main.js` | `AVAILABLE` | — | — | — | — |
 | R | **World events / calendar** — scheduled wall-clock buffs (e.g. "double drops", "bonus XP") that toggle on a repeating clock and surface in the HUD. | `js/events.js` *(new)* | `js/game.js` (apply the active event's multiplier in the reward path), `js/main.js`/`css` (HUD banner) | `AVAILABLE` | — | — | — | — |
@@ -203,6 +203,19 @@ Format: `- [YYYY-MM-DD · session <id>] <comment>`.
 - [initial] New `js/meridians.js`: a permanent passive tree (nodes give flat/%% stats or Qi/economy perks), points granted on breakthrough (separate pool from stat points). ONE `effectiveStats` add-line in `progression.js`, `player.meridians` on the player (back-filled). Own ☯ modal. Read the conventions doc — passive sources plug into `effectiveStats`.
 
 ### Task O — Daily trials
+- [2026-07-07 · session pick-your-task-wakee5] Claimed. Building `js/trials.js`:
+  a 🗓 Daily Trial modal offering one wall-clock-daily challenge foe (deterministic
+  from the UTC day-number + player level, so the roster rotates each day and is
+  the same for everyone that day). One attempt per day tracked by
+  `player.trials = { lastDay, wins, ... }` (day-number bucket, resets at UTC
+  midnight). The fight runs through the **pure `resolveCombat`** against a
+  `playerCombatActor` snapshot; win → bonus stones/XP (+ chance at an item),
+  loss → no penalty (free daily). Self-rendered modal shows the foe + outcome
+  banner inline — NOT routing through `ui.js` `playCombat`, to stay self-contained.
+  `game.js` gets an `attemptDailyTrial` wrapper (+ `player.trials` back-fill in
+  `createGame`, keeping `actors.js` untouched). Shared touches at separated
+  anchors: `index.html` (🗓 button + overlay before `<script>`), `css` (appended
+  at EOF), `main.js` (init). Branch `claude/daily-trials`.
 - [initial] New `js/trials.js`: a wall-clock daily challenge (one attempt per real day, `player.trials` last-attempt timestamp — same pattern as Qi regen). Reuses `resolveCombat`/spawn; bonus reward on win. Own modal + a HUD entry.
 
 ### Task P — Hunt bounties
@@ -321,6 +334,7 @@ The claim board stops two sessions doing the *same* task. These rules stop their
 
 Optional but helpful — a one-line breadcrumb per session so the next one has context.
 
+- 2026-07-07 — pick-your-task-wakee5 — claimed task O (Daily trials).
 - 2026-07-07 — pick-your-task-wakee5 — task G (Epic quest chain) IN REVIEW, PR #14. Note: minimal `game.js` claimQuest branch for named rewards (see Task G notes).
 - 2026-07-07 — pick-your-task-wakee5 — claimed task G (Epic quest chain); P was taken in a claim race.
 - 2026-07-06 — session_01Sty (integrator) — **Stage 2 complete** (all PRs #3,#5–#12 merged; strip #13 held until end of Stage 3). Opened the **Stage 3 (1.0) task board** above: 12 tasks A–L, with A/B/C/D/K/L as the parallel-safe starter batch for up to 4 concurrent sessions. Task E is a foundational refactor; F–I are content (sequence per Notes); J (balance) is blocked until content lands.

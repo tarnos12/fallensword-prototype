@@ -1,0 +1,120 @@
+/* Cultivator Titles (read-only cosmetic). Own sheet — no collision with style.css. */
+
+.titles-btn { width: 100%; color: var(--gold, #d4af37); border-color: var(--gold, #d4af37); }
+
+#titles-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(8, 9, 13, 0.78);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  overflow-y: auto;
+}
+
+#titles-panel {
+  background: var(--panel, #1d2029);
+  border: 1px solid var(--gold, #d4af37);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 540px;
+  padding: 16px 20px 22px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+}
+
+#titles-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--panel-edge, #2c3040);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+#titles-header h2 { margin: 0; color: var(--gold, #d4af37); font-weight: normal; letter-spacing: 1px; }
+
+#btn-close-titles { padding: 2px 10px; }
+
+/* Active-title banner — the prestige headline. */
+#titles-active {
+  border: 1px solid var(--gold, #d4af37);
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.16), rgba(212, 175, 55, 0.04));
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.titles-active-label {
+  color: var(--dim, #8a8778);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.titles-active-name {
+  color: var(--gold, #d4af37);
+  font-size: 1.5rem;
+  letter-spacing: 1px;
+  margin: 4px 0 6px;
+  text-shadow: 0 0 12px rgba(212, 175, 55, 0.4);
+}
+
+.titles-active-flavor {
+  color: var(--text, #d6d3c8);
+  font-size: 0.82rem;
+  font-style: italic;
+  opacity: 0.9;
+}
+
+.titles-active-count {
+  color: var(--dim, #8a8778);
+  font-size: 0.76rem;
+  margin-top: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The ladder. */
+#titles-body { display: flex; flex-direction: column; gap: 6px; }
+
+.title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--panel-edge, #2c3040);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.title-row.locked { opacity: 0.55; }
+
+.title-row.unlocked { border-color: rgba(212, 175, 55, 0.35); }
+
+.title-row.active {
+  border-color: var(--gold, #d4af37);
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.title-mark { font-size: 1.1rem; line-height: 1.3; flex: 0 0 auto; }
+
+.title-info { min-width: 0; }
+
+.title-name {
+  color: var(--text, #d6d3c8);
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+.title-row.unlocked .title-name { color: var(--gold, #d4af37); }
+
+.title-detail {
+  color: var(--dim, #8a8778);
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+
+.title-row.unlocked .title-detail { font-style: italic; }

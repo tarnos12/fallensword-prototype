@@ -85,6 +85,7 @@ import { stageName } from './progression.js';
 import { recordFight, initReplay, getLastFight, setReplayVisible } from './replay.js';
 import { initInput } from './input.js';
 import { initStats } from './stats.js';
+import { initTitles } from './titles.js';
 import { initEventBanner, renderEventBanner } from './events.js';
 import { initDebug } from './debug.js'; // TESTING ONLY (strip before demo)
 
@@ -428,6 +429,7 @@ initSockets(state, {
 initToasts(); // unified toast/feedback host (task X)
 initReplay(state, { onReplay: (result) => runPlayback(result) });
 initStats(state); // 📊 Chronicle of Deeds (lifetime stats)
+initTitles(state); // 🏵 Cultivator Titles (read-only cosmetic)
 initEventBanner(); // world-events HUD strip under the header (task R)
 initDebug(state, renderAll); // TESTING ONLY (strip before demo)
 renderAll();

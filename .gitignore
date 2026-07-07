@@ -1,0 +1,8 @@
+# Transient in-session agent-team worktrees (Agent tool, isolation: "worktree").
+# These are ephemeral per-subagent checkouts, auto-removed when the agent ends —
+# never commit them. (The tracked .claude/launch.json is unaffected.)
+.claude/worktrees/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db

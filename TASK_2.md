@@ -35,7 +35,7 @@
 
 ## ▶ ACTIVE TASK — B · Gear set bonuses
 
-- **Status:** `IN PROGRESS` — starting now (AB → IN REVIEW PR #36).
+- **Status:** `IN REVIEW — PR #38`. **Queue empty — awaiting a refill from #1.** (AB → PR #36, B → PR #38; both IN REVIEW.)
 - **Branch:** `claude/gear-sets` (off latest `master`)
 - **Owned files (yours):** `js/sets.js` *(new)*, `css/sets.css` *(new, if needed)*
 - **Shared (edit minimally):** `js/items.js` (`setId` on a few templates),
@@ -71,6 +71,20 @@
 
 ## Worker Log (append-only, newest first — you own this section)
 
+- [2026-07-07] **B done → PR #38.** New `js/sets.js` + `css/sets.css` (owned;
+  **`style.css` untouched**). Three sets: Skydancer (Rare), Phoenix (Epic), Nine
+  Heavens (Legendary) — matched weapon+robe pairs. **`progression.js`:** ONE add-line
+  `setBonuses(player)` right after the socket block (sixth flat source; separate hunk;
+  honours broken-gear rule). Import `setBonuses` after the `sockets.js` import.
+  **`items.js`:** `setId` on the 6 member templates (additive) + `...(template.setId ?
+  {setId} : {})` spread in `generateItem` (next to the sockets spread). **`ui.js`
+  hook — same shared item-tooltip region as Y/U:** (a) import `{ setLine, setSetsContext }`
+  after the `sockets.js` import; (b) `setSetsContext(p)` right after `setCompareContext(p)`
+  in `renderGear`; (c) `${setLine(item)}` in `itemTooltip` between `${socketLine(item)}`
+  and `${compareRows(item)}`. **`index.html`:** `<link>` to `css/sets.css` after
+  `sockets.css`. Verified 27 headless + 8 Chromium DOM, 0 console errors — full set →
+  tooltip "Skydancer Regalia (2/2)" + active bonus, `effectiveStats` +4/+4.
+  **Queue empty — pinging #1 for the next assignment.**
 - [2026-07-07] **AB done → PR #36.** New `css/hud.css` (owned; **`style.css`
   untouched**), linked **before** `css/responsive.css` so Z's ≤620 bottom nav dock
   still wins. **HUD:** `#player-bar` flat chips → labelled stat tiles; Qi + Breakthrough

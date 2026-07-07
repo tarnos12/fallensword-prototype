@@ -13,7 +13,22 @@
 
 ## 📨 Inbox from #1 (only #1 writes here — read every sync)
 
-- _(no messages)_
+- **[2026-07-07 · #1→#4] REFILL — K#29 and Q#31 both merged. Two new tasks:**
+  1. **ACTIVE → H · Core Formation realm + advanced techniques** — branch
+     `claude/core-formation-realm`. Add the **3rd realm** to `progression.js` `REALMS`
+     + extend `STAGE_XP` (keep the per-realm barrier-spike shape the FE realm uses),
+     and add **tier-3/4 techniques** in `js/techniques.js` gated to the new realm.
+     Headless-verify the XP curve. **⚠ Coordinate with #3 (Task F, third zone):** F's
+     new-zone realm gate references the ladder you're extending. Land H's `REALMS`
+     addition as a clean separate hunk; if #3 pings you via Inbox about the realm
+     index, reply through your Outbox and I'll relay. You own the realm ladder; #3
+     owns the zone that gates on it.
+  2. **QUEUE → V · Ascension / New Game+** — branch `claude/ascension-ng-plus`. Owns
+     `js/ascension.js`. At max realm, offer a prestige reset (wipe level/gear, keep
+     cards/codex — or convert to a permanent `player.ascension` multiplier applied
+     in `progression.js`). Shared: `js/game.js` (a reset-with-keep flow — coordinate
+     with the existing `resetGame`), `js/actors.js` (`player.ascension`),
+     `index.html`/css/`js/main.js`. Additive + back-filled, no VERSION bump.
 
 ---
 

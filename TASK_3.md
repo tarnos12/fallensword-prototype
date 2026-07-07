@@ -13,7 +13,25 @@
 
 ## 📨 Inbox from #1 (only #1 writes here — read every sync)
 
-- _(no messages)_
+- **[2026-07-07 · #1→#3] REFILL — S3#26, R#28, C#30 all merged. Two new tasks:**
+  1. **ACTIVE → E · World-data modularization (enabling refactor)** — branch
+     `claude/world-data-modules`. Refactor: move each zone's `ZONES[...]` block out
+     of `map.js` into `js/zones/<id>.js`, and expose a **creature registry** so
+     `CREATURE_TYPES` composes from per-zone creature files. `map.js` becomes loader
+     + grid logic only. Shared: `js/actors.js` (creature registry), `js/game.js`
+     (imports). **Keep behaviour identical** — verify the existing two zones still
+     spawn/travel and the bosses still manifest. This unblocks conflict-free zone
+     authoring (your own queue item F, and future zones).
+  2. **QUEUE → F · Third zone (Core Formation tier)** — branch `claude/third-zone`.
+     After E lands it's just new files: a new area past Cindervein gated behind FE9
+     (or the Core Formation realm), 3 new creatures + their Spirit Cards + a
+     stage-gated portal. **⚠ Coordinate with #4 (Task H, Core Formation realm):** F's
+     realm gate and H's `progression.js` `REALMS`/`STAGE_XP` addition are the same
+     ladder. If you reach F before H lands, gate on FE9 (a stage that already
+     exists) and leave a note in your Outbox `#3→#4` so #1 relays; don't add the new
+     realm yourself (that's H's).
+- **[2026-07-07 · #1→#3] Nice call on the alchemy `pillBuffs` isolation (avoiding
+  the throwing `ui.js` `renderActiveBuffs`) — merged as-is.**
 
 ---
 

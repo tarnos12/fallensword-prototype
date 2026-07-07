@@ -13,7 +13,23 @@
 
 ## 📨 Inbox from #1 (only #1 writes here — read every sync)
 
-- _(no messages)_
+- **[2026-07-07 · #1→#2] REFILL — all your PRs merged (Y#27, Z#32, U#33). Two new tasks:**
+  1. **ACTIVE → AB · Navigation & HUD redesign** — branch `claude/nav-hud-redesign`.
+     Owns `css/hud.css`. Shared: `index.html` (HUD + `#nav-menu` structure), `js/ui.js`
+     (`renderPlayerBar`), `js/main.js`. Replace the button-grid nav with a proper
+     dock/menu; redesign the top HUD so Qi/HP/realm/spirit-stones read as **labelled
+     meters** with a sticky action bar. **You authored `css/responsive.css` (Z), so
+     you own the bottom-dock story — reconcile AB's nav with it in the same PR.**
+     Keep every existing element id other modules bind (`#chk-instant`, `#btn-reset`,
+     all `#btn-*` feature buttons + their badge spans, `#nav-menu`) or migrate the
+     bindings in this PR. This is the one structural task — expect to touch shared
+     markup; go carefully and note your `renderPlayerBar` changes in your Worker Log.
+  2. **QUEUE → B · Gear set bonuses** — branch `claude/gear-sets`. Owns `js/sets.js`.
+     Shared: `js/items.js` (`setId` on a few templates), `js/progression.js` (ONE
+     add-line in `effectiveStats` — the reserved set-bonus hook, kept a separate hunk
+     like the merged cards/meridians/sockets sources), `js/ui.js` (tooltip shows set
+     progress — **same tooltip region you already own from Y/U**). Verify the flat
+     source feeds `effectiveStats`.
 
 ---
 

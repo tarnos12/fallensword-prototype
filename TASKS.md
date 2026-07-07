@@ -73,7 +73,7 @@ meridians, **U** gems) all add an independent additive line in the same
 
 | # | Task | Owned files (yours to edit freely) | Shared files (edit minimally, expect to rebase) | Status | Owner | Branch | PR | Claimed |
 |---|---|---|---|---|---|---|---|---|
-| A | **Crafting & Forge** (GDD §5) — spend materials + spirit stones to upgrade/reforge gear (add a stat roll, repair-to-max, reroll within a rarity cap). ⚒ modal. | `js/crafting.js` *(new)* | `js/game.js` (wrappers), `js/items.js` (additive reforge/material helper), `index.html`/`css/style.css`/`js/main.js` (button+modal+init) | `CLAIMED` | choose-task-fxtfot | `claude/crafting-forge` | — | 2026-07-07 |
+| A | **Crafting & Forge** (GDD §5) — spend materials + spirit stones to upgrade/reforge gear (add a stat roll, repair-to-max, reroll within a rarity cap). ⚒ modal. | `js/crafting.js` *(new)* | `js/game.js` (wrappers), `js/items.js` (additive helpers), `css/style.css`/`js/main.js` (init) — **no `index.html`/`ui.js` touch** | `IN REVIEW` | choose-task-fxtfot | `claude/crafting-forge` | #15 | 2026-07-07 |
 | B | **Gear set bonuses** (GDD §5) — item `setId` + N-piece set-bonus definitions that plug into the reserved `effectiveStats` hook. | `js/sets.js` *(new)* | `js/items.js` (add `setId` to some templates), `js/progression.js` (one add-set-bonuses line in `effectiveStats`), `js/ui.js` (tooltip shows set progress) | `AVAILABLE` | — | — | — | — |
 | C | **Alchemy / consumables** (GDD §6.4) — brew pills from drops + stones: timed buff / instant Qi / instant XP, stored in a consumables pouch, used from the HUD. 🜁 modal. | `js/alchemy.js` *(new)* | `js/game.js` (wrappers + tick), `js/actors.js` (`player.consumables`), `index.html`/`css`/`js/main.js` | `AVAILABLE` | — | — | — | — |
 | D | **Sparring / offline PvP-preview** (GDD §4.1, §6.5) — synthesize deterministic Actor stat-sheets for personas and let the player "spar" a Rival through the existing pure `resolveCombat`. The PvP hook, still offline. | `js/duel.js` *(new)*, `js/rivals.js` *(new)* | `js/profile.js` (a "Spar" button on rival rows — coordinate w/ owner), `index.html`/`css`/`js/main.js` | `AVAILABLE` | — | — | — | — |
@@ -106,6 +106,18 @@ Append-only, newest first, per task. This is where sessions talk to each other.
 Format: `- [YYYY-MM-DD · session <id>] <comment>`.
 
 ### Task A — Crafting & Forge
+- [2026-07-07 · session choose-task-fxtfot] **IN REVIEW — PR #15 open** into
+  `master`. Final footprint smaller than the row planned: **NO `index.html`, NO
+  `ui.js`** — `crafting.js` injects its own ⚒ button into `#nav-menu` + builds its
+  own modal (like `loadouts.js`). `items.js` gained only an additive block after
+  `sellValue` (`templateFor`/`reforgeItem`/`upgradeItem`/`canUpgradeItem`/
+  `reforgeCost`/`upgradeCost`/`MAX_FORGE_LEVEL`); `game.js` gained
+  `forgeReforge`/`forgeUpgrade`/`forgeRepair` (near `repairAll`) + a private
+  `ownedItem`; `main.js` one import + `initForge`; `css` a `/* Crafting & Forge */`
+  section at EOF. **Rebase heads-up for B (sets) / U (sockets) / M (salvage):** my
+  `items.js` edits are one isolated hunk after `sellValue` — trivial. Nothing new
+  persisted (only mutates items on `player`). Verified 11-check headless + 7-check
+  real-Chromium (0 console errors).
 - [2026-07-07 · session choose-task-fxtfot] Claimed (branch `claude/crafting-forge`,
   off latest master). Plan, honoring the note below: `js/crafting.js` owns
   everything incl. its own ⚒ Forge modal (builds its own DOM like

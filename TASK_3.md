@@ -35,49 +35,27 @@
 
 ---
 
-## ▶ ACTIVE TASK — (queue empty — awaiting #1 refill)
+## ▶ ACTIVE TASK — E · World-data modularization
 
-All queued tasks are in review: **S3 → PR #26**, **R → PR #28**, **C → PR #30**.
-**@#1: requesting a refill** — not grabbing a board row per the dispatch protocol.
-
-## ▶ (prior) S3 · Statistics / lifetime summary
-
-- **Status:** `IN REVIEW — PR #26` (branch `claude/lifetime-stats`, off latest master).
-- **Branch:** `claude/lifetime-stats` (off latest `master`)
-- **Owned files (yours):** `js/stats.js` *(new)*, `css/stats.css` *(new — link in `<head>`)*
-- **Shared (edit minimally):** `js/game.js` (increment a few lifetime counters at
-  the existing kill/reward hooks — well-separated additive lines), `js/actors.js`
-  (`player.stats = {}` on `createPlayer`, lazily back-filled — no VERSION bump),
-  `index.html` `<head>` (css link) + a 📊 button (inject it from `stats.js` into
-  `#nav-menu` like `crafting.js` does, to avoid `index.html` body churn), `js/main.js` (init).
-- **Goal:** a read-only 📊 **Chronicle of Deeds** modal. Most values **derive** from
-  existing save data (bestiary kill totals, cards/codex %, spirit stones on hand);
-  add only a few genuine lifetime counters that can't be derived — fights
-  won/lost/drawn, total stones earned, ms played — incremented in `game.js`.
-- **Constraints:** self-contained like `crafting.js`/`meridians.js` — own button +
-  modal DOM, **no `ui.js`**. Own stylesheet, **not** appended to `style.css`.
-  `player.stats` additive + back-filled; no VERSION bump.
-- **Verify (cloud — no localhost link):** headless (counters increment on
-  kill/win/loss; derived totals match a known save) + real-Chromium (📊 opens,
-  numbers render, 0 console errors). Tell the author how to run locally in the PR.
+- **Status:** `IN REVIEW — PR #35` (branch `claude/world-data-modules`, off latest master).
+- Behaviour-identical refactor: per-zone `js/zones/<id>.js` (`ZONE` + `CREATURES`)
+  composed by `js/zones/registry.js` into `ZONES`/`CREATURE_TYPES`; `map.js` and
+  `actors.js` re-export them so **no other importer changed**. 19/19 headless +
+  8/8 Chromium, 0 errors. (Turned out `game.js` needed **no** change — the
+  re-export keeps its imports intact.)
 
 ## ⏭ QUEUE (do next — no need to wait on #1)
 
-1. **R · World events / calendar** — branch `claude/world-events`. Owns
-   `js/events.js` (+ own css). A deterministic repeating wall-clock calendar of
-   global buffs ("double drops", "+50% XP", "cheap repairs") — derive the active
-   event from the clock (no persistence, like the Recently-Active feed). Shared:
-   `js/game.js` (one guarded multiplier line in the reward path), `js/main.js`/css
-   (a HUD banner showing the active event + time remaining). Nice synergy with your
-   stats panel (surface the active event there too if easy).
-2. **C · Alchemy / consumables** (GDD §6.4) — branch `claude/alchemy-consumables`.
-   Owns `js/alchemy.js` (+ own css). Brew pills from drops + spirit stones →
-   timed buff / instant Qi / instant XP, stored in a `player.consumables` pouch
-   (additive on `createPlayer`, back-filled, no VERSION bump), used from a 🜁 modal.
-   Reuse the existing `activeBuffs`/technique-buff shape for timed pills so they
-   flow through `effectiveStats` for free. Shared: `js/game.js` (brew/use wrappers
-   + a tick if a buff expires), `js/actors.js` (`player.consumables`),
-   `index.html`/css/`js/main.js` (button + modal init). Self-contained; no `ui.js`.
+1. **F · Third zone (Core Formation tier)** — branch `claude/third-zone`, **off
+   master once E (#35) merges** (F needs the `js/zones/` scaffolding E adds). Then
+   it's just new files: `js/zones/<newzone>.js` (`ZONE` + `CREATURES`, 3 new
+   creatures) + one line in `registry.js` `ZONE_MODULES`; new Spirit Cards for the
+   3 creatures in `cards.js`; a stage-gated portal from Cindervein.
+   **⚠ Realm-gate coordination with #4 (Task H, PR #34 — Core Formation realm):**
+   H adds the 3rd realm to `progression.js` `REALMS`/`STAGE_XP`. If H is merged when
+   I start F, gate the new portal on the first Core Formation stage; if not, gate on
+   **FE9 (stage 18, already exists)** and do NOT add the realm myself. See Outbox
+   `#3→#4` below.
 
 *(When the queue empties, ping #1 for a refill — don't grab a board row yourself.)*
 
@@ -88,11 +66,25 @@ All queued tasks are in review: **S3 → PR #26**, **R → PR #28**, **C → PR 
 - **S3 · Statistics / lifetime summary** — **PR #26**, branch `claude/lifetime-stats`.
 - **R · World events / calendar** — **PR #28**, branch `claude/world-events`.
 - **C · Alchemy / consumables** — **PR #30**, branch `claude/alchemy-consumables`.
+- **E · World-data modularization** — **PR #35**, branch `claude/world-data-modules`.
 
 ---
 
 ## Worker Log (append-only, newest first — you own this section)
 
+- [2026-07-07] E done → **PR #35**, `claude/world-data-modules` (off master).
+  Behaviour-identical refactor. New `js/zones/azuremist.js`, `js/zones/cindervein.js`
+  (each exports `ZONE` + `CREATURES`), `js/zones/registry.js` (composes them into
+  `ZONES` + `CREATURE_TYPES`). `map.js` dropped its inline `ZONES` and **re-exports**
+  the registry's; `actors.js` dropped its inline `CREATURE_TYPES` and re-exports the
+  registry's — so **every existing importer (`game.js`/`ui.js`/`save.js`/`cards.js`/
+  `boss.js`/`bounties.js`/`achievements.js`/`stats.js`/`debug.js`) is unchanged**;
+  only 5 files in the diff (3 new). `game.js` needed **no** edit despite the assignment
+  listing it. Bosses untouched (`boss.js` owns `BOSSES`). **To add a zone: new
+  `js/zones/<id>.js` + one line in `registry.js` `ZONE_MODULES`.** Verified headless
+  19/19 (ZONES/CREATURE_TYPES content, order, spawn, createZone all identical) +
+  real Chromium 8/8 (boot, spawn, fight, registry live), 0 errors. **Advancing to
+  F (Third zone) — will branch off master once #35 merges (F needs the zones/ dir).**
 - [2026-07-07] C done → **PR #30**, `claude/alchemy-consumables` (off master). New
   `js/alchemy.js` + `css/alchemy.css` — 🜁 Alchemy modal: brew pills from stones
   (level-gated) → instant Qi/XP or a timed combat buff. **Deliberately did NOT
@@ -169,4 +161,14 @@ All queued tasks are in review: **S3 → PR #26**, **R → PR #28**, **C → PR 
 Post questions to #1 or (via #1) another session. Tag `#3→#target · OPEN`; flip to
 `ANSWERED` once you've read the reply in your Inbox above. Keep working meanwhile.
 
-- _(no questions)_
+- **[2026-07-07 · #3→#4 · OPEN]** (via #1) Re **Task F (third zone)** vs your **Task H
+  (Core Formation realm, PR #34)**: F needs a realm/stage to gate the new zone's
+  portal on. I will **not** touch `progression.js` `REALMS`/`STAGE_XP` — that's yours.
+  Plan: if H (#34) is merged when I start F, I'll gate the portal on the **first Core
+  Formation stage** (tell me its stage index / realm name if it's not obviously the
+  entry after FE9); if H isn't merged yet, I'll gate on **FE9 (stage 18)** as a
+  placeholder and leave the realm addition entirely to you. Flag any conflict with
+  how you've defined the CF entry stage.
+- **[2026-07-07 · #3→#1 · OPEN]** E (#35) is a prerequisite for my F. Ping me (or just
+  merge #35) when it lands so I can branch F off the updated master with the
+  `js/zones/` scaffolding in place.

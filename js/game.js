@@ -32,6 +32,11 @@ import {
   repairCost,
   sellValue,
   INVENTORY_SIZE,
+  reforgeItem,
+  upgradeItem,
+  canUpgradeItem,
+  reforgeCost,
+  upgradeCost,
 } from './items.js';
 import * as Quests from './quests.js';
 import * as Techniques from './techniques.js';
@@ -511,6 +516,67 @@ export function repairAll(state) {
   addLog(state, `Repaired your artifacts for ${cost} stones.`);
   saveGame(state);
   return true;
+}
+
+// --- Crafting & Forge (GDD §5). Thin wrappers over the items.js forge helpers:
+// spend spirit stones to reroll ("reforge"), level up ("temper/upgrade"), or
+// repair one artifact — from anywhere, not just a haven. Each persists on
+// success. The Forge modal (js/crafting.js) reads the same cost fns for display.
+
+// Resolve an item id to the live object whether it's worn or in the pack.
+function ownedItem(player, itemId) {
+  for (const it of Object.values(player.equipment)) if (it && it.id === itemId) return it;
+  return player.inventory.find((i) => i.id === itemId) ?? null;
+}
+
+export function forgeReforge(state, itemId) {
+  const item = ownedItem(state.player, itemId);
+  if (!item) return { ok: false };
+  const cost = reforgeCost(item);
+  if (state.player.spiritStones < cost) {
+    addLog(state, `Reforging ${item.name} needs ${cost} spirit stones.`);
+    return { ok: false, reason: 'stones' };
+  }
+  state.player.spiritStones -= cost;
+  reforgeItem(item, state.worldRng);
+  addLog(state, `Reforged ${item.name} — its spirit-forces realign anew (−${cost} ◆).`);
+  saveGame(state);
+  return { ok: true, item };
+}
+
+export function forgeUpgrade(state, itemId) {
+  const item = ownedItem(state.player, itemId);
+  if (!item) return { ok: false };
+  if (!canUpgradeItem(item)) {
+    addLog(state, `${item.name} is already at peak refinement.`);
+    return { ok: false, reason: 'max' };
+  }
+  const cost = upgradeCost(item);
+  if (state.player.spiritStones < cost) {
+    addLog(state, `Tempering ${item.name} needs ${cost} spirit stones.`);
+    return { ok: false, reason: 'stones' };
+  }
+  state.player.spiritStones -= cost;
+  upgradeItem(item);
+  addLog(state, `Tempered ${item.name} to Lv ${item.level} (−${cost} ◆).`);
+  saveGame(state);
+  return { ok: true, item };
+}
+
+export function forgeRepair(state, itemId) {
+  const item = ownedItem(state.player, itemId);
+  if (!item) return { ok: false };
+  const cost = repairCost(item);
+  if (cost === 0) return { ok: false, reason: 'full' };
+  if (state.player.spiritStones < cost) {
+    addLog(state, `Repairing ${item.name} needs ${cost} spirit stones.`);
+    return { ok: false, reason: 'stones' };
+  }
+  state.player.spiritStones -= cost;
+  item.durability = item.maxDurability;
+  addLog(state, `Repaired ${item.name} at the forge (−${cost} ◆).`);
+  saveGame(state);
+  return { ok: true, item };
 }
 
 export function claimQuest(state) {

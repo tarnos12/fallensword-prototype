@@ -209,6 +209,59 @@ export function sellValue(item) {
   return Math.max(1, item.level * RARITIES[item.rarity].sellMult);
 }
 
+// --- Crafting & Forge (GDD §5). Additive helpers the Forge (js/crafting.js)
+// drives: find an item's source template, reroll its stat values within the same
+// rarity/level ("reforge"), or raise its level and scale its stats up
+// ("upgrade"). Costs live here alongside sellValue/repairCost. ---
+
+export const MAX_FORGE_LEVEL = 20;
+
+// The template an item rolled from — needed to re-roll its exact attribute set.
+export function templateFor(item) {
+  return (TEMPLATES[item.slot]?.[item.rarity] ?? []).find((t) => t.name === item.name) ?? null;
+}
+
+// Reroll an item's stat values in place, using its own template/rarity/level:
+// same attributes, fresh rolls (chase a better spread). Returns true on success.
+export function reforgeItem(item, rng) {
+  const template = templateFor(item);
+  if (!template) return false;
+  const rarity = RARITIES[item.rarity];
+  const bonuses = {};
+  for (const attr of template.attrs.slice(0, rarity.attributes)) {
+    const [stat, value] = rollAttr(attr, item.level, rarity.mult, rng);
+    bonuses[stat] = (bonuses[stat] ?? 0) + value;
+  }
+  item.bonuses = bonuses;
+  return true;
+}
+
+export function canUpgradeItem(item) {
+  return item.level < MAX_FORGE_LEVEL;
+}
+
+// Raise an item one level, scaling its stats by the same per-level factor
+// generateItem uses — so a well-rolled piece stays proportionally well-rolled.
+export function upgradeItem(item) {
+  if (!canUpgradeItem(item)) return false;
+  const ratio = (1 + 0.45 * item.level) / (1 + 0.45 * (item.level - 1));
+  for (const stat of Object.keys(item.bonuses)) {
+    item.bonuses[stat] = Math.max(1, Math.round(item.bonuses[stat] * ratio));
+  }
+  item.level += 1;
+  return true;
+}
+
+// Forge costs (spirit stones). Reforge is a flat-ish reroll fee; upgrade scales
+// with the target level so higher-tier tempering is a real sink.
+export function reforgeCost(item) {
+  return Math.max(10, Math.round(RARITIES[item.rarity].sellMult * (item.level + 4)));
+}
+
+export function upgradeCost(item) {
+  return Math.round(RARITIES[item.rarity].sellMult * (item.level + 1) * 1.5);
+}
+
 // Equipped gear wears 1 durability per fight, win or lose (GDD §3: degrades
 // with use). At 0 it stops granting bonuses until repaired.
 export function degradeEquipment(player) {

@@ -14,12 +14,16 @@
 import { CREATURE_TYPES } from './actors.js';
 import { CARDS, ownedCardCount } from './cards.js';
 import { REALMS } from './progression.js';
+import { setBonuses } from './sets.js';
 
 const RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
 const TOTAL_CREATURES = Object.keys(CREATURE_TYPES).length;
 const TOTAL_CARDS = Object.keys(CARDS).length;
 // Global stage index at which the second realm (Foundation Establishment) begins.
 const FOUNDATION_STAGE = REALMS[0].stages + 1;
+// ...and the third realm (Core Formation) — derived from the realm ladder so it
+// tracks any future re-tune of the earlier realms' stage counts.
+const CORE_FORMATION_STAGE = REALMS[0].stages + (REALMS[1]?.stages ?? 0) + 1;
 
 // --- Derived measurements (all read-only over the save) ---
 
@@ -48,6 +52,28 @@ function bestRarityIndex(player) {
 function hasMaxedCard(player) {
   const cards = player.cards ?? {};
   return Object.entries(cards).some(([id, lv]) => CARDS[id] && lv >= CARDS[id].maxLevel);
+}
+
+// A gem is slotted into a socket of an equipped artifact (sockets.js fills an
+// item.sockets[] slot with a gem object; empty sockets are null/undefined).
+function hasFilledSocket(player) {
+  for (const item of Object.values(player.equipment ?? {})) {
+    if (item && Array.isArray(item.sockets) && item.sockets.some(Boolean)) return true;
+  }
+  return false;
+}
+
+// A full gear set is equipped (setBonuses returns all-zero stats otherwise).
+function hasCompleteSet(player) {
+  return Object.values(setBonuses(player)).some((v) => v > 0);
+}
+
+// Highest rank across the player's opened meridians (0 if none opened).
+function bestMeridianRank(player) {
+  const nodes = player.meridians?.nodes ?? {};
+  let best = 0;
+  for (const rank of Object.values(nodes)) if (rank > best) best = rank;
+  return best;
 }
 
 // --- Milestone catalog. Ordered as displayed; `check(player)` is the predicate. ---
@@ -79,6 +105,27 @@ export const ACHIEVEMENTS = [
     desc: 'Refine any Spirit Card to its maximum level.', check: hasMaxedCard },
   { id: 'codex_scholar', icon: '📖', name: 'Codex Scholar', tier: 'gold',
     desc: 'Encounter every creature in the bestiary.', check: (p) => creaturesSeen(p) >= TOTAL_CREATURES },
+  // --- Stage 3 milestones (crafting/sockets/sets/alchemy/meridians/realms/ascension) ---
+  { id: 'core_formation', icon: '🟡', name: 'Golden Core', tier: 'gold',
+    desc: 'Condense your golden core — reach Core Formation.', check: (p) => p.level >= CORE_FORMATION_STAGE },
+  { id: 'meridian_open', icon: '☯', name: 'Meridians Opened', tier: 'bronze',
+    desc: 'Open your first extraordinary meridian.', check: (p) => bestMeridianRank(p) >= 1 },
+  { id: 'meridian_master', icon: '🌌', name: 'Meridian Perfected', tier: 'gold',
+    desc: 'Refine a single meridian to its highest rank.', check: (p) => bestMeridianRank(p) >= 5 },
+  { id: 'gem_socketed', icon: '💠', name: 'Jeweled Artifact', tier: 'silver',
+    desc: 'Slot a spirit gem into an equipped artifact.', check: hasFilledSocket },
+  { id: 'set_complete', icon: '🎽', name: 'Matched Regalia', tier: 'gold',
+    desc: 'Wear a complete matched gear set.', check: hasCompleteSet },
+  { id: 'alchemist', icon: '🜁', name: 'Pill Refiner', tier: 'bronze',
+    desc: 'Brew your first alchemical pill.', check: (p) => Object.values(p.consumables ?? {}).some((q) => (q ?? 0) > 0) },
+  { id: 'full_sect', icon: '🏯', name: 'Grand Sect Master', tier: 'silver',
+    desc: 'Command a full sect of three disciples.', check: (p) => (p.guild?.members ?? []).length >= 3 },
+  { id: 'treasury', icon: '🏆', name: 'Immortal Treasury', tier: 'gold',
+    desc: 'Hold 10,000 spirit stones at once.', check: (p) => (p.spiritStones ?? 0) >= 10000 },
+  { id: 'ascended', icon: '✦', name: 'Reforged Foundation', tier: 'gold',
+    desc: 'Shatter your foundation and ascend anew.', check: (p) => (p.ascension ?? 0) >= 1 },
+  { id: 'thrice_reborn', icon: '✨', name: 'Thrice-Reborn', tier: 'gold',
+    desc: 'Ascend through three cycles of rebirth.', check: (p) => (p.ascension ?? 0) >= 3 },
 ];
 
 const BY_ID = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a]));

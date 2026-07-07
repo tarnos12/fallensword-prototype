@@ -22,6 +22,7 @@
   <link rel="stylesheet" href="css/stats.css">
   <link rel="stylesheet" href="css/events.css">
   <link rel="stylesheet" href="css/itemcompare.css">
+  <link rel="stylesheet" href="css/alchemy.css">
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/a11y.css">
   <script>/* theme bootstrap — set data-theme before paint to avoid a flash */try{var t=localStorage.getItem('fallen-immortal-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}</script>
@@ -102,6 +103,7 @@
         <button id="btn-bounties" type="button" class="bounties-btn" title="Hunt Bounties — slay beasts for bonus rewards">🏹 Hunt Bounties <span id="bounty-claim-count" class="mail-badge hidden"></span></button>
         <button id="btn-settings" type="button" class="settings-btn" title="Settings — display preferences, tutorial & save">⚙ Settings</button>
         <button id="btn-trials" type="button" class="trials-btn" title="Daily Trial — a rotating challenge, one attempt per day">🗓 Daily Trial <span id="trials-badge" class="dim"></span></button>
+        <button id="btn-alchemy" type="button" class="alchemy-btn" title="Alchemy — brew pills for buffs, Qi & insight">🜁 Alchemy</button>
       </div>
 
       <div class="panel-box">
@@ -278,6 +280,17 @@
       </div>
       <p class="trial-intro">A rotating challenger appears each day, scaled to your cultivation. One attempt per day — win for bonus spirit stones and insight. Losing costs nothing.</p>
       <div id="trials-body"></div>
+    </div>
+  </div>
+
+  <div id="alchemy-overlay" class="hidden">
+    <div id="alchemy-panel">
+      <div id="alchemy-header">
+        <h2>Alchemy <span id="alchemy-stones" class="dim"></span></h2>
+        <button id="btn-close-alchemy" type="button" title="Close">✕</button>
+      </div>
+      <p class="alchemy-intro">Refine spirit stones into pills. Instant pills restore Qi or grant insight; buff pills sharpen your body for the next fights.</p>
+      <div id="alchemy-body"></div>
     </div>
   </div>
 

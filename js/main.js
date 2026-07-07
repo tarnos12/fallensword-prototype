@@ -37,6 +37,7 @@ import {
   acceptBounty,
   claimBounty,
   attemptDailyTrial,
+  tickPlaytime,
 } from './game.js';
 import {
   renderPlayerBar,
@@ -71,6 +72,7 @@ import { toast, initToasts } from './toast.js';
 import { stageName } from './progression.js';
 import { recordFight, initReplay, getLastFight, setReplayVisible } from './replay.js';
 import { initInput } from './input.js';
+import { initStats } from './stats.js';
 import { initDebug } from './debug.js'; // TESTING ONLY (strip before demo)
 
 const state = createGame();
@@ -373,6 +375,7 @@ initMeridians(state, {
 });
 initToasts(); // unified toast/feedback host (task X)
 initReplay(state, { onReplay: (result) => runPlayback(result) });
+initStats(state); // 📊 Chronicle of Deeds (lifetime stats)
 initDebug(state, renderAll); // TESTING ONLY (strip before demo)
 renderAll();
 initTutorial(); // first-run onboarding overlay (+ ❔ Help button); after renderAll so targets exist
@@ -384,6 +387,7 @@ initInput({ move: (dx, dy) => onTileClick(state.pos.x + dx, state.pos.y + dy) })
 // Wall-clock Qi regen + passive spirit-stone income + technique-buff tick
 // (once per second).
 setInterval(() => {
+  tickPlaytime(state); // accrue active playtime for the Chronicle (task S3)
   const qiBefore = state.qi;
   tickQi(state);
   const stonesGained = tickStones(state); // spirit-stones/hour Spirit Cards

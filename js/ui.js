@@ -18,6 +18,7 @@ import { beginFx, turnFx, endFx } from './combatfx.js';
 import { compareRows, setCompareContext } from './itemcompare.js'; // task Y: hover deltas
 import { isGem, gemIcon, gemStatText, socketLine } from './sockets.js'; // task U: gems + sockets
 import { setLine, setSetsContext } from './sets.js'; // task B: gear set progress in tooltip
+import { salvageYield, materialName } from './salvage.js'; // task M: salvage yield for the menu entry
 
 const $ = (id) => document.getElementById(id);
 
@@ -401,7 +402,22 @@ function makeItemSlot(item, { label, onClick, onMenu, tooltipHint }) {
   return el;
 }
 
-export function renderGear(state, { onEquip, onUnequip, onSell, onDestroy, atGate }) {
+// A right-click "Salvage" menu entry: break an item down into spirit essence
+// (task M). Guarded so a missing handler is a no-op; confirms like Destroy,
+// showing the essence yield.
+function salvageEntry(item, onSalvage) {
+  const y = salvageYield(item);
+  const label = y ? `Salvage → ${y.qty} ${materialName(y.materialId)}` : 'Salvage';
+  return {
+    label,
+    onClick: () => {
+      if (!onSalvage || !y) return;
+      if (confirm(`Salvage ${item.name} into ${y.qty} ${materialName(y.materialId)}? This is permanent.`)) onSalvage(item.id);
+    },
+  };
+}
+
+export function renderGear(state, { onEquip, onUnequip, onSell, onDestroy, onSalvage, atGate }) {
   const p = state.player;
   setCompareContext(p); // task Y: give itemcompare the live equipment to diff against
   setSetsContext(p); // task B: give sets the live equipment for tooltip progress
@@ -436,6 +452,7 @@ export function renderGear(state, { onEquip, onUnequip, onSell, onDestroy, atGat
           onMenu: (e) =>
             openMenu(e, [
               { label: `Sell for ${sellValue(item)} ◆`, disabled: !atGate, onClick: () => onSell(item.id) },
+              salvageEntry(item, onSalvage),
               {
                 label: 'Destroy',
                 danger: true,
@@ -460,6 +477,7 @@ export function renderGear(state, { onEquip, onUnequip, onSell, onDestroy, atGat
               disabled: !atGate,
               onClick: () => onSell(item.id),
             },
+            salvageEntry(item, onSalvage),
             {
               label: 'Destroy',
               danger: true,

@@ -52,6 +52,7 @@ import { recordAchievements } from './achievements.js';
 import * as Trials from './trials.js';
 import { eventReward } from './events.js';
 import { pillById, applyPillBuffs, cleanPillBuffs } from './alchemy.js';
+import { salvageYield, essenceRepairCost, materialName } from './salvage.js';
 import { saveGame, loadGame, clearSave } from './save.js';
 
 // --- Qi (stamina) tuning. Prototype regen is fast so playtesting isn't
@@ -112,6 +113,7 @@ export function createGame() {
   if (!state.player.trials) state.player.trials = { lastDay: -1, plays: 0, wins: 0 };
   if (!state.player.stats) state.player.stats = {}; // lifetime counters (task S3); keys default lazily
   if (!state.player.consumables) state.player.consumables = {}; // { pillId: qty } — Alchemy (task C)
+  if (!state.player.materials) state.player.materials = {}; // { materialId: qty } — Salvage essence (task M)
   if (!state.player.pillBuffs) state.player.pillBuffs = []; // timed pill combat buffs
   if (state.lastStoneTick == null) state.lastStoneTick = Date.now();
   if (!state.market) state.market = emptyMarket();
@@ -662,6 +664,45 @@ export function destroyItem(state, itemId) {
   state.player.inventory.splice(idx, 1);
   saveGame(state);
   return true;
+}
+
+// --- Salvage / materials (task M, GDD §5). Thin wrappers over salvage.js pure
+// helpers: break a PACK artifact (or loose gem) into spirit essence, and spend
+// essence to mend an owned artifact's durability anywhere. Each persists on
+// success. Equipped items can't be salvaged (guarded — only pack items). ---
+
+export function salvageItemAction(state, itemId) {
+  const p = state.player;
+  const idx = p.inventory.findIndex((i) => i.id === itemId);
+  if (idx === -1) return { ok: false, reason: 'not in pack' }; // equipped/unknown — refuse
+  const item = p.inventory[idx];
+  const y = salvageYield(item);
+  if (!y) return { ok: false, reason: 'unsalvageable' };
+  p.inventory.splice(idx, 1);
+  if (!p.materials) p.materials = {};
+  p.materials[y.materialId] = (p.materials[y.materialId] || 0) + y.qty;
+  const name = materialName(y.materialId);
+  addLog(state, `Salvaged ${item.name} → +${y.qty} ${name}.`);
+  saveGame(state);
+  return { ok: true, materialId: y.materialId, qty: y.qty, materialName: name };
+}
+
+export function essenceRepairAction(state, itemId) {
+  const p = state.player;
+  const item = ownedItem(p, itemId); // worn or pack
+  if (!item) return { ok: false };
+  const cost = essenceRepairCost(item);
+  if (!cost || cost.qty === 0) return { ok: false, reason: 'full' };
+  const have = (p.materials && p.materials[cost.materialId]) || 0;
+  if (have < cost.qty) {
+    addLog(state, `Mending ${item.name} needs ${cost.qty} ${materialName(cost.materialId)}.`);
+    return { ok: false, reason: 'essence' };
+  }
+  p.materials[cost.materialId] -= cost.qty;
+  item.durability = item.maxDurability;
+  addLog(state, `Mended ${item.name} with ${cost.qty} ${materialName(cost.materialId)}.`);
+  saveGame(state);
+  return { ok: true, materialId: cost.materialId, qty: cost.qty };
 }
 
 export function totalRepairCost(state) {

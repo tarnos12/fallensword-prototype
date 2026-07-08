@@ -45,6 +45,8 @@ import {
   tickSectMissions,
   collectSectMissions,
   ascend,
+  salvageItemAction,
+  essenceRepairAction,
 } from './game.js';
 import {
   renderPlayerBar,
@@ -72,6 +74,7 @@ import { initProfile, setSparHandler } from './profile.js';
 import { initDuel, openDuel } from './duel.js';
 import { initAchievements, updateAchievementBadge, showAchievementToasts } from './achievements.js';
 import { initForge } from './crafting.js';
+import { initSalvage, renderSalvage } from './salvage.js';
 import { initBounties, renderBounties, updateBountyBadge } from './bounties.js';
 import { initSectMissions, renderSectMissions, updateSectMissionBadge } from './sectmissions.js';
 import { initAscension, renderAscension } from './ascension.js';
@@ -167,6 +170,12 @@ function renderAll() {
     onDestroy: (id) => {
       destroyItem(state, id);
       renderAll();
+    },
+    onSalvage: (id) => {
+      const r = salvageItemAction(state, id);
+      renderSalvage(state); // refresh the essence ledger if the modal is open
+      renderAll();
+      if (r?.ok) toast(`Salvaged into +${r.qty} ${r.materialName}`, 'success');
     },
   });
   renderQuests(state, () => {
@@ -367,6 +376,14 @@ initForge(state, {
   reforge: (id) => { forgeReforge(state, id); renderAll(); },
   upgrade: (id) => { forgeUpgrade(state, id); renderAll(); },
   repair: (id) => { forgeRepair(state, id); renderAll(); },
+});
+initSalvage(state, {
+  repair: (id) => {
+    const r = essenceRepairAction(state, id);
+    renderSalvage(state); renderAll();
+    if (r?.ok) toast('Gear mended with spirit essence.', 'success');
+    else if (r?.reason === 'essence') toast('Not enough spirit essence.', 'error');
+  },
 });
 initBounties(state, {
   accept: (id) => {

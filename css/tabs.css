@@ -1,0 +1,195 @@
+/* =====================================================================
+   Full-view tabs — UI/UX revamp.
+   Top-level tabs switch the ENTIRE main area; only one screen shows at a
+   time and the PAGE never scrolls (the active view scrolls internally).
+   Linked LAST in <head> so this layout wins over style.css / hud.css /
+   responsive.css at equal specificity. Presentation only — the tab
+   controller lives in js/tabs.js; every element id is unchanged.
+   ===================================================================== */
+
+/* ---- Single-viewport shell -----------------------------------------
+   The document becomes a fixed-height flex column: header + any injected
+   under-header banners (#event-banner, #pill-buff-bar) + #tab-bar stay at
+   natural height; #layout takes the rest and its active view scrolls
+   internally. Fixed-position overlays (modals, toast host, tooltip) are
+   out of flow, so they're unaffected. */
+html { height: 100%; }
+body {
+  height: 100dvh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;               /* the page itself never scrolls */
+}
+/* Every in-flow body child keeps its natural height; only #layout grows. */
+body > * { flex: 0 0 auto; }
+#layout {
+  flex: 1 1 auto;
+  min-height: 0;                  /* allow the flex child to shrink so it can scroll */
+  display: block;                 /* override style.css's flex/gap/wrap 3-column grid */
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* Tall modals scroll within their own fixed overlay instead of being clipped
+   by body:overflow-hidden (belt-and-braces; most panels already scroll). */
+[id$="-overlay"]:not(.hidden) { overflow-y: auto; }
+
+/* ---- Tab bar --------------------------------------------------------- */
+#tab-bar {
+  display: flex;
+  gap: 4px;
+  padding: 6px 10px 0;
+  border-bottom: 1px solid var(--panel-edge);
+  background: var(--panel, #16181f);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+#tab-bar::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  flex: 1 1 auto;
+  min-width: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: var(--radius, 6px) var(--radius, 6px) 0 0;
+  background: transparent;
+  color: var(--dim, #9aa0ad);
+  font: inherit;
+  font-size: 0.92rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.tab-btn .tab-icon { font-size: 1.05rem; line-height: 1; }
+.tab-btn:hover:not(.tab-active) { color: var(--text); background: rgba(255, 255, 255, 0.04); }
+.tab-btn:focus-visible { outline: 2px solid var(--ring, var(--gold)); outline-offset: -2px; }
+
+/* Active tab: raised, gold-accented, seam-joined to the view below. */
+.tab-btn.tab-active {
+  color: var(--gold);
+  background: var(--bg);
+  border-color: var(--panel-edge);
+  border-bottom: 1px solid var(--bg);
+  margin-bottom: -1px;            /* cover the tab-bar's bottom border */
+  font-weight: bold;
+}
+
+/* A small count badge riding a tab (e.g. claimable bounties, mail). */
+.tab-btn .tab-badge {
+  min-width: 16px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--loss, #e0554e);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: bold;
+  line-height: 16px;
+  text-align: center;
+}
+.tab-btn .tab-badge.hidden { display: none; }
+
+/* ---- Tab views ------------------------------------------------------- */
+.tab-view {
+  display: none;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 14px 16px 22px;
+  overflow-y: auto;               /* only the active screen scrolls, never the page */
+  overflow-x: hidden;
+}
+.tab-view.tab-active { display: block; }
+
+/* Inside each view, panels stack in a comfortable single column, widened a
+   little on desktop so the freed horizontal space is used well. */
+.tab-view > #map-panel,
+.tab-view > .panel-box,
+.tab-view > #char-panel > .panel-box,
+.tab-view > #char-panel > * { margin-bottom: 14px; }
+
+#char-panel { display: block; }
+
+/* Map view: center the board and let the info/log panels flow beneath it. */
+#view-map #map-panel { display: block; margin-inline: auto; }
+#view-map #map-grid { margin-inline: auto; }
+
+/* Give the roomy screens a sensible reading width on wide monitors. */
+#view-char #char-panel,
+#view-quests #quest-panel,
+#view-halls #nav-menu { max-width: 860px; margin-inline: auto; }
+
+/* Combat view empty-state note (shown when no fight is active). */
+#combat-empty {
+  max-width: 520px;
+  margin: 24px auto;
+  padding: 18px;
+  text-align: center;
+  color: var(--dim, #9aa0ad);
+  border: 1px dashed var(--panel-edge);
+  border-radius: var(--radius, 6px);
+}
+#combat-panel:not(.hidden) + #combat-empty { display: none; }
+#view-combat #combat-panel { max-width: 620px; margin-inline: auto; }
+
+/* ---- Mobile: tab bar becomes a fixed bottom dock (thumb-reachable) ----
+   Overrides responsive.css (linked earlier): the old #nav-menu bottom dock
+   is neutralised — the feature buttons live on the Halls tab now — and the
+   tab bar itself docks at the bottom. */
+@media (max-width: 620px) {
+  body { padding-bottom: 0; }     /* undo responsive.css's dock clearance on body */
+
+  #tab-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    z-index: 70;
+    padding: 4px 4px calc(4px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--panel-edge);
+    border-bottom: none;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.35);
+  }
+  .tab-btn {
+    flex-direction: column;
+    gap: 2px;
+    min-width: 56px;
+    padding: 6px 4px;
+    font-size: 0.66rem;
+    border-radius: var(--radius, 6px);
+  }
+  .tab-btn .tab-icon { font-size: 1.15rem; }
+  .tab-btn.tab-active {
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--panel-edge);
+    background: rgba(212, 175, 55, 0.12);
+  }
+
+  /* #layout must clear the fixed bottom dock. */
+  #layout { padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px)); }
+
+  /* Undo responsive.css's fixed bottom dock on #nav-menu — it's a normal
+     grid inside the Halls tab now. */
+  #nav-menu {
+    position: static;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    box-shadow: none;
+    overflow: visible;
+    padding: 12px;
+  }
+
+  .tab-view { padding: 10px 10px 16px; }
+}
+
+/* Respect reduced motion for the tab transitions. */
+@media (prefers-reduced-motion: reduce) {
+  .tab-btn { transition: none; }
+}

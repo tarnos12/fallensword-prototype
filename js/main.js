@@ -84,6 +84,7 @@ import { toast, initToasts } from './toast.js';
 import { stageName } from './progression.js';
 import { recordFight, initReplay, getLastFight, setReplayVisible } from './replay.js';
 import { initInput } from './input.js';
+import { initTabs, setActiveTab } from './tabs.js';
 import { initStats } from './stats.js';
 import { initTitles } from './titles.js';
 import { initEventBanner, renderEventBanner } from './events.js';
@@ -210,6 +211,7 @@ function onTileClick(x, y) {
 function runPlayback(result, onDone) {
   if (inCombat) return;
   inCombat = true;
+  setActiveTab('combat'); // full-view tabs: a fight takes over the Combat screen
   setReplayVisible(false); // hide replay controls during live playback
   renderPlayerBar(state);
   playCombat(state, result, () => {
@@ -427,6 +429,10 @@ initSockets(state, {
   },
 });
 initToasts(); // unified toast/feedback host (task X)
+initTabs(); // full-view tab shell — wire the tab bar (markup lives in index.html)
+// Leaving combat via "Continue" returns to the Map screen. addEventListener (not
+// onclick) so it coexists with ui.js's own close handler that hides the panel.
+document.getElementById('btn-close-combat')?.addEventListener('click', () => setActiveTab('map'));
 initReplay(state, { onReplay: (result) => runPlayback(result) });
 initStats(state); // 📊 Chronicle of Deeds (lifetime stats)
 initTitles(state); // 🏵 Cultivator Titles (read-only cosmetic)

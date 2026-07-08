@@ -11,6 +11,8 @@
 // work. "Seen" state is a display preference in its own localStorage key (like
 // the instant-combat toggle), so it never touches the save schema.
 
+import { revealElementById } from './tabs.js';
+
 const SEEN_KEY = 'fallen-immortal-tutorial-seen';
 
 // Each step: a title, body copy, and an optional element id to spotlight. Steps
@@ -88,6 +90,10 @@ function clearHighlight() {
 function highlight(targetId) {
   clearHighlight();
   if (!targetId) return;
+  // Full-view tabs: the spotlight target may live on a hidden tab (char sheet,
+  // gear, techniques, the Halls buttons…). Switch to its tab first so the
+  // highlight lands on a visible element. No-op for always-visible HUD targets.
+  revealElementById(targetId);
   const el = $(targetId);
   if (!el) return;
   el.classList.add('tut-highlight');

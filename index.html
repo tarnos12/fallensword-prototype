@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="css/responsive.css"><!-- task Z: linked last so it overrides -->
   <link rel="stylesheet" href="css/fixes.css"><!-- desktop overflow fix: after responsive so the >=621px override wins -->
   <link rel="stylesheet" href="css/modalfx.css"><!-- subtle modal open animation: linked last so it layers on top -->
+  <link rel="stylesheet" href="css/tabs.css"><!-- full-view tab shell: linked LAST so its single-viewport layout wins over style/hud/responsive -->
   <script>/* theme bootstrap — set data-theme before paint to avoid a flash */try{var t=localStorage.getItem('fallen-immortal-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}</script>
 </head>
 <body>
@@ -77,10 +78,30 @@
     </div>
   </header>
 
+  <!-- Full-view tab bar (UI revamp): top-level tabs switch the entire main area
+       so only one screen shows at a time and the page never scrolls. Buttons
+       carry data-tab matching a .tab-view below; js/tabs.js wires them. -->
+  <nav id="tab-bar" role="tablist" aria-label="Main sections">
+    <button class="tab-btn tab-active" data-tab="map" role="tab" type="button" aria-selected="true"><span class="tab-icon">🗺</span><span class="tab-label">Map</span></button>
+    <button class="tab-btn" data-tab="combat" role="tab" type="button" aria-selected="false"><span class="tab-icon">⚔</span><span class="tab-label">Combat</span></button>
+    <button class="tab-btn" data-tab="char" role="tab" type="button" aria-selected="false"><span class="tab-icon">🧘</span><span class="tab-label">Cultivator</span></button>
+    <button class="tab-btn" data-tab="quests" role="tab" type="button" aria-selected="false"><span class="tab-icon">📜</span><span class="tab-label">Quests</span></button>
+    <button class="tab-btn" data-tab="halls" role="tab" type="button" aria-selected="false"><span class="tab-icon">🏛</span><span class="tab-label">Halls</span></button>
+  </nav>
+
   <main id="layout">
-    <section id="map-panel">
-      <div id="map-grid"></div>
-      <p class="hint">Click an adjacent tile to move — orthogonal costs 1 Qi, diagonal costs 2 Qi. ☯ is you; red dots are demonic beasts. Return to the Sect Gate to repair and sell.</p>
+    <!-- Map / exploration screen -->
+    <section id="view-map" class="tab-view tab-active" data-tab="map" role="tabpanel" aria-label="Map">
+      <div id="map-panel">
+        <div id="map-grid"></div>
+        <p class="hint">Click an adjacent tile to move — orthogonal costs 1 Qi, diagonal costs 2 Qi. ☯ is you; red dots are demonic beasts. Return to the Sect Gate to repair and sell.</p>
+      </div>
+
+      <div id="tile-info" class="panel-box">
+        <h2 id="tile-title">Location</h2>
+        <div id="gate-actions" class="hidden"></div>
+        <div id="monster-list"></div>
+      </div>
 
       <div id="event-log" class="panel-box">
         <h2>Chronicle</h2>
@@ -88,13 +109,8 @@
       </div>
     </section>
 
-    <section id="side-panel">
-      <div id="tile-info" class="panel-box">
-        <h2 id="tile-title">Location</h2>
-        <div id="gate-actions" class="hidden"></div>
-        <div id="monster-list"></div>
-      </div>
-
+    <!-- Combat screen (auto-activated when a fight starts) -->
+    <section id="view-combat" class="tab-view" data-tab="combat" role="tabpanel" aria-label="Combat">
       <div id="combat-panel" class="panel-box hidden">
         <h2 id="combat-title">Combat</h2>
         <div id="combat-log"></div>
@@ -104,32 +120,44 @@
           <button id="btn-close-combat" type="button" class="hidden">Continue</button>
         </div>
       </div>
+      <p id="combat-empty" class="empty-note">No active battle. Find a demonic beast on the <strong>Map</strong> and strike to begin a hunt.</p>
+    </section>
 
+    <!-- Cultivator screen: character sheet, gear, techniques -->
+    <section id="view-char" class="tab-view" data-tab="char" role="tabpanel" aria-label="Cultivator">
+      <div id="char-panel">
+        <div id="char-sheet" class="panel-box">
+          <h2>Cultivator</h2>
+          <div id="char-stats"></div>
+        </div>
+
+        <div id="gear-box" class="panel-box">
+          <h2>Artifacts</h2>
+          <div id="equipment-slots"></div>
+          <h3>Pack <span id="pack-count" class="dim"></span></h3>
+          <div id="inventory-list"></div>
+        </div>
+
+        <div id="tech-box" class="panel-box">
+          <h2>Techniques</h2>
+          <div id="active-buffs"></div>
+          <div id="tech-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quests screen -->
+    <section id="view-quests" class="tab-view" data-tab="quests" role="tabpanel" aria-label="Quests">
       <div id="quest-panel" class="panel-box">
         <h2>Sect Missions</h2>
         <div id="quest-body"></div>
       </div>
     </section>
 
-    <section id="char-panel">
-      <div id="char-sheet" class="panel-box">
-        <h2>Cultivator</h2>
-        <div id="char-stats"></div>
-      </div>
-
-      <div id="gear-box" class="panel-box">
-        <h2>Artifacts</h2>
-        <div id="equipment-slots"></div>
-        <h3>Pack <span id="pack-count" class="dim"></span></h3>
-        <div id="inventory-list"></div>
-      </div>
-
-      <div id="tech-box" class="panel-box">
-        <h2>Techniques</h2>
-        <div id="active-buffs"></div>
-        <div id="tech-list"></div>
-      </div>
-
+    <!-- Halls screen: feature-system buttons (each opens a modal) + save tools.
+         Modules (Forge, Meridians, Jewelcraft, Chronicle, Sect Dispatch,
+         Ascension, Titles) inject their buttons into #nav-menu at runtime. -->
+    <section id="view-halls" class="tab-view" data-tab="halls" role="tabpanel" aria-label="Halls">
       <div id="nav-menu" class="panel-box">
         <h3 class="nav-dock-title">Halls &amp; Pavilions</h3>
         <button id="btn-codex" type="button" class="codex-btn" title="Beast Codex & Spirit Cards">📖 Beast Codex</button>

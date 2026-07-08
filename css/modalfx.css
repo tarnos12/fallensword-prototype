@@ -1,0 +1,56 @@
+/* modalfx.css — subtle modal open animation (presentation-only)
+ *
+ * Every modal in the game is an `[id$="-overlay"]` div holding a direct child
+ * `[id$="-panel"]`, made visible by REMOVING a `.hidden` class
+ * (`.hidden { display: none !important }`). We give that reveal a gentle
+ * fade + scale-in so modals feel intentional instead of popping in.
+ *
+ * Why an ANIMATION, not a TRANSITION: visibility toggles between
+ * `display:none` and `display:flex/block`. You can't transition `display`, so a
+ * CSS transition would never run. A CSS `@keyframes` animation, however,
+ * replays every time the element becomes displayed (each open) — which is
+ * exactly the trigger we want. Close stays instant (the open animation alone
+ * reads as polish).
+ *
+ * This file touches NO layout and no final resting appearance — animations use
+ * `both` (and settle at opacity:1 / transform:none), so a modal's steady state
+ * is identical to before. Rules only apply to `:not(.hidden)`, so the
+ * display-toggle behaviour is untouched. Generic `[id$="-overlay"]` selectors
+ * cover every current and future modal.
+ *
+ * All motion is gated behind `prefers-reduced-motion: reduce` (disabled there),
+ * so reduced-motion users get instant modals.
+ */
+
+@keyframes modalfx-scrim-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modalfx-panel-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Fade the backdrop/scrim as the overlay is shown. */
+[id$="-overlay"]:not(.hidden) {
+  animation: modalfx-scrim-in .15s ease both;
+}
+
+/* Fade + scale the panel in. Target the DIRECT child so nested content isn't
+ * separately animated; `> *` is a safe fallback for the (rare) runtime-injected
+ * modal whose child id doesn't end in `-panel`. Overlays hold exactly one panel
+ * child, so `> *` animates just that one element. */
+[id$="-overlay"]:not(.hidden) > [id$="-panel"],
+[id$="-overlay"]:not(.hidden) > * {
+  animation: modalfx-panel-in .18s cubic-bezier(.2, .7, .3, 1) both;
+}
+
+/* Reduced motion: no animation — modals appear instantly. */
+@media (prefers-reduced-motion: reduce) {
+  [id$="-overlay"]:not(.hidden),
+  [id$="-overlay"]:not(.hidden) > [id$="-panel"],
+  [id$="-overlay"]:not(.hidden) > * {
+    animation: none;
+  }
+}

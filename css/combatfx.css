@@ -69,6 +69,33 @@
 }
 .cfx-shake { animation: cfx-shake 0.32s ease; }
 
+/* --- Critical hit: a stronger flash/glow burst (+ bigger shake) on top of the
+   normal hit feedback. Colour/glow are non-motion (kept under reduced-motion);
+   the harder shake is gated below. --- */
+.cfx-crit-hit {
+  border-color: var(--loss, #e57373);
+  box-shadow: 0 0 0 3px rgba(229, 115, 115, 0.7), 0 0 18px 3px rgba(255, 138, 128, 0.65);
+}
+.cfx-you.cfx-crit-hit { border-color: var(--loss, #e57373); }
+.cfx-crit-hit.cfx-shake { animation: cfx-crit-shake 0.34s ease; }
+
+@keyframes cfx-crit-shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-7px); }
+  35% { transform: translateX(7px); }
+  55% { transform: translateX(-5px); }
+  75% { transform: translateX(4px); }
+  90% { transform: translateX(-2px); }
+}
+
+/* Brief arena-level flash punctuating a crit. */
+.cfx-crit-flash { animation: cfx-crit-flash 0.34s ease; }
+@keyframes cfx-crit-flash {
+  0% { background: rgba(255, 138, 128, 0); }
+  25% { background: rgba(255, 138, 128, 0.16); }
+  100% { background: rgba(255, 138, 128, 0); }
+}
+
 .cfx-dead { opacity: 0.5; filter: grayscale(0.6); }
 
 /* --- Floating numbers --- */
@@ -141,6 +168,9 @@
 @media (prefers-reduced-motion: reduce) {
   .cfx-hpfill { transition: none; }
   .cfx-shake { animation: none; }
+  /* Keep the crit's colour/glow (non-motion) but drop its shake + arena flash. */
+  .cfx-crit-hit.cfx-shake { animation: none; }
+  .cfx-crit-flash { animation: none; }
   .cfx-float { animation: none; opacity: 1; transform: translateX(calc(-50% + var(--cfx-dx))); }
   .cfx-flourish { animation: none; }
 }

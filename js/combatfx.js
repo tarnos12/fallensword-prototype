@@ -97,13 +97,23 @@ function floatNum(a, text, kind) {
   setTimeout(() => f.remove(), 900);
 }
 
-function strike(a) {
-  a.card.classList.remove('cfx-hit', 'cfx-shake');
+function strike(a, crit) {
+  a.card.classList.remove('cfx-hit', 'cfx-shake', 'cfx-crit-hit');
   // Force reflow so re-adding the class restarts the animation on rapid hits.
   void a.card.offsetWidth;
   a.card.classList.add('cfx-hit');
+  // A crit gets a distinct, punchier flash/glow (and a bigger shake) on top of
+  // the normal hit feedback — additive, cleaned up on the same timer.
+  if (crit) a.card.classList.add('cfx-crit-hit');
   if (!REDUCE.matches) a.card.classList.add('cfx-shake');
-  setTimeout(() => a.card.classList.remove('cfx-hit', 'cfx-shake'), 360);
+  setTimeout(() => a.card.classList.remove('cfx-hit', 'cfx-shake', 'cfx-crit-hit'), 360);
+  // A very brief arena-level flash punctuates the big hit.
+  if (crit && arena && arena.root && !REDUCE.matches) {
+    arena.root.classList.remove('cfx-crit-flash');
+    void arena.root.offsetWidth;
+    arena.root.classList.add('cfx-crit-flash');
+    setTimeout(() => arena && arena.root && arena.root.classList.remove('cfx-crit-flash'), 360);
+  }
 }
 
 function applySwing(target, swing) {
@@ -116,7 +126,7 @@ function applySwing(target, swing) {
   const crit = swing.dmg >= target.max * CRIT_FRACTION;
   floatNum(target, `-${swing.dmg}`, crit ? 'crit' : 'dmg');
   sfx(crit ? 'crit' : 'hit');
-  strike(target);
+  strike(target, crit);
 }
 
 // Play one turn's worth of fx. Player (attacker) swings at the foe; if the foe

@@ -71,5 +71,10 @@ export const ZONE = {
   },
   portals: [
     { x: 0, y: 0, to: 'azuremist', entryX: 9, entryY: 9, minStage: 0 },
+    // Ascend to Stormcrown Peak (Core Formation tier). Gated at CF1 (level 19 =
+    // Foundation Establishment 9 -> Core Formation 1 barrier). Placed at the free
+    // (9,0) corner — clear of the two boss lairs at (9,9) and (0,9) and the
+    // Azuremist return portal at (0,0).
+    { x: 9, y: 0, to: 'thunderpeak', entryX: 0, entryY: 0, minStage: 19 },
   ],
 };

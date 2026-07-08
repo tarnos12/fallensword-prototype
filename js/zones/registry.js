@@ -18,8 +18,9 @@
 
 import * as azuremist from './azuremist.js';
 import * as cindervein from './cindervein.js';
+import * as thunderpeak from './thunderpeak.js';
 
-const ZONE_MODULES = [azuremist, cindervein];
+const ZONE_MODULES = [azuremist, cindervein, thunderpeak];
 
 export const ZONES = {};
 export const CREATURE_TYPES = {};

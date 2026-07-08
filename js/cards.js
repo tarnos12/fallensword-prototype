@@ -24,6 +24,12 @@ export const CARDS = {
   card_emberHound: { id: 'card_emberHound', creatureId: 'emberHound', creatureName: 'Ember Hound', bonusType: 'qiCap', perLevel: 20, maxLevel: 5, dropChance: 0.02 },
   card_cinderGolem: { id: 'card_cinderGolem', creatureId: 'cinderGolem', creatureName: 'Cinder Golem', bonusType: 'stones', perLevel: 10, maxLevel: 5, dropChance: 0.02 },
   card_ashenRevenant: { id: 'card_ashenRevenant', creatureId: 'ashenRevenant', creatureName: 'Ashen Revenant', bonusType: 'hp', perLevel: 4, maxLevel: 5, dropChance: 0.02 },
+  // Stormcrown Peak — the Core Formation zone (js/zones/thunderpeak.js). CF-tier
+  // cards run one notch above the FE cards (combat +2 vs +1, meta stones +15 vs
+  // +10) to match the realm's power step, still well short of the boss cards (+3).
+  card_galewingRoc: { id: 'card_galewingRoc', creatureId: 'galewingRoc', creatureName: 'Galewing Roc', bonusType: 'attack', perLevel: 2, maxLevel: 5, dropChance: 0.02 },
+  card_stormscaleWyrm: { id: 'card_stormscaleWyrm', creatureId: 'stormscaleWyrm', creatureName: 'Stormscale Wyrm', bonusType: 'stones', perLevel: 15, maxLevel: 5, dropChance: 0.02 },
+  card_celestialWarden: { id: 'card_celestialWarden', creatureId: 'celestialWarden', creatureName: 'Celestial Warden', bonusType: 'hp', perLevel: 6, maxLevel: 5, dropChance: 0.02 },
   // Boss card (GDD §7.2, §9.1): dropped by the Ancient Terror (js/boss.js — its
   // own encounter, not a zone spawn). A deliberately potent combat-stat card
   // (+3 Damage/level vs a common beast's +1) to make the legendary kill feel

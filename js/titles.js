@@ -14,6 +14,7 @@ import { CARDS, ownedCardCount } from './cards.js';
 import { achievementProgress } from './achievements.js';
 import { setBonuses } from './sets.js';
 import { MERIDIAN_NODES } from './meridians.js';
+import { toast } from './toast.js'; // one-directional (toast.js does NOT import titles.js — no cycle)
 
 // Display-preference storage for the player-chosen active title. This is a pure
 // cosmetic choice (mirrors theme.js / audio.js), NOT part of the save schema —
@@ -30,6 +31,81 @@ export function setPreferredTitleId(id) {
     if (id) localStorage.setItem(TITLE_PREF_KEY, id);
     else localStorage.removeItem(TITLE_PREF_KEY);
   } catch { /* storage unavailable — the pick just won't persist */ }
+}
+
+// Notification ledger for "which earned titles has this browser already been
+// toasted about". Like TITLE_PREF_KEY, this is a display/notification pref in its
+// OWN localStorage key — NOT the save schema (survives export/import/reset, no
+// VERSION bump). Every access is guarded: storage can throw / be absent / hold
+// garbage, and NONE of those must ever produce a spam of toasts.
+const TITLES_SEEN_KEY = 'fallen-immortal-titles-seen';
+
+// Returns the array of already-notified title ids, or null when the ledger is
+// absent/unreadable/corrupt — the null case means "seed silently, toast nothing"
+// so a bad value can never trigger a flood.
+function readSeenTitles() {
+  try {
+    const raw = localStorage.getItem(TITLES_SEEN_KEY);
+    if (raw == null) return null;              // first run — seed silently
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr)) return null;      // garbage — reseed silently
+    return arr;
+  } catch {
+    return null;                               // storage/parse failure — reseed silently
+  }
+}
+function writeSeenTitles(ids) {
+  try { localStorage.setItem(TITLES_SEEN_KEY, JSON.stringify(ids)); }
+  catch { /* storage unavailable — notifications just won't persist */ }
+}
+
+// Cheap fingerprint of the last-seen earned set so the 1.5s poll early-returns
+// instantly when nothing changed (the overwhelmingly common case).
+let lastEarnedKey = null;
+
+// Idempotent, called on the same 1.5s cadence as the chip. On the FIRST run for a
+// browser (ledger absent) it seeds the ledger with every currently-earned title
+// and toasts NOTHING — an existing player with N earned titles must not get N
+// toasts. Afterwards, only titles that become earned AFTER the seed toast, and a
+// burst is capped to a single (highest-prestige) toast so it can never flood.
+export function checkNewTitles(state) {
+  try {
+    const player = state && state.player;
+    if (!player) return;
+
+    const earnedIds = earnedTitles(player).map((t) => t.id);
+    const key = earnedIds.join('|');
+    if (key === lastEarnedKey) return; // nothing changed since last poll — bail fast
+    lastEarnedKey = key;
+
+    const seen = readSeenTitles();
+    if (seen === null) {
+      // First run (or unreadable ledger): seed silently, no toasts.
+      writeSeenTitles(earnedIds);
+      return;
+    }
+
+    const seenSet = new Set(seen);
+    const newly = earnedIds.filter((id) => !seenSet.has(id));
+    if (newly.length === 0) return;
+
+    // TITLES is ordered least → most prestigious. Toast only the single highest
+    // newly-earned title; if several arrived at once, note the remainder rather
+    // than firing a toast per title.
+    const rank = new Map(TITLES.map((t, i) => [t.id, i]));
+    newly.sort((a, b) => (rank.get(a) ?? 0) - (rank.get(b) ?? 0));
+    const topId = newly[newly.length - 1];
+    const topTitle = TITLES.find((t) => t.id === topId);
+    if (topTitle) {
+      const extra = newly.length - 1;
+      const suffix = extra > 0 ? ` (…and ${extra} more)` : '';
+      toast(`🏵 New title earned: “${topTitle.name}”${suffix}`, 'success');
+    }
+
+    writeSeenTitles([...seenSet, ...newly]);
+  } catch {
+    /* a bad ledger value must never break the chip or the game */
+  }
 }
 
 const TOTAL_CREATURES = Object.keys(CREATURE_TYPES).length;
@@ -289,9 +365,13 @@ function injectChip(state) {
   }
 
   updateTitleChip(state);
+  checkNewTitles(state); // seeds the notification ledger silently on first run
   // Self-updating: refresh cheaply so the chip tracks progression live without
-  // any external render hook.
-  setInterval(() => updateTitleChip(state), 1500);
+  // any external render hook. Same cadence drives the new-title notifier.
+  setInterval(() => {
+    updateTitleChip(state);
+    checkNewTitles(state);
+  }, 1500);
 }
 
 export function updateTitleChip(state) {

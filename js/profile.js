@@ -234,6 +234,7 @@ function el(tag, cls, html) {
 
 function renderSummary(s) {
   const box = $('profile-summary');
+  box.title = 'Your cultivation summary — effective combat stats after gear, cards, meridians, sect buffs and techniques.';
   const stat = (k, label) => `<span class="prof-stat"><span class="prof-stat-label">${label}</span> ${s.stats[k]}</span>`;
   box.innerHTML = `
     <div class="prof-identity">
@@ -263,6 +264,9 @@ function renderBuffs(buffs, now) {
     const time = b.remainingMs == null
       ? '<span class="prof-buff-perm">always on</span>'
       : `<span class="prof-buff-time">${Math.ceil(b.remainingMs / 1000)}s</span>`;
+    row.title = b.remainingMs == null
+      ? `${b.name} (${b.source}) — an always-on bonus: ${b.detail}.`
+      : `${b.name} (${b.source}) — ${b.detail}, fades in ${Math.ceil(b.remainingMs / 1000)}s.`;
     row.innerHTML = `
       <span class="prof-buff-src src-${b.source.toLowerCase().replace(/\s+/g, '')}">${b.source}</span>
       <span class="prof-buff-name">${b.name}</span>
@@ -289,6 +293,7 @@ function renderRivals() {
       row.appendChild(spar);
     }
     const btn = el('button', 'danger-btn prof-mini-btn', 'Unmark');
+    btn.title = `Stop tracking ${personaLabelSafe(r)} as a rival.`;
     btn.addEventListener('click', () => { provider.removeRival(r.id); refresh(); });
     row.appendChild(btn);
     box.appendChild(row);
@@ -296,6 +301,7 @@ function renderRivals() {
 
   const toggle = $('profile-add-rival');
   toggle.textContent = showRivalPicker ? 'Close' : '+ Add rival';
+  toggle.title = showRivalPicker ? 'Close the rival picker.' : 'Pick a cultivator to track as a rival — lets you spar them and see them flagged in the feed.';
 
   const picker = $('profile-rival-picker');
   picker.innerHTML = '';
@@ -305,6 +311,7 @@ function renderRivals() {
       const row = el('div', 'prof-social-row');
       row.appendChild(el('span', 'prof-social-name', personaLabelSafe(p)));
       const btn = el('button', 'claim-btn prof-mini-btn', 'Mark rival');
+      btn.title = `Track ${personaLabelSafe(p)} as a rival — lets you spar them and see them flagged in the feed.`;
       btn.addEventListener('click', () => { provider.addRival(p.id); showRivalPicker = false; refresh(); });
       row.appendChild(btn);
       picker.appendChild(row);
@@ -322,6 +329,7 @@ function renderFeed(now) {
   for (const f of provider.recentlyActive(now)) {
     const row = el('div', 'prof-feed-row');
     const rivalMark = f.isRival ? '<span class="prof-rival-mark" title="Rival">⚑</span> ' : '';
+    row.title = `${f.label} ${f.activity}, ${fmtAgo(f.minutesAgo)}. A simulated fellow cultivator — not another real player yet.`;
     row.innerHTML = `
       <span class="prof-feed-dot"></span>
       <span class="prof-feed-text">${rivalMark}<span class="prof-feed-name">${f.label}</span> ${f.activity}</span>

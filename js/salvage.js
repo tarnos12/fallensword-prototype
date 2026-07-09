@@ -86,6 +86,7 @@ function damageableItems(player) {
 function ledgerRow(mat, qty) {
   const row = document.createElement('div');
   row.className = `salvage-mat rarity-${mat.rarity}`;
+  row.title = `${mat.name} — ${RARITIES[mat.rarity]?.label ?? mat.rarity} salvage material, used to mend ${RARITIES[mat.rarity]?.label ?? mat.rarity} gear. You have ${qty}.`;
   row.innerHTML = `<span class="salvage-mat-icon">${mat.icon}</span>
     <span class="salvage-mat-name">${mat.name}</span>
     <span class="salvage-mat-qty">${qty}</span>`;
@@ -112,6 +113,7 @@ function mendRow(entry) {
       <span class="dim">Lv ${item.level} ${RARITIES[item.rarity].label} ${item.slot}</span></div>
     <div class="salvage-dur ${broken ? 'broken' : 'dim'}">durability ${item.durability}/${item.maxDurability}</div>
     <div class="salvage-where dim">${where}</div>`;
+  info.title = `${item.name} — durability ${item.durability}/${item.maxDurability}${broken ? ' (broken — sockets/gems disabled until mended)' : ''}.`;
 
   const actionsWrap = document.createElement('div');
   actionsWrap.className = 'salvage-actions';
@@ -122,7 +124,9 @@ function mendRow(entry) {
   const mat = MATERIAL_BY_ID[cost.materialId];
   const have = mats[cost.materialId] || 0;
   btn.textContent = `Mend · ${cost.qty} ${mat.icon}`;
-  btn.title = `Restore durability for ${cost.qty} ${mat.name} (have ${have})`;
+  btn.title = have < cost.qty
+    ? `Not enough ${mat.name} — mending costs ${cost.qty}, you have ${have}. Salvage more ${RARITIES[item.rarity].label} gear to get it.`
+    : `Spend ${cost.qty} ${mat.name} to restore this artifact's durability to full.`;
   btn.disabled = have < cost.qty;
   btn.addEventListener('click', () => { actions.repair(item.id); rerender(); });
   actionsWrap.appendChild(btn);

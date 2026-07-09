@@ -63,6 +63,7 @@ function forgeRow(entry) {
       <span class="dim">Lv ${item.level} ${RARITIES[item.rarity].label} ${item.slot}</span></div>
     <div class="forge-stats dim">${statLine(item)}</div>
     <div class="forge-where dim">${where}${dur}</div>`;
+  info.title = `${item.name} — currently ${statLine(item)}, durability ${item.durability}/${item.maxDurability}.`;
 
   const actionsWrap = document.createElement('div');
   actionsWrap.className = 'forge-actions';
@@ -73,7 +74,9 @@ function forgeRow(entry) {
   reforge.type = 'button';
   reforge.className = 'forge-btn';
   reforge.textContent = `Reforge · ${rfCost} ◆`;
-  reforge.title = 'Reroll this artifact’s stat values within its rarity';
+  reforge.title = stones < rfCost
+    ? `Not enough spirit stones — reforging costs ${rfCost} ◆, you have ${stones} ◆.`
+    : `Spend ${rfCost} spirit stones ◆ to reroll this artifact's stat values within its rarity (chase a better spread).`;
   reforge.disabled = stones < rfCost;
   reforge.addEventListener('click', () => { actions.reforge(item.id); rerender(); });
   actionsWrap.appendChild(reforge);
@@ -85,11 +88,14 @@ function forgeRow(entry) {
   if (canUpgradeItem(item)) {
     const upCost = upgradeCost(item);
     temper.textContent = `Temper → Lv ${item.level + 1} · ${upCost} ◆`;
-    temper.title = 'Raise this artifact’s level, scaling every stat up';
+    temper.title = stones < upCost
+      ? `Not enough spirit stones — tempering costs ${upCost} ◆, you have ${stones} ◆.`
+      : `Spend ${upCost} spirit stones ◆ to raise this artifact to level ${item.level + 1}, scaling every stat up.`;
     temper.disabled = stones < upCost;
     temper.addEventListener('click', () => { actions.upgrade(item.id); rerender(); });
   } else {
     temper.textContent = `Peak (Lv ${MAX_FORGE_LEVEL})`;
+    temper.title = `Already at the forge's level cap (Lv ${MAX_FORGE_LEVEL}) — cannot temper further.`;
     temper.disabled = true;
   }
   actionsWrap.appendChild(temper);
@@ -101,6 +107,9 @@ function forgeRow(entry) {
     repair.type = 'button';
     repair.className = 'forge-btn';
     repair.textContent = `Repair · ${rpCost} ◆`;
+    repair.title = stones < rpCost
+      ? `Not enough spirit stones — repairing costs ${rpCost} ◆, you have ${stones} ◆.`
+      : `Spend ${rpCost} spirit stones ◆ to restore this artifact's durability to full.`;
     repair.disabled = stones < rpCost;
     repair.addEventListener('click', () => { actions.repair(item.id); rerender(); });
     actionsWrap.appendChild(repair);
@@ -113,6 +122,7 @@ function forgeRow(entry) {
 export function renderForge(state) {
   if (!overlay) return;
   $('forge-stones').textContent = `— ◆ ${state.player.spiritStones}`;
+  $('forge-stones').title = `Spirit stones on hand: ${state.player.spiritStones} ◆ — spend them here to reforge, temper, or repair gear.`;
   const body = $('forge-body');
   body.innerHTML = '';
 

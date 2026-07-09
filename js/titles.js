@@ -431,7 +431,7 @@ export function renderTitles(state) {
       <div class="titles-active-label">Your current title</div>
       <div class="titles-active-name">${active.name}</div>
       <div class="titles-active-flavor">${active.flavor}</div>
-      <div class="titles-active-count">${earnedSet.size} / ${TITLES.length} honorifics earned</div>`;
+      <div class="titles-active-count" title="Cosmetic only — titles have no gameplay effect, they're a record of what you've accomplished.">${earnedSet.size} / ${TITLES.length} honorifics earned</div>`;
     const auto = document.createElement('button');
     auto.type = 'button';
     auto.className = `titles-auto-btn${autoMode ? ' on' : ''}`;
@@ -456,10 +456,12 @@ export function renderTitles(state) {
 
     const row = document.createElement('div');
     row.className = `title-row ${unlocked ? 'unlocked' : 'locked'}${isActive ? ' active' : ''}`;
+    row.title = unlocked ? `${t.name} — ${t.flavor}` : `Locked — ${t.hint}`;
 
     const mark = document.createElement('span');
     mark.className = 'title-mark';
     mark.textContent = unlocked ? '🏵' : '🔒';
+    mark.title = unlocked ? 'Earned' : 'Not yet earned';
 
     const info = document.createElement('div');
     info.className = 'title-info';

@@ -1,0 +1,41 @@
+/* tooltips.css — styled, near-instant global tooltips (js/tooltips.js).
+   Matches the rich item tooltip (#tooltip in style.css): dark parchment card,
+   gold border, small serif text. Like that tooltip, it deliberately stays dark
+   in BOTH themes (theme.css supplies no #tooltip light override), so the two
+   never clash. Sits ABOVE every modal (modals 80, item tooltip 50, topmost
+   feature layer ~120) so it renders over controls inside open modals. */
+
+#app-tooltip {
+  position: fixed;
+  left: -9999px;
+  top: -9999px;
+  z-index: 9999; /* above all modals and the item #tooltip */
+  max-width: 260px;
+  padding: 7px 10px;
+  background: #0e1015;
+  color: var(--ink, #e8e2d0);
+  border: 1px solid var(--gold, #c8a24a);
+  border-radius: 6px;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  white-space: normal;
+  pointer-events: none; /* never intercept the cursor */
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  visibility: hidden;
+}
+
+#app-tooltip.visible {
+  opacity: 1;
+  visibility: visible;
+  animation: app-tooltip-in 90ms ease-out;
+}
+
+@keyframes app-tooltip-in {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app-tooltip.visible { animation: none; }
+}

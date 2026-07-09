@@ -113,9 +113,11 @@ function nodeRow(node) {
       <span class="dim">Rank ${rank}/${node.maxRank}</span></div>
     <div class="mer-desc dim">${node.desc}</div>
     <div class="mer-bonus">${bonusLine}</div>`;
+  info.title = `${node.name} — permanent +${node.perRank} ${STAT_LABELS[node.stat]} per rank, ranked ${rank}/${node.maxRank}. Free, permanent points earned one per breakthrough.`;
 
   const pips = document.createElement('div');
   pips.className = 'mer-pips';
+  pips.title = `Rank ${rank} of ${node.maxRank} opened.`;
   for (let i = 0; i < node.maxRank; i++) {
     const pip = document.createElement('span');
     pip.className = i < rank ? 'mer-pip on' : 'mer-pip';
@@ -127,11 +129,14 @@ function nodeRow(node) {
   btn.className = 'mer-open-btn';
   if (maxed) {
     btn.textContent = 'Opened';
+    btn.title = `${node.name} is fully opened at rank ${node.maxRank}.`;
     btn.disabled = true;
   } else {
     btn.textContent = `Open (+${node.perRank} ${STAT_LABELS[node.stat]})`;
     btn.disabled = free <= 0;
-    if (free <= 0) btn.title = 'No meridian points — break through a realm to earn more';
+    btn.title = free <= 0
+      ? 'No free meridian points — break through a realm to earn one more.'
+      : `Spend 1 meridian point for a permanent +${node.perRank} ${STAT_LABELS[node.stat]} (free — no spirit stones).`;
     btn.addEventListener('click', () => { actions.allocate(node.id); rerender(); });
   }
 
@@ -144,6 +149,7 @@ export function renderMeridians(state) {
   const p = state.player;
   const free = meridianPointsFree(p);
   $('meridian-free').textContent = `— ${free} point${free === 1 ? '' : 's'} to open`;
+  $('meridian-free').title = `${free} unspent meridian point${free === 1 ? '' : 's'} — earned one per breakthrough, spent for free (no spirit stones).`;
 
   const body = $('meridian-body');
   body.innerHTML = '';

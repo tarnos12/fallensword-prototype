@@ -117,9 +117,9 @@ export function renderPillBar(state, now = Date.now()) {
   if (!active.length) { bar.classList.add('hidden'); bar.innerHTML = ''; return; }
   bar.classList.remove('hidden');
   bar.innerHTML =
-    `<span class="pill-bar-label">${PILL_ICON} Pill effects:</span>` +
+    `<span class="pill-bar-label" title="Timed buffs from quaffed pills, active for your next fights.">${PILL_ICON} Pill effects:</span>` +
     active
-      .map((b) => `<span class="pill-chip"><b>${b.icon} ${b.name}</b> <span class="dim">${fmt(b.expiresAt - now)}</span></span>`)
+      .map((b) => `<span class="pill-chip" title="${b.name} — ${b.effect ? Object.entries(b.effect).map(([s, pct]) => `${pct > 0 ? '+' : ''}${Math.round(pct * 100)}% ${STAT_LABELS[s] ?? s}`).join(', ') : ''}, fades in ${fmt(b.expiresAt - now)}."><b>${b.icon} ${b.name}</b> <span class="dim">${fmt(b.expiresAt - now)}</span></span>`)
       .join('');
 }
 
@@ -137,6 +137,7 @@ function renderAlchemy(state) {
 
     const row = document.createElement('div');
     row.className = 'pill-row' + (levelOk ? '' : ' pill-locked');
+    row.title = `${pill.desc} Brewing costs ${pill.cost} spirit stones ◆.${levelOk ? '' : ` Requires cultivation stage ${pill.minLevel}.`}`;
     row.innerHTML = `
       <div class="pill-icon">${pill.icon}</div>
       <div class="pill-info">
@@ -146,13 +147,21 @@ function renderAlchemy(state) {
       </div>
       <div class="pill-actions"></div>`;
     const actions = row.querySelector('.pill-actions');
+    row.querySelector('.pill-name').title = `${pill.name} — ${pill.kind === 'buff' ? `a timed combat buff (${buffText(pill)}) lasting ${Math.round(pill.durationMs / 1000)}s of battle` : pill.desc}. Costs ${pill.cost} spirit stones ◆ to brew.`;
+    row.querySelector('.pill-meta').title = pill.kind === 'buff'
+      ? `Applies ${buffText(pill)} to your next fights for ${Math.round(pill.durationMs / 1000)}s after you quaff it.`
+      : 'Takes effect immediately when quaffed.';
 
     const brew = document.createElement('button');
     brew.type = 'button';
     brew.className = 'pill-brew';
     brew.textContent = `Brew (${pill.cost} ◆)`;
     brew.disabled = !levelOk || !canAfford;
-    if (!canAfford && levelOk) brew.title = 'Not enough spirit stones';
+    brew.title = !levelOk
+      ? `Requires cultivation stage ${pill.minLevel}.`
+      : !canAfford
+        ? `Not enough spirit stones — brewing costs ${pill.cost} ◆, you have ${p.spiritStones} ◆.`
+        : `Spend ${pill.cost} spirit stones ◆ to brew one ${pill.name}.`;
     brew.addEventListener('click', () => { handlers.brew(pill.id); renderAlchemy(state); });
     actions.append(brew);
 
@@ -161,6 +170,11 @@ function renderAlchemy(state) {
     use.className = 'pill-use';
     use.textContent = 'Use';
     use.disabled = owned <= 0;
+    use.title = owned <= 0
+      ? `You have none brewed — brew one for ${pill.cost} spirit stones ◆ first.`
+      : pill.kind === 'buff'
+        ? `Quaff a ${pill.name} for ${buffText(pill)} in your next ${Math.round(pill.durationMs / 1000)}s of battle.`
+        : `Quaff a ${pill.name} — ${pill.desc}`;
     use.addEventListener('click', () => { handlers.use(pill.id); renderAlchemy(state); });
     actions.append(use);
 

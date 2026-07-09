@@ -151,9 +151,11 @@ export function renderTrialBadge(state) {
   if (!el) return;
   if (attemptedToday(state.player)) {
     el.textContent = formatCountdown(msUntilReset());
+    el.title = `You've used today's Daily Trial attempt — a fresh one arrives in ${formatCountdown(msUntilReset())}.`;
     el.classList.remove('trial-ready');
   } else {
     el.textContent = 'Ready';
+    el.title = 'Your free Daily Trial is ready — one attempt per day, costs no Qi, a loss costs nothing.';
     el.classList.add('trial-ready');
   }
 }
@@ -169,20 +171,20 @@ function renderTrialsPanel(state, handlers) {
   const done = attemptedToday(p);
 
   const foeCard = `
-    <div class="trial-foe trial-${tier.key}">
+    <div class="trial-foe trial-${tier.key}" title="Today's benchmark foe — same for every cultivator your level. A win pays the reward below; a loss or draw costs nothing.">
       <div class="trial-foe-head">
-        <span class="trial-tier">${tier.label}</span>
+        <span class="trial-tier" title="${tier.label} — foe stats scaled ×${tier.mult}, reward scaled ×${tier.reward}.">${tier.label}</span>
         <span class="trial-foe-name">${foe.name}</span>
         <span class="trial-foe-title">${foe.title}</span>
       </div>
-      <div class="trial-stats">
+      <div class="trial-stats" title="The trial foe's combat stats — better gear and stat points make this fight winnable.">
         ${statRow('Attack', foe.stats.attack)}
         ${statRow('Defense', foe.stats.defense)}
         ${statRow('Damage', foe.stats.damage)}
         ${statRow('Armor', foe.stats.armor)}
         ${statRow('HP', foe.maxHp)}
       </div>
-      <div class="trial-reward">Victory: <b>+${reward.stones}</b> stones · <b>+${reward.xp}</b> XP${reward.itemChance ? ' · a chance at an artifact' : ''}</div>
+      <div class="trial-reward" title="Winning today's trial pays ${reward.stones} spirit stones ◆ and ${reward.xp} XP${reward.itemChance ? `, plus a ${Math.round(reward.itemChance * 100)}% chance at an artifact` : ''}. Free — costs no Qi.">Victory: <b>+${reward.stones}</b> stones · <b>+${reward.xp}</b> XP${reward.itemChance ? ' · a chance at an artifact' : ''}</div>
     </div>`;
 
   let action;
@@ -200,7 +202,7 @@ function renderTrialsPanel(state, handlers) {
   } else if (done) {
     action = `<p class="trial-note">You have faced today's trial. The next challenge arrives in ${formatCountdown(msUntilReset())}.</p>`;
   } else {
-    action = `<button id="btn-attempt-trial" type="button" class="trial-attempt-btn">Face the Trial</button>
+    action = `<button id="btn-attempt-trial" type="button" class="trial-attempt-btn" title="Fight today's trial foe for ${reward.stones} spirit stones ◆ and ${reward.xp} XP on a win. Costs no Qi; a loss or draw costs nothing.">Face the Trial</button>
       <p class="trial-note">One attempt per day. A loss carries no penalty.</p>`;
   }
 

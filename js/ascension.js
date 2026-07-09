@@ -86,19 +86,19 @@ export function renderAscension(state) {
   const nextPct = ascensionBonusPct(count + 1);
 
   body.innerHTML = `
-    <div class="asc-status">
+    <div class="asc-status" title="You have ascended ${count} time${count === 1 ? '' : 's'}, for a permanent +${ascensionBonusPct(count)}% to every effective stat.">
       <div class="asc-tier">Ascension <strong>${count}</strong></div>
       <div class="asc-bonus dim">Current bonus: <strong>+${ascensionBonusPct(count)}%</strong> to all stats</div>
     </div>
     <p class="asc-intro">Shatter your foundation and begin the climb anew. Each ascension is permanent and stacks — the road is the same, but you walk it stronger.</p>
     <div class="asc-cols">
-      <div class="asc-col asc-keep"><h3>Kept forever</h3><ul>
+      <div class="asc-col asc-keep" title="These carry over unchanged when you ascend."><h3>Kept forever</h3><ul>
         <li>Spirit Cards &amp; Beast Codex</li>
         <li>Your Sect, Rivals &amp; spar record</li>
         <li>Achievements &amp; lifetime stats</li>
         <li><strong>+${ASCENSION_STAT_PER_TIER * 100}% permanent stats</strong> per ascension</li>
       </ul></div>
-      <div class="asc-col asc-wipe"><h3>Reset to zero</h3><ul>
+      <div class="asc-col asc-wipe" title="These are wiped back to a fresh start every time you ascend."><h3>Reset to zero</h3><ul>
         <li>Cultivation level &amp; XP</li>
         <li>Allocated stats, meridians &amp; techniques</li>
         <li>All artifacts &amp; loadouts</li>
@@ -112,6 +112,9 @@ export function renderAscension(state) {
   action.className = ready ? 'asc-go claim-btn' : 'asc-go';
   action.disabled = !ready;
   action.textContent = ready ? `✦ Ascend — become Ascension ${count + 1} (+${nextPct}% stats)` : 'Reach the peak of cultivation to ascend';
+  action.title = ready
+    ? `Wipe your level, gear, techniques and meridians for a permanent +${nextPct}% to all stats — keeps cards, codex, sect and achievements. Cannot be undone.`
+    : `Requires reaching the peak of cultivation (level ${MAX_STAGE}) to ascend.`;
   if (ready) {
     action.addEventListener('click', () => {
       if (confirm(`Ascend to tier ${count + 1}? Your level, gear, techniques and meridians reset to zero. You keep your cards, codex, and gain a permanent +${nextPct}% to all stats. This cannot be undone.`)) {

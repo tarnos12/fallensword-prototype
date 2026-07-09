@@ -20,7 +20,7 @@ export const RARITIES = {
   mythic: { key: 'mythic', label: 'Mythic', mult: 3.6, attributes: 5, weight: 0, maxDurability: 120, repairPerPoint: 8, sellMult: 180 },
 };
 
-export const INVENTORY_SIZE = 24; // testing size; 1.0 starts small per GDD §6.2
+export const INVENTORY_SIZE = 12; // small starting pack per GDD §6.2
 export const DROP_CHANCE = 0.22;
 
 // Templates: ordered attribute pools with level-1 roll ranges [stat, min, max].
@@ -197,16 +197,8 @@ export function mintNamedItem(namedId) {
   };
 }
 
-// TESTING ONLY (strip with the debug tooling before demo): a global multiplier
-// on the loot drop chance so debug tools can crank drops without touching the
-// tuned DROP_CHANCE. Defaults to 1 (no effect).
-let dropMultiplier = 1;
-export function setDropMultiplier(m) {
-  dropMultiplier = m;
-}
-
 export function rollDrop(creatureLevel, rng) {
-  if (rng() >= DROP_CHANCE * dropMultiplier) return null;
+  if (rng() >= DROP_CHANCE) return null;
   // A slice of drops are loose gems instead of gear (task U) — rolled after the
   // drop gate so gems are a fraction of loot, not an extra roll. Gems ride the
   // same inventory/save/sell path as gear (they carry id/name/rarity/level).

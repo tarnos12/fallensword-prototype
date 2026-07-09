@@ -68,19 +68,11 @@ export function cardBonusText(card, level = 1) {
   }
 }
 
-// TESTING ONLY (strip with the debug tooling before demo): a global multiplier
-// on the card drop chance so debug tools can force cards without editing the
-// tuned per-card dropChance. Defaults to 1 (no effect).
-let cardDropMultiplier = 1;
-export function setCardDropMultiplier(m) {
-  cardDropMultiplier = m;
-}
-
 // A separate-from-loot roll (GDD §7.2): returns a cardId on success, else null.
 export function rollCardDrop(typeId, rng) {
   const card = cardForCreature(typeId);
   if (!card) return null;
-  return rng() < card.dropChance * cardDropMultiplier ? card.id : null;
+  return rng() < card.dropChance ? card.id : null;
 }
 
 // Aggregate every owned card into flat stat bonuses (fed into effectiveStats)

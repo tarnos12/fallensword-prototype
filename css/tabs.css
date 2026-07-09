@@ -115,13 +115,40 @@ body > * { flex: 0 0 auto; }
 
 #char-panel { display: block; }
 
-/* Map view: center the board and let the info/log panels flow beneath it. */
-#view-map #map-panel { display: block; margin-inline: auto; }
-#view-map #map-grid { margin-inline: auto; }
+/* Map view: map grid + the location/enemy panel sit side by side as one
+   connected unit, tops aligned, with nothing below — the view never needs
+   to scroll on desktop. */
+#view-map.tab-active {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 14px;
+  justify-content: center;
+  align-items: flex-start;
+}
+#view-map #map-panel {
+  display: block;
+  margin-inline: 0;               /* the flex row centers the pair, not the map alone */
+  margin-bottom: 0;
+  flex: 0 0 auto;
+}
+#view-map #map-grid { margin-inline: 0; }
+
+/* Right column: attached beside the map, top-aligned, capped so it never
+   grows past the map column's height (480px grid + hint line). Scrolls
+   internally if the monster list is long. */
+#view-map #tile-info {
+  flex: 0 0 320px;
+  max-width: 360px;
+  max-height: 540px;
+  overflow-y: auto;
+  margin-bottom: 0;
+}
 
 /* Give the roomy screens a sensible reading width on wide monitors. */
 #view-char #char-panel,
 #view-quests #quest-panel,
+#view-quests #event-log,
 #view-halls #nav-menu { max-width: 860px; margin-inline: auto; }
 
 /* Combat view empty-state note (shown when no fight is active). */
@@ -187,6 +214,23 @@ body > * { flex: 0 0 auto; }
   }
 
   .tab-view { padding: 10px 10px 16px; }
+
+  /* Side-by-side map layout can't fit a phone screen — stack back to a
+     column (map above, location/enemy panel below), full width, and let
+     the tab view scroll internally as usual. */
+  #view-map.tab-active {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  #view-map #map-panel { margin-inline: auto; }
+  #view-map #tile-info {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    overflow-y: visible;
+    margin-bottom: 14px;
+  }
 }
 
 /* Respect reduced motion for the tab transitions. */

@@ -1,7 +1,9 @@
-# Deploy the game to GitHub Pages. No build step — the repo root IS the site
-# (pure HTML/JS/CSS ES modules with relative paths, so the /fallensword-prototype/
-# subpath works as-is). configure-pages `enablement: true` creates/enables the
-# Pages site on first run, so no manual Settings → Pages step is needed.
+# Publish the game to GitHub Pages via the classic gh-pages branch.
+# (configure-pages `enablement: true` cannot create the Pages site — that needs
+# repo-admin scope the workflow token doesn't have. Pushing a gh-pages branch
+# auto-publishes on public repos with no Settings step.)
+# No build step — master's tree IS the site (relative paths work under the
+# /fallensword-prototype/ subpath). .nojekyll (in the tree) skips Jekyll.
 name: Deploy to GitHub Pages
 
 on:
@@ -10,9 +12,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: pages
@@ -21,16 +21,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-        with:
-          enablement: true
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Mirror master to gh-pages
+        run: git push --force origin HEAD:gh-pages

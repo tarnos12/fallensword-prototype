@@ -121,6 +121,61 @@ export const QUESTS = [
     target: { stage: 14 },
     reward: { stones: 2000, item: { named: 'heavenSeverer' } },
   },
+  // --- Stormcrown saga (GDD §5): the Core Formation endgame chain, native to
+  // Stormcrown Peak (js/zones/thunderpeak.js). All three creatures below only
+  // ever spawn behind that zone's portal, itself gated at CF1 (Cindervein's
+  // (9,0) -> thunderpeak, minStage 19) — the same hard-lock role that
+  // `foundation-1`'s explicit stage gate played for the Heaven-Severing saga,
+  // just enforced by zone access instead of a duplicate stage quest, since
+  // the CF1 gate already exists on the portal. Mints two more NAMED_ITEMS:
+  // the Legendary robe Stormsovereign's Raiment (mid-chain) and the game's
+  // first Mythic weapon, Stormreaver (capstone). Reward stones/xp are scaled
+  // from the Heaven-Severing saga's own rewards by the same factors used to
+  // scale the zone's creatures over their Cindervein counterparts (~30x xp,
+  // ~8.5x stones — see thunderpeak.js), so the boost feels proportionate to
+  // the ~30x richer CF kill-xp/stones without stage-skipping (total xp across
+  // the saga is ~5% of the CF1->CF7 climb it spans, matching the epic saga's
+  // ~5% of the FE1->FE5 climb). ---
+  {
+    id: 'storm-trial',
+    title: 'Trial of the Storm-Wings',
+    text: 'Cloudgate Terrace opens onto a summit ruled by storm-born raptors. Prove your golden core is no idle boast: slay 10 Galewing Rocs and let the mountain take your measure.',
+    type: 'kill',
+    target: { typeId: 'galewingRoc', count: 10 },
+    reward: { stones: 4200, xp: 18000 },
+  },
+  {
+    id: 'storm-serpent-crown',
+    title: "The Serpent-Crown's Challenge",
+    text: "A thunder-scaled wyrm coils in the high clouds, testing every claimant who climbs this far. Face the Stormscale Wyrm — win or fall back, but earn its regard, and the mountain will yield a sovereign's raiment in answer.",
+    type: 'face',
+    target: { typeId: 'stormscaleWyrm', count: 1 },
+    reward: { stones: 2500, xp: 12000, item: { named: 'stormsovereignRaiment' } },
+  },
+  {
+    id: 'storm-deeper-coil',
+    title: 'Coils Beneath the Clouds',
+    text: 'One wyrm faced is not the mountain conquered. Hunt 8 more Stormscale Wyrms through the high passes until the storm itself learns to fear your step.',
+    type: 'kill',
+    target: { typeId: 'stormscaleWyrm', count: 8 },
+    reward: { stones: 6000, xp: 24000 },
+  },
+  {
+    id: 'storm-apex-vigil',
+    title: "The Warden's Vigil",
+    text: 'At the true summit stands the Celestial Warden, unmoved since an immortal set it there an age ago. Break 6 of its kind in vigil-combat, and prove the peak may yet have a new master.',
+    type: 'kill',
+    target: { typeId: 'celestialWarden', count: 6 },
+    reward: { stones: 4200, xp: 36000 },
+  },
+  {
+    id: 'storm-ascension',
+    title: 'Ascension Beyond the Ninefold Gale',
+    text: 'The summit itself waits on your core, not your sword. Cultivate to Core Formation 7, and Stormreaver — a blade tempered through a thousand years of sky-fire — will answer to no lesser hand than yours.',
+    type: 'stage',
+    target: { stage: 25 },
+    reward: { stones: 17000, item: { named: 'stormreaver' } },
+  },
 ];
 
 export function createQuestState() {

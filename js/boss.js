@@ -67,6 +67,32 @@ export const BOSSES = {
     minStage: 14, // Foundation Establishment 5
     cooldownMs: 45 * 60_000,
   },
+  // Boss #3 — the Core Formation calamity, gated at Core Formation 5. A being of
+  // congealed heavenly tribulation that haunts the storm-wracked summit of
+  // Stormcrown Peak (js/zones/thunderpeak.js). Crushes a fresh CF5 arrival, a real
+  // gamble for a prepared CF7 adept, a reliable win only for a maxed + buffed CF9
+  // cultivator. The game's FIRST Mythic-drop source: a guaranteed Legendary that
+  // upgrades to Mythic on a 30% roll (one notch above Zhulong's Epic→Legendary),
+  // expressed through onBossDefeated's baseRarity/upgradeRarity drop path.
+  tribulationSovereign: {
+    id: 'tribulationSovereign',
+    typeId: 'tribulationSovereign',
+    cardId: 'card_tribulationSovereign',
+    name: 'Jiuxiao, the Tribulation Sovereign',
+    title: 'Calamity Beast',
+    flavor:
+      'When a cultivator dares to form their golden core, heaven answers with lightning. Ten thousand tribulations have shattered upon this summit, and their thunder never dispersed — it pooled in the thin air, took the shape of a crowned serpent of white fire, and learned to hunger. It is the calamity that guards the last step before immortality.',
+    level: 25,
+    stats: { attack: 101, defense: 57, damage: 66, armor: 29 },
+    maxHp: 780,
+    reward: { xp: 12000, stones: 3600 },
+    drop: { level: 24, baseRarity: 'legendary', upgradeRarity: 'mythic', upgradeChance: 0.3 },
+    cardDropChance: 0.5,
+    lair: { zoneId: 'thunderpeak', x: 9, y: 9 }, // storm-wracked summit, opposite the (0,0) Cloudgate portal
+    lairHint: 'the storm-wracked summit of the Peak',
+    minStage: 23, // Core Formation 5 — the golden-core barrier's own guardian
+    cooldownMs: 60 * 60_000,
+  },
 };
 
 export const BOSS_LIST = Object.values(BOSSES);
@@ -204,7 +230,15 @@ export function onBossDefeated(state, monster, rng, now = Date.now()) {
   rec.defeats += 1;
 
   const slot = rng() < 0.5 ? 'weapon' : 'robe';
-  const rarity = rng() < boss.drop.legendaryChance ? 'legendary' : 'epic';
+  // Drop rarity: a guaranteed base rarity that upgrades one notch on a roll. The
+  // legacy shape ({ legendaryChance }) means base Epic → Legendary; a boss may
+  // instead name its own pair explicitly (e.g. base Legendary → Mythic) via
+  // { baseRarity, upgradeRarity, upgradeChance }. Defaults preserve the old two.
+  const d = boss.drop;
+  const baseRarity = d.baseRarity ?? 'epic';
+  const upgradeRarity = d.upgradeRarity ?? 'legendary';
+  const upgradeChance = d.upgradeChance ?? d.legendaryChance ?? 0;
+  const rarity = rng() < upgradeChance ? upgradeRarity : baseRarity;
   const drop = generateItem(slot, boss.drop.level, rarity, rng);
 
   const cardId = rng() < boss.cardDropChance ? boss.cardId : null;

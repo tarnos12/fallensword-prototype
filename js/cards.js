@@ -40,6 +40,10 @@ export const CARDS = {
   // Second boss card — the Ember Calamity (js/boss.js). A potent +3 Attack/level
   // (complements the Ancient Terror's +Damage), same boss-roll drop shape.
   card_emberCalamity: { id: 'card_emberCalamity', creatureId: 'emberCalamity', creatureName: 'Zhulong, the Ember Calamity', bonusType: 'attack', perLevel: 3, maxLevel: 5, dropChance: 0.5 },
+  // Third boss card — the Tribulation Sovereign (js/boss.js, Core Formation gate).
+  // A potent +3 Defense/level, completing the boss-card trio's spread (the first
+  // two grant offense — Damage + Attack — so this one wards). Same boss-roll shape.
+  card_tribulationSovereign: { id: 'card_tribulationSovereign', creatureId: 'tribulationSovereign', creatureName: 'Jiuxiao, the Tribulation Sovereign', bonusType: 'defense', perLevel: 3, maxLevel: 5, dropChance: 0.5 },
 };
 
 const BY_CREATURE = {};

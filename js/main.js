@@ -87,6 +87,7 @@ import { toast, initToasts } from './toast.js';
 import { stageName } from './progression.js';
 import { recordFight, initReplay, getLastFight, setReplayVisible } from './replay.js';
 import { initInput } from './input.js';
+import { initTooltips } from './tooltips.js';
 import { initTabs, setActiveTab } from './tabs.js';
 import { initStats } from './stats.js';
 import { initTitles } from './titles.js';
@@ -445,6 +446,7 @@ initSockets(state, {
   },
 });
 initToasts(); // unified toast/feedback host (task X)
+initTooltips(); // global instant-tooltip engine — styled hover tips over native title="" (slice T1)
 initTabs(); // full-view tab shell — wire the tab bar (markup lives in index.html)
 // Leaving combat via "Continue" returns to the Map screen. addEventListener (not
 // onclick) so it coexists with ui.js's own close handler that hides the panel.

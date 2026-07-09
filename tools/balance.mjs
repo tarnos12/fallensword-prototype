@@ -382,6 +382,11 @@ const BOSS_SCENARIOS = {
     { name: 'at-gate      (FE7 · Rare L16 +mer+zcards)', expect: 'gamble', make: () => playerAt(16, 16, 'rare', { cards: 'zone', meridians: true }) },
     { name: 'maxed+buffed (FE9 · Rare L18 +allcards+mer+buff)', expect: 'reliable', make: () => playerAt(18, 18, 'rare', { cards: 'all', meridians: true, buff: true }) },
   ],
+  tribulationSovereign: [
+    { name: 'under-geared (CF5 arrival · Rare L23 +mer)', expect: 'crushed', make: () => playerAt(23, 23, 'rare', { meridians: true }) },
+    { name: 'at-gate      (CF7 · Rare L25 +mer+zcards)', expect: 'gamble', make: () => playerAt(25, 25, 'rare', { cards: 'zone', meridians: true }) },
+    { name: 'maxed+buffed (CF9 · Rare L27 +allcards+mer+buff)', expect: 'reliable', make: () => playerAt(27, 27, 'rare', { cards: 'all', meridians: true, buff: true }) },
+  ],
 };
 
 function sectionBossGates() {

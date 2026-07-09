@@ -909,6 +909,23 @@ function codexEntry(state, typeId) {
   return el;
 }
 
+// Human-readable drop line for a boss's codex entry, derived from its
+// `drop` config rather than hardcoded — mirrors boss.js `onBossDefeated`'s
+// own defaults exactly (legacy shape: base Epic → chance Legendary).
+function bossDropLine(boss) {
+  const d = boss.drop;
+  const baseRarity = d.baseRarity ?? 'epic';
+  const upgradeRarity = d.upgradeRarity ?? 'legendary';
+  const upgradeChance = d.upgradeChance ?? d.legendaryChance ?? 0;
+  const baseLabel = RARITIES[baseRarity].label;
+  const baseClass = `rarity-${baseRarity}`;
+  const base = `a guaranteed <span class="${baseClass}">${baseLabel}</span> artifact`;
+  if (upgradeChance <= 0) return `${base}`;
+  const upgradeLabel = RARITIES[upgradeRarity].label;
+  const upgradeClass = `rarity-${upgradeRarity}`;
+  return `${base} (a chance at <span class="${upgradeClass}">${upgradeLabel}</span>)`;
+}
+
 // A calamity's codex entry (GDD §9.1) — hand-authored, separate from the
 // random-spawn beast roster. Full lore + stats once discovered (inspected or
 // fought); a teasing locked entry beforehand. Doubles as the boss card slot.
@@ -946,7 +963,7 @@ function bossCodexEntry(state, boss) {
     <p class="codex-flavor">${boss.flavor}</p>
     <p class="codex-kills">Vanquished: <b>${defeats}</b>${defeats ? ' <span class="mastery">☠ calamity-breaker</span>' : ''}</p>
     <p class="codex-line">ATK ${s.attack} · DEF ${s.defense} · DMG ${s.damage} · ARM ${s.armor} · HP ${boss.maxHp}</p>
-    <p class="codex-line">Drops: a guaranteed <span class="rarity-epic">Epic</span> artifact (a chance at <span class="rarity-legendary">Legendary</span>) · <b>${Math.round(boss.cardDropChance * 100)}%</b> Spirit Card</p>
+    <p class="codex-line">Drops: ${bossDropLine(boss)} · <b>${Math.round(boss.cardDropChance * 100)}%</b> Spirit Card</p>
     ${cardStatusLine}`;
   return el;
 }

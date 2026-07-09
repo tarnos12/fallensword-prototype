@@ -4,7 +4,8 @@
 import { ZONES, portalAt } from './map.js';
 import { maxQi, effectiveStats, stageName, totalRepairCost, marketListings, marketPlayerListings, marketMailbox, guildMembers, guildRecruits, guildBuffSummary } from './game.js';
 import { MAX_TURNS } from './combat.js';
-import { xpForBreakthrough, ALLOC_STATS, POINT_VALUE, MAX_STAGE } from './progression.js';
+import { xpForBreakthrough, ALLOC_STATS, POINT_VALUE, MAX_STAGE, ASCENSION_STAT_PER_TIER } from './progression.js';
+import { meridianBonuses } from './meridians.js'; // per-source char-sheet stat breakdown
 import { sellValue, RARITIES, INVENTORY_SIZE, DROP_CHANCE } from './items.js';
 import { currentQuest, progressText, QUESTS } from './quests.js';
 import { CREATURE_TYPES, creatureStatBlock } from './actors.js';
@@ -16,8 +17,8 @@ import { TECHNIQUES, CATEGORIES, get as getTech, isLearned, canLearn, canCast, a
 import { BOSS_LIST, bossAtLair, bossLairStatus } from './boss.js';
 import { beginFx, turnFx, endFx } from './combatfx.js';
 import { compareRows, setCompareContext } from './itemcompare.js'; // task Y: hover deltas
-import { isGem, gemIcon, gemStatText, socketLine } from './sockets.js'; // task U: gems + sockets
-import { setLine, setSetsContext } from './sets.js'; // task B: gear set progress in tooltip
+import { isGem, gemIcon, gemStatText, socketLine, socketBonuses } from './sockets.js'; // task U: gems + sockets
+import { setLine, setSetsContext, setBonuses } from './sets.js'; // task B: gear set progress in tooltip
 import { salvageYield, materialName } from './salvage.js'; // task M: salvage yield for the menu entry
 
 const $ = (id) => document.getElementById(id);
@@ -296,15 +297,71 @@ export function renderCharSheet(state, onAllocate) {
   const box = $('char-stats');
   box.innerHTML = '';
 
+  // True per-source stat breakdown mirroring progression.js effectiveStats
+  // exactly: base + trained + gear + cards + meridians + gems + set (flat),
+  // then technique/pill percentage buffs, then the global ascension scalar. Each
+  // flat source is summed the same way (and honours the same broken-gear rule) as
+  // effectiveStats, so the displayed parts recombine to the effective total.
+  const now = Date.now();
   const cardStat = cardBonuses(p).stat;
+  const merStat = meridianBonuses(p);
+  const socketStat = socketBonuses(p);
+  const setStat = setBonuses(p);
+  // Real gear sum (same iteration + broken-gear skip as effectiveStats).
+  const gearSum = { attack: 0, defense: 0, damage: 0, armor: 0, hp: 0 };
+  for (const item of Object.values(p.equipment)) {
+    if (!item || item.durability <= 0) continue; // broken gear grants nothing
+    for (const [s, v] of Object.entries(item.bonuses)) gearSum[s] += v;
+  }
+  const buffs = activeBuffs(p, now);
+  const asc = p.ascension ?? 0;
+
   const grid = document.createElement('div');
   grid.className = 'stat-grid';
   for (const stat of ALLOC_STATS) {
     const effKey = stat === 'hp' ? 'maxHp' : stat;
+    // Flat parts. `stat` is already the bonus-map key ('hp' for Max HP), matching
+    // gearSum/cardStat/merStat/socketStat/setStat which all key HP as 'hp'.
+    const base = p.base[effKey];
     const trained = p.allocated[stat] * POINT_VALUE[stat];
+    const gearPart = gearSum[stat] ?? 0;
     const cardPart = cardStat[stat] ?? 0;
-    const gearPart = eff[effKey] - p.base[effKey] - trained - cardPart;
-    const cardBit = cardPart ? ` + ${cardPart} cards` : '';
+    const merPart = merStat[stat] ?? 0;
+    const gemPart = socketStat[stat] ?? 0;
+    const setPart = setStat[stat] ?? 0;
+
+    // Flat subtotal, then the percentage buffs and ascension scalar applied with
+    // the SAME rounding as effectiveStats (per-buff round; final ascension round).
+    let val = base + trained + gearPart + cardPart + merPart + gemPart + setPart;
+    const flatSubtotal = val;
+    for (const buff of buffs) {
+      const pct = buff.effect[stat];
+      if (pct != null) val = Math.max(1, Math.round(val * (1 + pct)));
+    }
+    const buffedVal = val;
+    if (asc > 0) val = Math.max(1, Math.round(val * (1 + ASCENSION_STAT_PER_TIER * asc)));
+
+    // Compose the flat line: base + trained + gear always shown (matches the
+    // legacy tooltip for a bonus-free player); the newer flat sources are shown
+    // only when non-zero to keep it compact.
+    const flatBits = [`${base} base`, `${trained} trained`, `${gearPart} gear`];
+    if (cardPart) flatBits.push(`${cardPart} cards`);
+    if (merPart) flatBits.push(`${merPart} meridians`);
+    if (gemPart) flatBits.push(`${gemPart} gems`);
+    if (setPart) flatBits.push(`${setPart} set`);
+    const hasFlatExtra = cardPart || merPart || gemPart || setPart;
+    // Show the running subtotal only when there's more math to follow (buffs or
+    // ascension) so the reader can trace flat → buffed → final.
+    const showSubtotal = (buffedVal !== flatSubtotal) || asc > 0;
+    let flatLine = flatBits.join(' + ');
+    if (hasFlatExtra && showSubtotal) flatLine += ` = ${flatSubtotal}`;
+
+    // Modifier line: technique/pill % buffs then the ascension multiplier.
+    const modBits = [];
+    if (buffedVal !== flatSubtotal) modBits.push(`buffs → ${buffedVal}`);
+    if (asc > 0) modBits.push(`×${(1 + ASCENSION_STAT_PER_TIER * asc).toFixed(2)} ascension (tier ${asc}) → ${val}`);
+    const modLine = modBits.length ? `<div class="tt-line">${modBits.join(' · ')}</div>` : '';
+
     const cell = document.createElement('div');
     cell.className = 'stat-cell';
     cell.innerHTML = `<span class="stat-label">${STAT_LABELS[stat]}</span><span class="stat-value">${eff[effKey]}</span>`;
@@ -312,7 +369,7 @@ export function renderCharSheet(state, onAllocate) {
       cell,
       () =>
         `<div class="tt-name">${STAT_LABELS[stat]}: ${eff[effKey]}</div>
-         <div class="tt-line">${p.base[effKey]} base + ${trained} trained + ${gearPart} gear${cardBit}</div>`
+         <div class="tt-line">${flatLine}</div>${modLine}`
     );
     if (p.statPoints > 0) {
       const btn = document.createElement('button');

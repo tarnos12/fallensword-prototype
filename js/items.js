@@ -173,6 +173,28 @@ export const NAMED_ITEMS = {
     level: 9,
     bonuses: { damage: 40, attack: 28, defense: 14, armor: 8, hp: 44 },
   },
+  // Stormcrown saga (Core Formation endgame, GDD §5): the mid-chain reward,
+  // granted for facing the Stormscale Wyrm. Legendary tier, level scaled to
+  // the wyrm's band (22-24) — a proportional scale-up of ashenAegis's shape
+  // (defense/armor/hp-heavy robe with a modest damage line).
+  stormsovereignRaiment: {
+    slot: 'robe',
+    name: "Stormsovereign's Raiment",
+    rarity: 'legendary',
+    level: 21,
+    bonuses: { armor: 72, defense: 66, hp: 120, damage: 30 },
+  },
+  // Stormcrown saga capstone: the game's first Mythic item, granted for
+  // reaching Core Formation 7 (level 25). A proportional scale-up of
+  // heavenSeverer's offense-forward shape (damage/attack near the top of
+  // band, defense/armor kept modest).
+  stormreaver: {
+    slot: 'weapon',
+    name: 'Stormreaver, the Ninefold Thunder Blade',
+    rarity: 'mythic',
+    level: 25,
+    bonuses: { damage: 127, attack: 89, defense: 45, armor: 26, hp: 140 },
+  },
 };
 
 // Mint a named item by id (deterministic stats). Returns null for an unknown id.

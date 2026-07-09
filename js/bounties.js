@@ -191,17 +191,21 @@ function el(tag, cls, html) {
   return e;
 }
 
-function bountyRow({ title, sub, chip, btnLabel, btnCls, onClick, disabled, disabledTitle }) {
+function bountyRow({ title, sub, chip, chipTitle, btnLabel, btnCls, btnTitle, onClick, disabled, disabledTitle }) {
   const row = el('div', 'bounty-row');
   const info = el('div', 'bounty-info');
   info.appendChild(el('span', 'bounty-name', title));
   if (sub) info.appendChild(el('span', 'bounty-sub dim', sub));
   row.appendChild(info);
-  if (chip) row.appendChild(el('span', 'bounty-reward-chip', chip));
+  if (chip) {
+    const chipEl = el('span', 'bounty-reward-chip', chip);
+    if (chipTitle) chipEl.title = chipTitle;
+    row.appendChild(chipEl);
+  }
   if (btnLabel) {
     const btn = el('button', btnCls, btnLabel);
     if (disabled) { btn.disabled = true; if (disabledTitle) btn.title = disabledTitle; }
-    else btn.addEventListener('click', onClick);
+    else { if (btnTitle) btn.title = btnTitle; btn.addEventListener('click', onClick); }
     row.appendChild(btn);
   }
   return row;
@@ -217,6 +221,7 @@ export function renderBounties(state, now = Date.now()) {
   const offered = provider.offered(now);
 
   const activeHead = el('h3', null, `Active Hunts <span class="dim">— ${active.length}/${provider.activeCap}</span>`);
+  activeHead.title = `Bounties you've accepted (max ${provider.activeCap} at once). They never expire — keep hunting until you claim them.`;
   body.appendChild(activeHead);
   if (active.length === 0) {
     body.appendChild(el('p', 'empty-note', 'No hunts accepted. Take one from the board below.'));
@@ -226,16 +231,19 @@ export function renderBounties(state, now = Date.now()) {
         title: b.name,
         sub: `Slain ${b.progress}/${b.target}`,
         chip: `+${b.reward.stones} ◆ · +${b.reward.xp} XP`,
+        chipTitle: `Claiming pays ${b.reward.stones} spirit stones ◆ and ${b.reward.xp} XP.`,
         btnLabel: b.complete ? 'Claim' : `${b.progress}/${b.target}`,
         btnCls: b.complete ? 'claim-btn' : 'bounty-progress-btn',
+        btnTitle: b.complete ? `Claim your reward: ${b.reward.stones} spirit stones ◆ and ${b.reward.xp} XP.` : '',
         disabled: !b.complete,
-        disabledTitle: b.complete ? '' : 'Keep hunting to complete this bounty.',
+        disabledTitle: b.complete ? '' : `Slay ${b.target - b.progress} more ${b.name} to complete this bounty.`,
         onClick: () => { actions.claim(b.id); },
       }));
     }
   }
 
   const offerHead = el('h3', null, 'Bounty Board');
+  offerHead.title = 'Offered bounties rotate roughly every 15 minutes. Accept one to start tracking it.';
   body.appendChild(offerHead);
   const full = active.length >= provider.activeCap;
   if (offered.length === 0) {
@@ -247,10 +255,12 @@ export function renderBounties(state, now = Date.now()) {
       title: `${o.name} <span class="dim">Lv ${o.level}</span>`,
       sub: `Slay ${o.target}`,
       chip: `+${o.reward.stones} ◆ · +${o.reward.xp} XP`,
+      chipTitle: `Completing this hunt pays ${o.reward.stones} spirit stones ◆ and ${o.reward.xp} XP.`,
       btnLabel: 'Accept',
       btnCls: 'accept-btn',
+      btnTitle: `Accept this bounty — slay ${o.target} ${o.name} for ${o.reward.stones} spirit stones ◆ and ${o.reward.xp} XP.`,
       disabled: blocked,
-      disabledTitle: full ? 'You are tracking the maximum number of bounties.' : 'You already have an active bounty for this beast.',
+      disabledTitle: full ? `You are tracking the maximum of ${provider.activeCap} bounties.` : 'You already have an active bounty for this beast.',
       onClick: () => { actions.accept(o.id); },
     }));
   }

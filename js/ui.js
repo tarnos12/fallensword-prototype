@@ -271,6 +271,7 @@ function openMenu(e, entries) {
     btn.textContent = entry.label;
     if (entry.danger) btn.classList.add('danger-btn');
     if (entry.disabled) btn.disabled = true;
+    if (entry.title) btn.title = entry.title;
     btn.addEventListener('click', () => {
       hideMenu();
       entry.onClick();
@@ -410,6 +411,7 @@ function salvageEntry(item, onSalvage) {
   const label = y ? `Salvage → ${y.qty} ${materialName(y.materialId)}` : 'Salvage';
   return {
     label,
+    title: y ? `Break this item down into ${y.qty} ${materialName(y.materialId)} — permanent, used to mend gear at the ♻ Salvage Workbench.` : 'Break this item down into spirit essence — permanent.',
     onClick: () => {
       if (!onSalvage || !y) return;
       if (confirm(`Salvage ${item.name} into ${y.qty} ${materialName(y.materialId)}? This is permanent.`)) onSalvage(item.id);
@@ -451,10 +453,11 @@ export function renderGear(state, { onEquip, onUnequip, onSell, onDestroy, onSal
           onClick: () => {},
           onMenu: (e) =>
             openMenu(e, [
-              { label: `Sell for ${sellValue(item)} ◆`, disabled: !atGate, onClick: () => onSell(item.id) },
+              { label: `Sell for ${sellValue(item)} ◆`, title: atGate ? `Sell this gem to the Sect Gate for ${sellValue(item)} spirit stones ◆.` : 'Selling is only available at the Sect Gate.', disabled: !atGate, onClick: () => onSell(item.id) },
               salvageEntry(item, onSalvage),
               {
                 label: 'Destroy',
+                title: 'Permanently delete this gem — no reward.',
                 danger: true,
                 onClick: () => {
                   if (confirm(`Destroy ${item.name}? This is permanent.`)) onDestroy(item.id);
@@ -471,15 +474,17 @@ export function renderGear(state, { onEquip, onUnequip, onSell, onDestroy, onSal
         onClick: () => onEquip(item.id),
         onMenu: (e) =>
           openMenu(e, [
-            { label: 'Equip', onClick: () => onEquip(item.id) },
+            { label: 'Equip', title: `Equip this ${item.slot} into your gear.`, onClick: () => onEquip(item.id) },
             {
               label: `Sell for ${sellValue(item)} ◆`,
+              title: atGate ? `Sell this item to the Sect Gate for ${sellValue(item)} spirit stones ◆.` : 'Selling is only available at the Sect Gate.',
               disabled: !atGate,
               onClick: () => onSell(item.id),
             },
             salvageEntry(item, onSalvage),
             {
               label: 'Destroy',
+              title: 'Permanently delete this item — no reward.',
               danger: true,
               onClick: () => {
                 if (confirm(`Destroy ${item.name}? This is permanent.`)) onDestroy(item.id);
@@ -527,6 +532,7 @@ export function renderQuests(state, onClaim) {
     btn.type = 'button';
     btn.className = 'claim-btn';
     btn.textContent = 'Claim reward';
+    btn.title = `Claim: ${rewardBits.join(', ')}.`;
     btn.addEventListener('click', onClaim);
     box.appendChild(btn);
   }
@@ -555,6 +561,7 @@ export function renderActiveBuffs(state, now = Date.now()) {
     const secs = Math.max(0, Math.ceil((b.expiresAt - now) / 1000));
     const row = document.createElement('div');
     row.className = 'buff-row';
+    row.title = `${t.name} — ${effectText(t.effect)}, fades in ${secs}s.`;
     row.innerHTML = `<span class="buff-name cat-${t.category.toLowerCase()}">${t.name}</span>
       <span class="buff-eff dim">${effectText(t.effect)}</span>
       <span class="buff-time">${secs}s</span>`;
@@ -570,6 +577,7 @@ export function renderTechniques(state, { onLearn, onCast }) {
   const head = document.createElement('p');
   head.className = 'empty-note';
   head.textContent = `Technique points: ${p.skillPoints}. Learn once, then channel (costs Qi) for a timed buff.`;
+  head.title = 'Technique points come from breakthroughs and are spent once to learn a technique; channelling it afterward costs Qi, not points.';
   list.appendChild(head);
 
   for (const cat of CATEGORIES) {
@@ -589,6 +597,7 @@ export function renderTechniques(state, { onLearn, onCast }) {
       info.innerHTML = `<span class="tech-name">${t.name}</span>
         <span class="tech-desc dim">${t.desc}</span>
         <span class="tech-meta dim">Qi ${t.qiCost} · ${Math.round(t.duration / 1000)}s · needs stage ${t.minStage}${t.prereqs.length ? ` · after ${t.prereqs.map((pr) => getTech(pr).name).join(', ')}` : ''}</span>`;
+      info.title = `${t.name} — ${t.desc} Once learned, channelling costs ${t.qiCost} Qi for a ${Math.round(t.duration / 1000)}s buff.`;
       row.appendChild(info);
 
       const btn = document.createElement('button');
@@ -597,14 +606,14 @@ export function renderTechniques(state, { onLearn, onCast }) {
         const chk = canLearn(p, t.id);
         btn.textContent = `Learn (${t.cost}✦)`;
         btn.disabled = !chk.ok;
-        if (!chk.ok && chk.reason) btn.title = chk.reason;
+        btn.title = !chk.ok && chk.reason ? chk.reason : `Spend ${t.cost} technique point${t.cost === 1 ? '' : 's'} to learn ${t.name} permanently — channelling it later costs Qi, not points.`;
         btn.addEventListener('click', () => onLearn(t.id));
       } else {
         const chk = canCast(p, state.qi, t.id);
         btn.textContent = 'Channel';
         btn.className = 'cast-btn';
         btn.disabled = !chk.ok;
-        if (!chk.ok && chk.reason) btn.title = chk.reason;
+        btn.title = !chk.ok && chk.reason ? chk.reason : `Spend ${t.qiCost} Qi to activate ${t.name} — ${effectText(t.effect)} for ${Math.round(t.duration / 1000)}s.`;
         btn.addEventListener('click', () => onCast(t.id));
       }
       row.appendChild(btn);
@@ -807,7 +816,7 @@ function codexEntry(state, typeId) {
   const bandLabel = t.levels[0] === t.levels[t.levels.length - 1] ? `Lv ${t.levels[0]}` : `Lv ${t.levels[0]}–${t.levels[t.levels.length - 1]}`;
 
   let body = `<p class="codex-flavor">${t.flavor}</p>
-    <p class="codex-kills">Kills: <b>${kills}</b>${mastered ? ' <span class="mastery">✦ mastered</span>' : ''}</p>`;
+    <p class="codex-kills" title="${mastered ? 'Mastered — you have slain this beast at least 100 times.' : `Slay ${CODEX_CARD_AT - kills} more for the mastery mark.`}">Kills: <b>${kills}</b>${mastered ? ' <span class="mastery">✦ mastered</span>' : ''}</p>`;
 
   // 10 kills: full combat stats (GDD §7.1 disclosure thresholds).
   if (kills >= CODEX_STATS_AT) {
@@ -815,20 +824,20 @@ function codexEntry(state, typeId) {
     body += `<p class="codex-line">ATK ${s.attack} · DEF ${s.defense} · DMG ${s.damage} · ARM ${s.armor} · HP ${s.maxHp} <span class="dim">(at ${bandLabel === `Lv ${t.levels[0]}` ? bandLabel : `Lv ${t.levels[0]}`})</span></p>
       <p class="codex-line dim">Rewards ~${s.xp} XP, ~${s.stones} spirit stones</p>`;
   } else {
-    body += `<p class="codex-line locked-line">Combat stats revealed at ${CODEX_STATS_AT} kills.</p>`;
+    body += `<p class="codex-line locked-line" title="Slay ${CODEX_STATS_AT - kills} more of this beast to reveal its combat stats.">Combat stats revealed at ${CODEX_STATS_AT} kills.</p>`;
   }
 
   // 50 kills: drop table.
   if (kills >= CODEX_DROPS_AT) {
     body += `<p class="codex-line">Drops: artifacts up to <span class="rarity-rare">Rare</span> · ~${Math.round(DROP_CHANCE * 100)}% per kill</p>`;
   } else {
-    body += `<p class="codex-line locked-line">Drop table revealed at ${CODEX_DROPS_AT} kills.</p>`;
+    body += `<p class="codex-line locked-line" title="Slay ${CODEX_DROPS_AT - kills} more of this beast to reveal its drop table.">Drop table revealed at ${CODEX_DROPS_AT} kills.</p>`;
   }
 
   // 100 kills: Spirit Card drop chance + mastery mark.
   const cardChanceLine = kills >= CODEX_CARD_AT
     ? `<p class="codex-line">Spirit Card: <b>${(card.dropChance * 100).toFixed(1)}%</b> per kill · ${cardBonusText(card, 1)}/level</p>`
-    : `<p class="codex-line locked-line">Spirit Card drop chance revealed at ${CODEX_CARD_AT} kills.</p>`;
+    : `<p class="codex-line locked-line" title="Slay ${CODEX_CARD_AT - kills} more of this beast to reveal its Spirit Card drop chance.">Spirit Card drop chance revealed at ${CODEX_CARD_AT} kills.</p>`;
 
   const cardStatusLine = cardLevel > 0
     ? `<p class="codex-line card-owned">Card held: Lv ${cardLevel}/${card.maxLevel} — <b>${cardBonusText(card, cardLevel)}</b></p>`
@@ -1010,7 +1019,9 @@ function renderBuyTab(body) {
     buy.textContent = 'Buy';
     if (state.player.spiritStones < l.price) {
       buy.disabled = true;
-      buy.title = 'Not enough spirit stones';
+      buy.title = `Not enough spirit stones — this costs ${l.price} ◆, you have ${state.player.spiritStones} ◆.`;
+    } else {
+      buy.title = `Buy Now for ${l.price} spirit stones ◆.`;
     }
     buy.addEventListener('click', () => { hideTip(); actions.buy(l.id); afterPavAction(); });
     row.append(pavItemIcon(l.item), info, buy);
@@ -1042,10 +1053,12 @@ function renderSellTab(body) {
     price.className = 'pav-price-input';
     price.min = '1';
     price.value = String(fair);
+    price.title = `Asking price in spirit stones ◆ — fair value is ≈${fair} ◆. Price low to sell fast, high and it may sit unsold.`;
     const listBtn = document.createElement('button');
     listBtn.type = 'button';
     listBtn.className = 'pav-list-btn';
     listBtn.textContent = 'List';
+    listBtn.title = 'List this item at the Pavilion — it is held in escrow until it sells or you reclaim it; proceeds land in your Mailbox.';
     listBtn.addEventListener('click', () => {
       const p = parseInt(price.value, 10);
       actions.list(item.id, p);
@@ -1078,6 +1091,7 @@ function renderMineTab(body) {
     const cancel = document.createElement('button');
     cancel.type = 'button';
     cancel.textContent = 'Reclaim';
+    cancel.title = 'Cancel this listing and take the item back — no sale happens.';
     cancel.addEventListener('click', () => { actions.cancel(l.id); afterPavAction(); });
     row.append(pavItemIcon(l.item), info, cancel);
     list.appendChild(row);
@@ -1093,6 +1107,7 @@ function renderMailboxTab(body) {
   collectAll.className = 'claim-btn';
   collectAll.textContent = 'Collect all';
   collectAll.disabled = mail.length === 0;
+  collectAll.title = mail.length === 0 ? 'Your mailbox is empty.' : `Collect all ${mail.length} item${mail.length === 1 ? '' : 's'} and stones from your mailbox into your pack.`;
   collectAll.addEventListener('click', () => { actions.collect(); afterPavAction(); });
   body.appendChild(collectAll);
 
@@ -1203,6 +1218,7 @@ function discipleRow(view, { actionLabel, onAction, actionCls = '' }) {
   info.innerHTML = `<div class="sect-name">${view.persona.name} <span class="dim">[${view.persona.guildTag}] · Lv ${view.persona.level}</span></div>
     <div class="sect-role cat-${spec.id}">${spec.icon} ${spec.name} — <span class="sect-buff">${view.buffText}</span></div>
     <div class="sect-desc dim">${spec.desc}</div>`;
+  info.title = `${spec.name} disciple — a permanent, always-on buff while hired: ${view.buffText}.`;
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = actionCls;
@@ -1210,6 +1226,10 @@ function discipleRow(view, { actionLabel, onAction, actionCls = '' }) {
   if (view.disabled) {
     btn.disabled = true;
     if (view.disabledReason) btn.title = view.disabledReason;
+  } else {
+    btn.title = actionLabel.startsWith('Recruit')
+      ? `Hire ${view.persona.name} for spirit stones ◆ — grants ${view.buffText}.`
+      : `Dismiss ${view.persona.name} from your sect — free, but you lose their ${view.buffText} buff.`;
   }
   btn.addEventListener('click', () => onAction(view.personaId));
   row.append(info, btn);
@@ -1222,12 +1242,14 @@ export function renderSect(state) {
   const buffs = guildBuffSummary(state);
 
   $('sect-count').textContent = `— ${members.length}/${SECT_CAPACITY} disciples`;
+  $('sect-count').title = `Your sect holds ${members.length} of a maximum ${SECT_CAPACITY} disciples.`;
 
   const summary = $('sect-summary');
   const chips = guildBuffSummaryChips(buffs);
   summary.innerHTML = chips.length
     ? `<span class="codex-summary-label">Active sect buffs:</span> ${chips.map((c) => `<span class="card-bonus-chip">${c}</span>`).join(' ')}`
     : '<span class="empty-note">No disciples yet. Recruit fellow cultivators below for always-on buffs.</span>';
+  summary.title = 'Combined passive buffs from every hired disciple — always on while they remain in your sect.';
 
   const body = $('sect-body');
   body.innerHTML = '';

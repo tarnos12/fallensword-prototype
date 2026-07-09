@@ -206,11 +206,11 @@ function socketRow(item, index) {
     btn.type = 'button';
     btn.className = 'sk-btn';
     btn.textContent = 'Remove';
-    btn.title = 'Pop this gem back into your pack';
+    btn.title = `Pop ${gem.name} back into your pack (needs a free pack slot).`;
     btn.addEventListener('click', () => { actions.unslot(item.id, index); rerender(); });
     row.appendChild(btn);
   } else {
-    row.innerHTML = `<span class="sk-empty dim">◇ empty socket</span>`;
+    row.innerHTML = `<span class="sk-empty dim" title="Empty socket — slot a gem below for a permanent flat stat bonus.">◇ empty socket</span>`;
     const gems = gemsInPack(p);
     if (gems.length === 0) {
       const note = document.createElement('span');
@@ -242,6 +242,7 @@ export function renderSockets(state) {
   const gems = gemsInPack(p);
 
   $('sockets-free').textContent = `— ${gems.length} loose gem${gems.length === 1 ? '' : 's'}`;
+  $('sockets-free').title = `${gems.length} unslotted gem${gems.length === 1 ? '' : 's'} in your pack, free to slot into an empty socket below.`;
 
   const body = $('sockets-body');
   body.innerHTML = '';
@@ -265,6 +266,7 @@ export function renderSockets(state) {
     const head = document.createElement('div');
     head.className = `sk-item-head rarity-${item.rarity}`;
     head.textContent = `${item.name} · ${item.sockets.filter(Boolean).length}/${item.sockets.length} sockets`;
+    head.title = `${item.name} — ${item.sockets.filter(Boolean).length} of ${item.sockets.length} sockets filled. Gems add flat stats; they stop working while this item is broken.`;
     card.appendChild(head);
     item.sockets.forEach((_, i) => card.appendChild(socketRow(item, i)));
     body.appendChild(card);

@@ -98,8 +98,8 @@ export function statsSummary(state) {
       rows: [
         ['Realm', `${realm} ${sub}`],
         ['Stage', `${p.level} / ${MAX_STAGE}${p.level >= MAX_STAGE ? ' (peak)' : ''}`],
-        ['Current XP', `${p.xp}`],
-        ['Unspent stat points', `${p.statPoints || 0}`],
+        ['Current XP', `${p.xp}`, 'Experience earned toward your next breakthrough.'],
+        ['Unspent stat points', `${p.statPoints || 0}`, 'Points earned from breakthroughs, ready to allocate on your character sheet.'],
         ['Techniques learned', `${(p.learnedTechniques ?? []).length}`],
       ],
     },
@@ -107,46 +107,46 @@ export function statsSummary(state) {
       title: 'Battle',
       rows: [
         ['Beasts slain', `${totalKills(p)}`],
-        ['Species faced', `${speciesFaced(p)} / ${TOTAL_CREATURES}`],
+        ['Species faced', `${speciesFaced(p)} / ${TOTAL_CREATURES}`, 'Distinct creature types you have encountered, out of every type in the world.'],
         ['Fights won', `${won}`],
         ['Fights lost', `${lost}`],
-        ['Draws (unresolved)', `${drawn}`],
-        ['Win rate', resolved > 0 ? `${pct(won, resolved)}%` : '—'],
+        ['Draws (unresolved)', `${drawn}`, 'Fights where neither side fell before the combat ended.'],
+        ['Win rate', resolved > 0 ? `${pct(won, resolved)}%` : '—', 'Wins as a percentage of fights that ended in a win or a loss (draws excluded).'],
         ['Artifacts looted', `${st.itemsLooted || 0}`],
-        ['Active hunt bounties', `${activeBounties(p)}`],
+        ['Active hunt bounties', `${activeBounties(p)}`, 'Bounties currently accepted from the 🏹 Hunt Bounties board.'],
       ],
     },
     {
       title: 'Collection',
       rows: [
-        ['Beast Codex', `${speciesFaced(p)} / ${TOTAL_CREATURES} (${pct(speciesFaced(p), TOTAL_CREATURES)}%)`],
-        ['Spirit Cards', `${ownedCardCount(p)} / ${TOTAL_CARDS} (${pct(ownedCardCount(p), TOTAL_CARDS)}%)`],
-        ['Achievements', `${ach.earned} / ${ach.total} (${pct(ach.earned, ach.total)}%)`],
+        ['Beast Codex', `${speciesFaced(p)} / ${TOTAL_CREATURES} (${pct(speciesFaced(p), TOTAL_CREATURES)}%)`, 'Creature species logged in your Beast Codex.'],
+        ['Spirit Cards', `${ownedCardCount(p)} / ${TOTAL_CARDS} (${pct(ownedCardCount(p), TOTAL_CARDS)}%)`, 'Unique Spirit Cards you own, out of the full set.'],
+        ['Achievements', `${ach.earned} / ${ach.total} (${pct(ach.earned, ach.total)}%)`, 'Milestones unlocked out of the full 🏆 Achievements list.'],
       ],
     },
     {
       title: 'Fortune',
       rows: [
-        ['Spirit stones on hand', `${p.spiritStones || 0}`],
-        ['Spirit stones won in battle', `${st.stonesWon || 0}`],
-        ['Sect disciples', `${(p.guild?.members ?? []).length}`],
-        ['Disciples on missions', `${activeSectMissions(p)}`],
-        ['Alchemy pills in pouch', `${pillsHeld(p)}`],
+        ['Spirit stones on hand', `${p.spiritStones || 0}`, 'Your current spirit stone ◆ balance.'],
+        ['Spirit stones won in battle', `${st.stonesWon || 0}`, 'Lifetime spirit stones ◆ earned from combat victories.'],
+        ['Sect disciples', `${(p.guild?.members ?? []).length}`, 'Disciples currently hired into your Sect.'],
+        ['Disciples on missions', `${activeSectMissions(p)}`, 'Disciples out on a timed 🗺 Sect Dispatch mission right now.'],
+        ['Alchemy pills in pouch', `${pillsHeld(p)}`, 'Brewed pills waiting to be quaffed from the 🜁 Alchemy modal.'],
       ],
     },
     {
       title: 'Ascension & Mastery',
       rows: [
-        ['Ascension tier', asc > 0 ? `${asc} (+${Math.round(asc * ASCENSION_STAT_PER_TIER * 100)}% stats)` : '0'],
-        ['Meridians opened', `${meridiansOpened(p)} / ${MERIDIAN_LIST.length}`],
-        ['Meridian ranks channelled', `${meridianRankTotal(p)}`],
-        ['Gems socketed', `${gemsSocketed(p)}`],
-        ['Gear set bonus', setActive(p) ? 'Active' : 'Inactive'],
+        ['Ascension tier', asc > 0 ? `${asc} (+${Math.round(asc * ASCENSION_STAT_PER_TIER * 100)}% stats)` : '0', 'Prestige resets performed; each grants a permanent stat bonus to every future run.'],
+        ['Meridians opened', `${meridiansOpened(p)} / ${MERIDIAN_LIST.length}`, 'Meridian nodes with at least one rank spent, out of all eight.'],
+        ['Meridian ranks channelled', `${meridianRankTotal(p)}`, 'Total ranks spent across all meridian nodes.'],
+        ['Gems socketed', `${gemsSocketed(p)}`, 'Gems currently slotted into your equipped gear.'],
+        ['Gear set bonus', setActive(p) ? 'Active' : 'Inactive', 'Whether a complete matched gear set is currently worn for its bonus.'],
       ],
     },
     {
       title: 'Journey',
-      rows: [['Time cultivated (active)', formatDuration(st.msPlayed)]],
+      rows: [['Time cultivated (active)', formatDuration(st.msPlayed), 'Time actively spent playing (idle/offline gaps are not counted).']],
     },
   ];
 }
@@ -212,9 +212,10 @@ export function renderStats(state) {
     const h = document.createElement('h3');
     h.textContent = section.title;
     sec.append(h);
-    for (const [label, value] of section.rows) {
+    for (const [label, value, hint] of section.rows) {
       const row = document.createElement('div');
       row.className = 'stats-row';
+      if (hint) row.title = hint;
       const l = document.createElement('span');
       l.className = 'stats-label';
       l.textContent = label;

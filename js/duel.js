@@ -49,7 +49,7 @@ let currentPersonaId = null;
 function statSheet(actor, extraLabel) {
   const s = actor.stats;
   return `
-    <div class="duel-fighter">
+    <div class="duel-fighter" title="${actor.name} — Attack ${s.attack}, Defense ${s.defense}, Damage ${s.damage}, Armor ${s.armor}, HP ${actor.maxHp}.">
       <div class="duel-fighter-name">${actor.name}<span class="dim"> · Lv ${actor.level}</span></div>
       ${extraLabel ? `<div class="duel-archetype dim">${extraLabel}</div>` : '<div class="duel-archetype dim">You</div>'}
       <div class="duel-stats">
@@ -86,11 +86,11 @@ function renderResult(spar) {
       ${statSheet(spar.rival, `${spar.archetype.label} rival`)}
     </div>
     <div class="banner ${bannerCls}">${bannerTxt}</div>
-    <div class="duel-record dim">Spar record: <strong>${rec.wins}</strong>W · <strong>${rec.losses}</strong>L · <strong>${rec.draws}</strong>D</div>
-    <details class="duel-details"><summary>Turn-by-turn</summary><div class="duel-turns">${turnLog(spar.result)}</div></details>
+    <div class="duel-record dim" title="Your lifetime sparring tally — wins, losses, and draws against rivals.">Spar record: <strong>${rec.wins}</strong>W · <strong>${rec.losses}</strong>L · <strong>${rec.draws}</strong>D</div>
+    <details class="duel-details" title="Round-by-round breakdown of this spar."><summary>Turn-by-turn</summary><div class="duel-turns">${turnLog(spar.result)}</div></details>
     <div class="duel-actions">
-      <button id="btn-spar-again" type="button" class="accept-btn">Spar again</button>
-      <button id="btn-duel-close2" type="button">Close</button>
+      <button id="btn-spar-again" type="button" class="accept-btn" title="Spar this rival again — a friendly, stakes-free duel with no gear damage or death penalty.">Spar again</button>
+      <button id="btn-duel-close2" type="button" title="Close">Close</button>
     </div>`;
   $('btn-spar-again').addEventListener('click', () => openDuel(gameState, currentPersonaId));
   $('btn-duel-close2').addEventListener('click', () => $('duel-overlay').classList.add('hidden'));

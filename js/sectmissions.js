@@ -162,10 +162,13 @@ export function renderSectMissions(state, now = Date.now()) {
     for (const t of tray) {
       const row = el('div', 'sm-row');
       row.appendChild(el('div', 'sm-info', `<span class="sm-name">${t.icon} ${t.discipleName}</span><span class="sm-sub dim">returned from ${t.typeName}</span>`));
-      row.appendChild(el('span', 'sm-reward', `+${t.reward.stones} ◆ · +${t.reward.xp} XP`));
+      const rewardEl = el('span', 'sm-reward', `+${t.reward.stones} ◆ · +${t.reward.xp} XP`);
+      rewardEl.title = `Waiting to be collected: ${t.reward.stones} spirit stones ◆ and ${t.reward.xp} XP.`;
+      row.appendChild(rewardEl);
       body.appendChild(row);
     }
     const collectBtn = el('button', 'claim-btn sm-collect', `Collect all (${tray.length})`);
+    collectBtn.title = `Collect ${tray.length} returned disciple${tray.length === 1 ? '' : 's'}' rewards — spirit stones ◆ and XP.`;
     collectBtn.addEventListener('click', () => actions.collect());
     body.appendChild(collectBtn);
   }
@@ -185,7 +188,11 @@ export function renderSectMissions(state, now = Date.now()) {
       const status = m.mission.done
         ? '<span class="sm-ready">Returning…</span>'
         : `<span class="sm-timer">${m.mission.icon} ${m.mission.typeName} · ${fmtRemaining(m.mission.remainingMs)}</span>`;
-      row.appendChild(el('div', 'sm-status', status));
+      const statusEl = el('div', 'sm-status', status);
+      statusEl.title = m.mission.done
+        ? `${m.label} has finished — collect the reward above.`
+        : `${m.label} is on ${m.mission.typeName}, back in ${fmtRemaining(m.mission.remainingMs)} (pays out even while you're away).`;
+      row.appendChild(statusEl);
     } else {
       const picker = el('div', 'sm-missions');
       for (const type of provider.missionTypes()) {

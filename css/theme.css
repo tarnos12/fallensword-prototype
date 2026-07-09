@@ -42,9 +42,7 @@
 :root[data-theme="light"] input,
 :root[data-theme="light"] textarea,
 :root[data-theme="light"] select,
-:root[data-theme="light"] .item-slot,
-:root[data-theme="light"] .dbg-select,
-:root[data-theme="light"] .dbg-num {
+:root[data-theme="light"] .item-slot {
   background: #e7e0cf;
 }
 

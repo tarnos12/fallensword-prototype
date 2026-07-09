@@ -6,8 +6,8 @@
 // and are rendered by `ui.js` via a technique lookup that would throw on a
 // non-technique entry. Rather than reach into that shared renderer (owned by the
 // UX sessions), pill combat-buffs live on their own `player.pillBuffs` list and
-// are applied at COMBAT time to the combat-actor snapshot (parallel to the debug
-// god-stat hook) — so they boost fights without touching `effectiveStats`,
+// are applied at COMBAT time to the combat-actor snapshot — so they boost
+// fights without touching `effectiveStats`,
 // `ui.js`, or `techniques.js`. The player sees them in a dedicated HUD bar owned
 // here. Everything is additive and stays inside this task's files.
 

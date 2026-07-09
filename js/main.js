@@ -91,7 +91,6 @@ import { initTabs, setActiveTab } from './tabs.js';
 import { initStats } from './stats.js';
 import { initTitles } from './titles.js';
 import { initEventBanner, renderEventBanner } from './events.js';
-import { initDebug } from './debug.js'; // TESTING ONLY (strip before demo)
 
 const state = createGame();
 let inCombat = false;
@@ -454,7 +453,6 @@ initReplay(state, { onReplay: (result) => runPlayback(result) });
 initStats(state); // 📊 Chronicle of Deeds (lifetime stats)
 initTitles(state); // 🏵 Cultivator Titles (read-only cosmetic)
 initEventBanner(); // world-events HUD strip under the header (task R)
-initDebug(state, renderAll); // TESTING ONLY (strip before demo)
 renderAll();
 initTutorial(); // first-run onboarding overlay (+ ❔ Help button); after renderAll so targets exist
 initSettings(); // ⚙ settings modal — after initTutorial so its "replay tutorial" can reach ❔ Help

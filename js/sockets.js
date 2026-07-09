@@ -60,7 +60,7 @@ export function socketCountFor(rarityKey) {
 // an extra roll). Kept modest: gems are a treat, and you need gear to socket.
 export const GEM_DROP_CHANCE = 0.18;
 
-// --- Gem generation (called by items.js rollDrop / debug tools) ----------
+// --- Gem generation (called by items.js rollDrop) ------------------------
 
 let gemCounter = 0;
 export function setGemCounter(n) { gemCounter = n; }

@@ -11,6 +11,7 @@
 
 import { generateItem, sellValue, INVENTORY_SIZE } from './items.js';
 import { personaById, personaForLevel, randomPersona } from './personas.js';
+import { awardMerit, spendMerit } from './merit.js';
 
 // --- Tuning. Prototype-fast so a demo session actually sees listings rotate and
 // player sales resolve; 1.0 lengthens these the way MAX_QI/QI_REGEN_MS will.
@@ -24,15 +25,47 @@ const PLAYER_SALE_MAX_MS = 6 * 60 * 1000; // slowest a (sellable) listing sells
 
 // NPC listings never exceed Rare — Epic+ stays hand-authored (GDD §6.1); the
 // Pavilion is a variance/convenience source, not a power spike past farming.
+// A small slice instead rolls Merit-priced and reaches a richer band (up to
+// Epic) — doc 20 §4.3, FS's "gold or FSP" auction pattern.
 const NPC_RARITY_WEIGHTS = [['common', 55], ['uncommon', 33], ['rare', 12]];
+const NPC_MERIT_LISTING_CHANCE = 0.08; // ~1 in 12 NPC listings prices in Merit instead of stones
+const NPC_MERIT_RARITY_WEIGHTS = [['uncommon', 40], ['rare', 40], ['epic', 20]];
+
+// Base concurrent player-listing cap — a generous default so normal selling is
+// unaffected; Hall of Merit's "Auction Stall Expansion" raises it (doc 20 §4.4).
+export const MAX_PLAYER_LISTINGS = 3;
+export function effectiveMaxPlayerListings(player) {
+  return MAX_PLAYER_LISTINGS + (player.meritShop?.purchases?.marketSlots ?? 0);
+}
 
 // AH value is a premium over the vendor sell floor — players pay more than a
-// vendor gives, and rarer gear commands a steeper multiple.
-const MARKET_PREMIUM = { common: 1.6, uncommon: 1.9, rare: 2.4, epic: 3.0, legendary: 3.6, mythic: 4.2 };
+// vendor gives, and rarer gear commands a steeper multiple. superElite/titan
+// entries are CombatWorld's new rarity tiers (doc 20 §7.3) — without these,
+// those listings would silently fall back to a generic 2x premium.
+const MARKET_PREMIUM = {
+  common: 1.6, uncommon: 1.9, rare: 2.4, epic: 3.0,
+  legendary: 3.6, superElite: 3.8, titan: 3.5, mythic: 4.2,
+};
 
-// The "fair value" a listing prices around before noise is applied.
-export function marketValue(item) {
-  return Math.max(1, Math.round(sellValue(item) * (MARKET_PREMIUM[item.rarity] ?? 2)));
+// 1 Merit is worth roughly this many stones of value — tunable like every
+// other economy constant (doc 20 §4.2).
+const MERIT_EXCHANGE_RATE = 40;
+
+// The "fair value" a listing prices around before noise is applied. Pass
+// currency: 'merit' to get the Merit-denominated price instead of stones.
+export function marketValue(item, currency = 'stones') {
+  const stoneValue = Math.max(1, Math.round(sellValue(item) * (MARKET_PREMIUM[item.rarity] ?? 2)));
+  return currency === 'merit' ? Math.max(1, Math.round(stoneValue / MERIT_EXCHANGE_RATE)) : stoneValue;
+}
+
+function rollWeighted(weights, rng) {
+  const total = weights.reduce((sum, [, w]) => sum + w, 0);
+  let roll = rng() * total;
+  for (const [key, w] of weights) {
+    roll -= w;
+    if (roll <= 0) return key;
+  }
+  return weights[weights.length - 1][0];
 }
 
 function nextSeq(market) {
@@ -52,33 +85,34 @@ function normalize(market) {
   m.mailbox ??= [];
   m.lastRefresh ??= 0;
   m.seq ??= 0;
+  // Old listings predate the dual-currency field (doc 20 §4.7) — default them
+  // to stones rather than leaving `currency` undefined at every read site.
+  for (const l of m.listings) l.currency ??= 'stones';
+  for (const l of m.playerListings) l.currency ??= 'stones';
   return m;
-}
-
-function rollNpcRarity(rng) {
-  let roll = rng() * 100;
-  for (const [key, weight] of NPC_RARITY_WEIGHTS) {
-    roll -= weight;
-    if (roll <= 0) return key;
-  }
-  return 'common';
 }
 
 function makeNpcListing(market, rng, now) {
   const slot = rng() < 0.5 ? 'weapon' : 'robe';
-  const rarity = rollNpcRarity(rng);
+  // A small slice of listings price in Merit instead of stones, drawing from a
+  // richer rarity band — a genuine premium lane, not just a bigger stones tag
+  // (doc 20 §4.3).
+  const isMerit = rng() < NPC_MERIT_LISTING_CHANCE;
+  const rarity = isMerit ? rollWeighted(NPC_MERIT_RARITY_WEIGHTS, rng) : rollWeighted(NPC_RARITY_WEIGHTS, rng);
   // Level drawn around a plausible seller; pick the seller to match afterward.
   const level = 1 + Math.floor(rng() * 14);
   const item = generateItem(slot, level, rarity, rng);
   const seller = personaForLevel(level, rng);
+  const currency = isMerit ? 'merit' : 'stones';
   // Deliberate spread (GDD §6.7.3): 0.6× (steal) to 1.5× (overpriced) of value.
   const noise = 0.6 + rng() * 0.9;
-  const price = Math.max(1, Math.round(marketValue(item) * noise));
+  const price = Math.max(1, Math.round(marketValue(item, currency) * noise));
   return {
     id: `lst-${nextSeq(market)}`,
     item,
     sellerPersonaId: seller.id,
     price,
+    currency,
     postedAt: now,
     expiresAt: now + LISTING_TTL_MS,
   };
@@ -118,7 +152,8 @@ function resolvePlayerListings(market, rng, now) {
       market.mailbox.push({
         id: `mail-${nextSeq(market)}`,
         kind: 'sale',
-        stones: pl.price,
+        stones: pl.price, // kept as the numeric amount field for back-compat readers
+        currency: pl.currency ?? 'stones', // doc 20 §4.5 — which wallet collectMailbox() credits
         itemName: pl.item.name,
         rarity: pl.item.rarity,
         buyerName: buyer?.name ?? 'a cultivator',
@@ -155,30 +190,44 @@ function buyNow(state, listingId, now) {
   if (idx === -1) return { ok: false, reason: 'That listing is no longer available.' };
   const listing = m.listings[idx];
   const p = state.player;
-  if (p.spiritStones < listing.price) return { ok: false, reason: 'Not enough spirit stones.' };
-  p.spiritStones -= listing.price;
+  const isMerit = listing.currency === 'merit';
+  const balance = isMerit ? (p.merit ?? 0) : p.spiritStones;
+  if (balance < listing.price) {
+    return { ok: false, reason: isMerit ? 'Not enough Merit.' : 'Not enough spirit stones.' };
+  }
+  if (isMerit) spendMerit(p, listing.price);
+  else p.spiritStones -= listing.price;
   m.listings.splice(idx, 1);
   // Instant delivery to the pack; if it is full, the item waits in the mailbox
   // (GDD §6.7.6 — completed purchases can land in the mailbox).
   if (p.inventory.length < INVENTORY_SIZE) {
     p.inventory.push(listing.item);
-    return { ok: true, item: listing.item, toMailbox: false, price: listing.price };
+    return { ok: true, item: listing.item, toMailbox: false, price: listing.price, currency: listing.currency };
   }
   m.mailbox.push({ id: `mail-${nextSeq(m)}`, kind: 'item', item: listing.item, at: now });
-  return { ok: true, item: listing.item, toMailbox: true, price: listing.price };
+  return { ok: true, item: listing.item, toMailbox: true, price: listing.price, currency: listing.currency };
 }
 
-function listItem(state, itemId, price, now) {
+// currency kept as the LAST-but-one param, `now` last (doc 20 §4.6 flag): the
+// only other caller today, game.js's `marketList(state, itemId, price)`, never
+// passes `now` explicitly, so inserting `currency` before it is safe in
+// practice — but re-check every `listItem(`/`marketList(` call site before
+// wiring a UI currency selector in, exactly as the doc warns.
+function listItem(state, itemId, price, currency = 'stones', now = Date.now()) {
   const p = state.player;
+  const cur = currency === 'merit' ? 'merit' : 'stones';
   const idx = p.inventory.findIndex((i) => i.id === itemId);
   if (idx === -1) return { ok: false, reason: 'Item not found in pack.' };
   if (!Number.isFinite(price) || price <= 0) return { ok: false, reason: 'Enter a valid asking price.' };
+  if (state.market.playerListings.length >= effectiveMaxPlayerListings(p)) {
+    return { ok: false, reason: 'You have too many active listings — collect or wait for one to resolve.' };
+  }
   const item = p.inventory[idx];
   p.inventory.splice(idx, 1); // item is held in escrow while listed
 
   // Competitiveness: how the ask compares to fair value. Undercutting sells
   // faster and more reliably; a greedy ask may never move (GDD §6.7.5).
-  const value = marketValue(item);
+  const value = marketValue(item, cur);
   const ratio = value / price; // >1 = cheap (below value), <1 = pricey
   const chance = Math.max(0.05, Math.min(0.95, 0.5 * ratio + 0.15));
   const willSell = state.worldRng() < chance;
@@ -189,6 +238,7 @@ function listItem(state, itemId, price, now) {
     id: `plst-${nextSeq(state.market)}`,
     item,
     price,
+    currency: cur,
     value,
     postedAt: now,
     expiresAt: now + PLAYER_LISTING_TTL_MS,
@@ -218,12 +268,21 @@ function collectMailbox(state) {
   const m = state.market;
   const p = state.player;
   let stones = 0;
+  let merit = 0;
   const items = [];
   const remaining = [];
   for (const entry of m.mailbox) {
     if (entry.kind === 'sale') {
-      stones += entry.stones;
-      p.spiritStones += entry.stones;
+      // doc 20 §4.5 — a Merit-priced player listing credits player.merit
+      // instead of spiritStones; the numeric amount still lives on
+      // `entry.stones` for back-compat with existing mailbox readers.
+      if (entry.currency === 'merit') {
+        merit += entry.stones;
+        awardMerit(p, entry.stones);
+      } else {
+        stones += entry.stones;
+        p.spiritStones += entry.stones;
+      }
       continue;
     }
     // 'item' (purchase overflow) or 'return' (unsold listing)
@@ -235,7 +294,7 @@ function collectMailbox(state) {
     }
   }
   m.mailbox = remaining;
-  return { stones, items, blocked: remaining.length };
+  return { stones, merit, items, blocked: remaining.length };
 }
 
 function tick(state, now) {
@@ -251,8 +310,8 @@ export function createMarketProvider(state) {
   state.market = normalize(state.market);
   return {
     getListings: (filters) => browse(state.market, filters),
-    buyNow: (listingId, now = Date.now()) => buyNow(state, listingId, now),
-    listItem: (itemId, price, now = Date.now()) => listItem(state, itemId, price, now),
+    buyNow: (listingId, now = Date.now()) => buyNow(state, listingId, now), // unchanged signature
+    listItem: (itemId, price, currency = 'stones', now = Date.now()) => listItem(state, itemId, price, currency, now),
     cancelListing: (listingId) => cancelListing(state, listingId),
     getPlayerListings: () => state.market.playerListings,
     getMailbox: () => state.market.mailbox,

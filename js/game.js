@@ -2,7 +2,7 @@
 // and persistence. Combat math itself lives in combat.js and is never
 // duplicated here.
 
-import { createPlayer } from './actors.js';
+import { createPlayer, spawnCreature } from './actors.js';
 import { resolveCombat, MAX_TURNS } from './combat.js';
 import {
   ZONES,
@@ -12,6 +12,15 @@ import {
   removeMonster,
   portalAt,
 } from './map.js';
+// Wave 2 rare-spawn / Titan economy (doc 40 §2-§5).
+import { LEGENDARY_DROP_CHANCE, SUPER_ELITE_DROP_CHANCE, LEGENDARY_STAT_MULT, SUPER_ELITE_STAT_MULT } from './rarespawns.js';
+import { spawnTitanActor, placeTitanRandomly, relocateTitan } from './titans.js';
+import { isForceDropsOn } from './debug.js';
+// Premium currency (Merit) award hook. Build-Economy owns js/merit.js; signature
+// awardMerit(player, amount) mutates player.merit. Written against that contract
+// now; the file lands at integration. Amounts per doc 40 §3.3 / Economy's earn
+// table: Legendary +2, Super-Elite +6, Titan +20 (boss clears live in boss.js).
+import { awardMerit } from './merit.js';
 import { mulberry32, randomSeed } from './rng.js';
 import {
   playerCombatActor,
@@ -485,6 +494,13 @@ export function attack(state, monsterId) {
 
   const actor = playerCombatActor(state.player);
   applyPillBuffs(actor, state.player); // Alchemy (task C): active timed pill combat buffs
+
+  // TITAN PURITY (doc 40 §3.1, critique §3a): resolveCombat is called exactly
+  // once, exactly like any other fight — combat.js is never told a Titan exists.
+  // The only wrinkle is which `hp` we hand it: a Titan's stats are fixed, but its
+  // HP is the PERSISTED world pool, synced into the transient field right before
+  // the call, then read back off the existing return shape right after.
+  if (monster.isTitan) monster.hp = monster.titanHp;
   const result = resolveCombat(actor, monster, randomSeed());
   state.qi -= result.staminaSpent;
 
@@ -493,9 +509,19 @@ export function attack(state, monsterId) {
   ensureSeen(state, monster.typeId); // facing a beast enters it in the codex
   Quests.onFace(state.quests, monster.typeId);
 
-  if (result.outcome === 'win') {
+  if (monster.isTitan) {
+    // World HP now reflects this encounter's chip damage. The attacker always
+    // swings first each round in combat.js, so the Titan is chipped even in a
+    // fight the player loses/draws — matching the ~10-encounter depletion model.
+    const last = result.turns[result.turns.length - 1];
+    monster.titanHp = last ? last.defenderHpAfter : monster.titanHp;
+  }
+  const titanDepleted = monster.isTitan && monster.titanHp <= 0;
+
+  if (result.outcome === 'win' || titanDepleted) {
     // Sect disciples buff battle rewards (GDD §4.3): XP and spirit-stone gain.
     const gb = guildBuffs(p);
+    const force = isForceDropsOn(); // debug toggle (§4): forces Legendary/SE/normal drops to 100%
     let xp, stones, drop, cardId;
     if (monster.isBoss) {
       // The Ancient Terror (GDD §9.1): hand-authored calamity rewards plus the
@@ -506,10 +532,30 @@ export function attack(state, monsterId) {
       stones = Math.round(br.stones * (1 + gb.stonePct));
       drop = br.drop;
       cardId = br.cardId;
+    } else if (monster.isTitan) {
+      // Titan depleted after the ~10-encounter chase: fixed authored reward paid
+      // ONCE, a guaranteed (100%) Titan-item drop, and +20 Merit (fires exactly
+      // here, once). The depletion sequence IS the gate — no extra roll, and the
+      // force-drops toggle is a no-op for Titans.
+      xp = Math.round(monster.xpReward * (1 + gb.xpPct));
+      stones = Math.round(monster.stoneReward * (1 + gb.stonePct));
+      drop = generateItem(state.worldRng() < 0.5 ? 'weapon' : 'robe', monster.dropLevel, 'titan', state.worldRng);
+      cardId = null; // Titans are a world-hunt encounter, not a bestiary/card creature
+      awardMerit(p, 20);
     } else {
       xp = Math.round(scaleXp(monster.xpReward, p.level, monster.level) * (1 + gb.xpPct));
       stones = Math.round(monster.stoneReward * (1 + gb.stonePct));
-      drop = rollDrop(monster.level, state.worldRng);
+      if (monster.isSuperElite) {
+        drop = (force || state.worldRng() < SUPER_ELITE_DROP_CHANCE)
+          ? generateItem(state.worldRng() < 0.5 ? 'weapon' : 'robe', monster.level, 'superElite', state.worldRng) : null;
+        awardMerit(p, 6);
+      } else if (monster.isLegendary) {
+        drop = (force || state.worldRng() < LEGENDARY_DROP_CHANCE)
+          ? generateItem(state.worldRng() < 0.5 ? 'weapon' : 'robe', monster.level, 'legendary', state.worldRng) : null;
+        awardMerit(p, 2);
+      } else {
+        drop = rollDrop(monster.level, state.worldRng, { forceDrop: force });
+      }
       // Spirit Card roll is independent of the loot roll (GDD §7.2) — a card
       // never replaces an item drop.
       cardId = rollCardDrop(monster.typeId, state.worldRng);
@@ -540,10 +586,13 @@ export function attack(state, monsterId) {
 
     result.rewards = { xp, stones, itemDrop: drop };
     result.bossKill = monster.isBoss || undefined;
+    if (monster.isTitan) result.titanProgress = { remainingHp: 0, maxHp: monster.titanMaxHp, depleted: true };
     addLog(
       state,
       monster.isBoss
         ? `${monster.name} is vanquished! +${xp} XP, +${stones} spirit stones. The calamity recedes into the deep.`
+        : monster.isTitan
+        ? `The ${monster.name} is felled at last! +${xp} XP, +${stones} spirit stones — a Titan artifact is yours.`
         : `Slew ${monster.name} (Lv ${monster.level}): +${xp} XP, +${stones} stones.`
     );
     grantXp(state, xp);
@@ -556,15 +605,70 @@ export function attack(state, monsterId) {
     const st = p.stats || (p.stats = {});
     st.fightsLost = (st.fightsLost || 0) + 1;
     addLog(state, `Defeated by ${monster.name}: -${stonesLost} stones, -${xpLost} XP.`);
+    // A surviving Titan bounds away to a new cell (it took chip damage even on a
+    // loss). World-state only — combat.js/rewards untouched.
+    if (monster.isTitan) {
+      const pos = relocateTitan(state.map, tile, monster, state.worldRng);
+      result.titanProgress = { remainingHp: monster.titanHp, maxHp: monster.titanMaxHp, movedTo: pos, depleted: false };
+      addLog(state, `${monster.name} staggers but flees to (${pos.x}, ${pos.y})! (${Math.round(100 * monster.titanHp / monster.titanMaxHp)}% remaining)`);
+    }
   } else {
     const st = p.stats || (p.stats = {});
     st.fightsDrawn = (st.fightsDrawn || 0) + 1;
     addLog(state, `Combat with ${monster.name} unresolved after ${MAX_TURNS} turns.`);
+    if (monster.isTitan) {
+      const pos = relocateTitan(state.map, tile, monster, state.worldRng);
+      result.titanProgress = { remainingHp: monster.titanHp, maxHp: monster.titanMaxHp, movedTo: pos, depleted: false };
+      addLog(state, `${monster.name} shrugs off the exchange and bounds to (${pos.x}, ${pos.y})! (${Math.round(100 * monster.titanHp / monster.titanMaxHp)}% remaining)`);
+    }
   }
 
   result.monster = monster;
   saveGame(state);
   return result;
+}
+
+// --- Debug spawn wrappers (doc 40 §5). Pure logic lives in rarespawns.js/
+// titans.js; game.js just spawns onto the player's CURRENT tile (so a tester can
+// attack immediately), logs, and saves. These BYPASS the natural 1-per-zone caps
+// — the author explicitly needs to spawn MULTIPLE for testing. ?dev=1-gated at
+// the UI layer (debug.js only renders the bar in dev mode). ---
+
+// Pick a native creature type for the current tile's danger band without needing
+// map.js's private pickType (kept out of my ownership) — weighting is irrelevant
+// for a debug spawn, so a uniform pick over the band's spawn table suffices.
+function debugPickType(state, tile) {
+  const spawns = ZONES[state.zoneId].spawns[tile.band];
+  return spawns[Math.floor(state.worldRng() * spawns.length)].type;
+}
+
+export function debugSpawnLegendary(state) {
+  const tile = currentTile(state);
+  const actor = spawnCreature(debugPickType(state, tile), null, state.worldRng, { legendary: true, statMult: LEGENDARY_STAT_MULT });
+  tile.monsters.push(actor);
+  tile.clearedAt = null;
+  addLog(state, `[debug] Spawned ${actor.name}.`);
+  saveGame(state);
+  return actor;
+}
+
+export function debugSpawnSuperElite(state) {
+  const tile = currentTile(state);
+  const actor = spawnCreature(debugPickType(state, tile), null, state.worldRng, { superElite: true, statMult: SUPER_ELITE_STAT_MULT });
+  tile.monsters.push(actor);
+  tile.clearedAt = null;
+  addLog(state, `[debug] Spawned ${actor.name}.`);
+  saveGame(state);
+  return actor;
+}
+
+export function debugSpawnTitan(state) {
+  const actor = spawnTitanActor(state.zoneId);
+  if (!actor) { addLog(state, '[debug] No Titan defined for this zone.'); return null; }
+  const pos = placeTitanRandomly(state.map, actor, state.worldRng);
+  addLog(state, `[debug] Spawned Titan ${actor.name} at (${pos.x}, ${pos.y}).`);
+  saveGame(state);
+  return actor;
 }
 
 // --- Character / gear / quest actions (each saves on success) ---

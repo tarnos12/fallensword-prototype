@@ -48,6 +48,46 @@ export const SETS = {
     bonusAt: { 2: { attack: 10, defense: 10, damage: 10, hp: 30 } },
     flavor: 'The nine calamities answer as one when heaven and blade align.',
   },
+  // Two legendary-tier sets completing the formerly set-less legendary templates
+  // (§1.2) — Legendary items ALWAYS carry a setId now.
+  sunderingHeavens: {
+    id: 'sunderingHeavens',
+    name: 'Sundering Heavens Regalia',
+    tier: 'legendary',
+    pieces: 2,
+    members: ['Sundering Heavens Spear', 'Dragon-Scale Imperial Robe'],
+    bonusAt: { 2: { attack: 10, damage: 10, hp: 24 } },
+    flavor: 'The heavens do not forgive what this pairing has already sundered.',
+  },
+  immortalSlaying: {
+    id: 'immortalSlaying',
+    name: 'Immortal-Slaying Communion',
+    tier: 'legendary',
+    pieces: 2,
+    members: ['Immortal-Slaying Jian', 'Voidfang Vestment'],
+    bonusAt: { 2: { damage: 12, defense: 8, armor: 6 } },
+    flavor: 'Even the deathless learn to bleed before this blade and its ward.',
+  },
+  // Two Super-Elite sets (§1.3) — brand-new tier, authored set-complete. Scaled
+  // above Legendary since SE drops are rarer (1/area vs. multiple/area).
+  voidSovereign: {
+    id: 'voidSovereign',
+    name: 'Void Sovereign Dominion',
+    tier: 'superElite',
+    pieces: 2,
+    members: ['Voidsovereign Blade', 'Voidsovereign Mantle'],
+    bonusAt: { 2: { attack: 16, damage: 16, hp: 40, armor: 8 } },
+    flavor: 'The void does not conquer — it simply outlasts.',
+  },
+  thousandThunder: {
+    id: 'thousandThunder',
+    name: 'Thousand-Thunder Communion',
+    tier: 'superElite',
+    pieces: 2,
+    members: ['Thousand-Thunder Spear', 'Thousand-Thunder Raiment'],
+    bonusAt: { 2: { attack: 16, defense: 16, damage: 10, hp: 36 } },
+    flavor: 'A thousand thunders answered when the two were finally reunited.',
+  },
 };
 
 export function setById(setId) {

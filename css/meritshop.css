@@ -1,0 +1,88 @@
+/* Hall of Merit — premium upgrade shop (doc 20 §3). Own sheet — injected by
+   meritshop.js. Reuses the shared design tokens (:root in style.css), so it
+   themes for free. Opens from the HUD's #btn-premium (✧) icon, not a nav
+   button, so this file has no *-nav-btn rule of its own. */
+
+#meritshop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(8, 9, 13, 0.8);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  overflow-y: auto;
+}
+
+#meritshop-panel {
+  background: var(--panel);
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 620px;
+  padding: 16px 20px 22px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+}
+
+#meritshop-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--panel-edge);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+#meritshop-header h2 { margin: 0; color: var(--gold); font-weight: normal; letter-spacing: 1px; flex: 1; }
+.meritshop-balance { color: var(--gold); font-size: 0.95rem; white-space: nowrap; }
+
+.meritshop-intro { font-size: 0.85rem; color: var(--dim); line-height: 1.55; margin: 0 0 14px; font-style: italic; }
+
+.merit-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+
+.merit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid var(--panel-edge);
+  border-radius: 6px;
+  padding: 8px 12px;
+  background: var(--bg);
+}
+
+.merit-info { flex: 1; min-width: 0; }
+.merit-name { font-size: 0.9rem; }
+.merit-desc { font-size: 0.78rem; margin-top: 2px; }
+
+.merit-buy-btn { white-space: nowrap; padding: 6px 10px; font-size: 0.82rem; }
+.merit-buy-btn:not(:disabled).claim-btn { color: var(--gold); border-color: var(--gold); }
+
+.merit-daoheart { border-top: 1px solid var(--panel-edge); padding-top: 12px; }
+.merit-daoheart h3 { margin: 0 0 4px; font-size: 0.9rem; letter-spacing: 0.5px; font-weight: normal; color: var(--gold); }
+.merit-daoheart-note { font-size: 0.78rem; margin: 0 0 10px; }
+
+.merit-daoheart-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+.merit-daoheart-card {
+  flex: 1 1 160px;
+  border: 1px solid var(--panel-edge);
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.merit-daoheart-card.active { border-color: var(--win); }
+.merit-daoheart-name { font-size: 0.88rem; }
+.merit-daoheart-card.active .merit-daoheart-name { color: var(--win); }
+.merit-daoheart-desc { font-size: 0.78rem; }
+.merit-daoheart-btn { margin-top: auto; padding: 6px 10px; font-size: 0.8rem; }
+.merit-daoheart-btn.active { color: var(--win); border-color: var(--win); }
+
+@media (max-width: 480px) {
+  .merit-row { flex-direction: column; align-items: stretch; }
+  .merit-daoheart-grid { flex-direction: column; }
+}

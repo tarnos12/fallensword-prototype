@@ -175,15 +175,38 @@ export function renderTilePanel(state, { onInspect, onAttack, canAttack, onRepai
     return;
   }
 
-  for (const m of tile.monsters) {
+  // Multi-monster tile-slot model (doc 40 §6.1): slot N = tile.monsters[N-1],
+  // 1-indexed to match the digit key that attacks it (input.js 1-9). The stable
+  // slot-number badge makes the key mapping legible; rare-spawn tiers get a
+  // distinct row class + tag, and a Titan shows its persisted world-HP progress.
+  tile.monsters.forEach((m, i) => {
     const row = document.createElement('div');
     row.className = 'monster-row';
     if (m.isBoss) row.classList.add('boss-row');
+    else if (m.isTitan) row.classList.add('titan-row');
+    else if (m.isSuperElite) row.classList.add('super-elite-row');
+    else if (m.isLegendary) row.classList.add('legendary-row');
+
+    const slotTag = document.createElement('span');
+    slotTag.className = 'slot-num';
+    slotTag.textContent = `${i + 1}`;
+    slotTag.title = `Press ${i + 1} to attack this monster`;
 
     const label = document.createElement('span');
     label.className = 'monster-name';
     if (m.isBoss) {
       label.innerHTML = `<span class="boss-tag">☠ Legendary</span> ${m.name} <span class="dim">(Lv ${m.level})</span>`;
+    } else if (m.isTitan) {
+      // titanHp is the persisted world pool; show % remaining so the chase is legible.
+      const maxHp = m.titanMaxHp || 1;
+      const pct = Math.max(0, Math.round((100 * (m.titanHp ?? maxHp)) / maxHp));
+      label.innerHTML = `<span class="titan-tag">⛰ Titan</span> ${m.name} <span class="dim">(Lv ${m.level} · ${pct}% HP)</span>`;
+    } else if (m.isSuperElite) {
+      // m.name already carries its "Super Elite " prefix from spawnCreature; the
+      // span just colours it and marks the row without duplicating the words.
+      label.innerHTML = `<span class="rarity-superElite">${m.name}</span> <span class="dim">(Lv ${m.level})</span>`;
+    } else if (m.isLegendary) {
+      label.innerHTML = `<span class="rarity-legendary">${m.name}</span> <span class="dim">(Lv ${m.level})</span>`;
     } else {
       label.textContent = `${m.name} (Lv ${m.level})`;
     }
@@ -196,17 +219,19 @@ export function renderTilePanel(state, { onInspect, onAttack, canAttack, onRepai
 
     const atk = document.createElement('button');
     atk.type = 'button';
-    atk.className = m.isBoss ? 'attack-btn boss-attack-btn' : 'attack-btn';
-    atk.textContent = m.isBoss ? 'Challenge' : 'Attack';
+    atk.className = m.isBoss ? 'attack-btn boss-attack-btn' : m.isTitan ? 'attack-btn titan-attack-btn' : 'attack-btn';
+    atk.textContent = m.isBoss ? 'Challenge' : m.isTitan ? 'Assault' : 'Attack';
     if (!canAttack()) {
       atk.disabled = true;
       atk.title = `Need ${MAX_TURNS} Qi to attack`;
+    } else if (m.isTitan) {
+      atk.title = 'Chip the Titan down — it flees to a new tile each time it survives.';
     }
     atk.addEventListener('click', () => onAttack(m.id));
 
-    row.append(label, inspect, atk);
+    row.append(slotTag, label, inspect, atk);
     list.appendChild(row);
-  }
+  });
 }
 
 export function toggleInspect(monster, row) {
@@ -786,21 +811,37 @@ function turnLine(t, monster) {
   return s + '</div>';
 }
 
+// A Titan that survived the encounter chips its persisted world-HP and bounds to
+// a new tile — surface that progress so the chase reads clearly in the panel.
+function titanProgressBanner(tp) {
+  if (!tp || tp.depleted) return '';
+  const pct = Math.max(0, Math.round((100 * tp.remainingHp) / (tp.maxHp || 1)));
+  const moved = tp.movedTo ? ` It bounds to (${tp.movedTo.x}, ${tp.movedTo.y}).` : '';
+  return `<div class="banner titan-chase">⛰ THE TITAN ENDURES — ${pct}% world-HP remaining.${moved} Hunt it down and strike again.</div>`;
+}
+
 function outcomeBanner(result) {
   if (result.outcome === 'win') {
     const r = result.rewards;
     const drop = r.itemDrop ? `, looted <span class="rarity-${r.itemDrop.rarity}">${r.itemDrop.name}</span>` : '';
-    let banner = result.bossKill
-      ? `<div class="banner boss-win">☠ CALAMITY FELLED — ${result.monster.name} is vanquished! +${r.xp} XP, +${r.stones} spirit stones${drop} <span class="dim">(${result.staminaSpent} Qi spent)</span></div>`
-      : `<div class="banner win">VICTORY — +${r.xp} XP, +${r.stones} spirit stones${drop} <span class="dim">(${result.staminaSpent} Qi spent)</span></div>`;
+    let banner;
+    if (result.bossKill) {
+      banner = `<div class="banner boss-win">☠ CALAMITY FELLED — ${result.monster.name} is vanquished! +${r.xp} XP, +${r.stones} spirit stones${drop} <span class="dim">(${result.staminaSpent} Qi spent)</span></div>`;
+    } else if (result.titanProgress && result.titanProgress.depleted) {
+      banner = `<div class="banner titan-win">⛰ TITAN FELLED — ${result.monster.name} collapses! +${r.xp} XP, +${r.stones} spirit stones${drop} <span class="dim">(${result.staminaSpent} Qi spent)</span></div>`;
+    } else {
+      banner = `<div class="banner win">VICTORY — +${r.xp} XP, +${r.stones} spirit stones${drop} <span class="dim">(${result.staminaSpent} Qi spent)</span></div>`;
+    }
     if (result.cardDrop) banner += cardDropBanner(result.cardDrop);
     return banner;
   }
   if (result.outcome === 'loss') {
     const p = result.penalty;
-    return `<div class="banner loss">DEFEAT — lost ${p.stonesLost} stones, ${p.xpLost} XP <span class="dim">(${result.staminaSpent} Qi spent)</span></div>`;
+    return `<div class="banner loss">DEFEAT — lost ${p.stonesLost} stones, ${p.xpLost} XP <span class="dim">(${result.staminaSpent} Qi spent)</span></div>`
+      + titanProgressBanner(result.titanProgress);
   }
-  return `<div class="banner draw">UNRESOLVED — ${MAX_TURNS} turns passed; this foe is beyond you for now <span class="dim">(${result.staminaSpent} Qi spent)</span></div>`;
+  return `<div class="banner draw">UNRESOLVED — ${MAX_TURNS} turns passed; this foe is beyond you for now <span class="dim">(${result.staminaSpent} Qi spent)</span></div>`
+    + titanProgressBanner(result.titanProgress);
 }
 
 function cardDropBanner(cd) {

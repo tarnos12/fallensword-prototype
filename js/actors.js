@@ -47,10 +47,17 @@ export function getCreatureCounter() {
   return creatureCounter;
 }
 
-export function spawnCreature(typeId, level, rng) {
+// opts (Wave 2, additive — 3-arg callers are unchanged): a stat multiplier +
+// rare-spawn flags for Legendary / Super-Elite variants. A Legendary/SE monster
+// is the SAME native creature (same typeId → cards/codex/quests untouched), just
+// stat-multiplied and flagged. Each rare-spawn carries BOTH a boolean flag
+// (game.js attack() branches on it) AND a plain `tier` string (external
+// consumers like Economy's Merit hook check monster.tier), set together here.
+export function spawnCreature(typeId, level, rng, opts = {}) {
   const t = CREATURE_TYPES[typeId];
   const lv = level ?? t.levels[Math.floor(rng() * t.levels.length)];
-  const scale = (stat) => Math.round(t.base[stat] + t.perLevel[stat] * (lv - 1));
+  const mult = opts.statMult ?? 1;
+  const scale = (stat) => Math.round((t.base[stat] + t.perLevel[stat] * (lv - 1)) * mult);
   const actor = createActor({
     id: `${typeId}-${++creatureCounter}`,
     name: t.name,
@@ -62,8 +69,10 @@ export function spawnCreature(typeId, level, rng) {
     maxHp: scale('maxHp'),
   });
   actor.typeId = typeId;
-  actor.xpReward = Math.round(t.xp * (1 + 0.35 * (lv - t.levels[0])));
-  actor.stoneReward = Math.round(t.stones * (1 + 0.35 * (lv - t.levels[0])));
+  actor.xpReward = Math.round(t.xp * (1 + 0.35 * (lv - t.levels[0])) * mult);
+  actor.stoneReward = Math.round(t.stones * (1 + 0.35 * (lv - t.levels[0])) * mult);
+  if (opts.legendary) { actor.isLegendary = true; actor.tier = 'legendary'; actor.name = `Legendary ${actor.name}`; }
+  if (opts.superElite) { actor.isSuperElite = true; actor.tier = 'superElite'; actor.name = `Super Elite ${actor.name}`; }
   return actor;
 }
 

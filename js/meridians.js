@@ -11,13 +11,16 @@
 // just by raising `player.level`. `player.meridians` holds only the spent ranks
 // ({ nodes: { id: rank } }); free points = earned − spent.
 //
-// Self-contained like crafting.js / loadouts.js: this module owns its own ☯
-// button (injected into the nav menu) and its own modal DOM, so it needs no
-// markup in index.html and never touches ui.js. The ONLY cross-module hook is a
-// flat add-line in progression.js effectiveStats (meridianBonuses).
+// Wave 2 (doc 30 §2.4): no more self-contained modal/nav button. Meridians is
+// folded into one "Skill Tree" surface on the Skills tab alongside the 4
+// active abilities — js/skilltree.js embeds `renderMeridianTree` directly into
+// its own container. This file keeps owning all the node data/points/allocate
+// logic (unchanged this wave); only the render section below changed shape,
+// from a self-contained overlay to a plain render-into-container function.
 //
-// NOTE: no `document` access at module load — the DOM lives inside initMeridians
-// only — so progression.js can import meridianBonuses in headless sims safely.
+// NOTE: no `document` access at module load — DOM only happens inside
+// renderMeridianTree — so progression.js can import meridianBonuses in
+// headless sims safely.
 
 export const MERIDIAN_POINTS_PER_STAGE = 1;
 
@@ -101,22 +104,24 @@ export function resetMeridians(player) {
   return { ok: true, refunded };
 }
 
-// --- Self-contained view: a ☯ Meridians button (in the nav menu) + its modal. ---
+// --- Render: embeddable node list for skilltree.js. ---
+//
+// Pure render-into-container, no module-level DOM/overlay state — skilltree.js
+// owns the container and calls this on every (re)render, passing an `actions`
+// object with an `allocateMeridian(id)` callback that applies the allocation
+// and re-renders (mirrors the shape techniques.js's row-builder expects from
+// its own caller, so both halves of the Skill Tree follow one pattern).
 
-const $ = (id) => document.getElementById(id);
-
-let overlay = null;
-let mer = null; // { state, actions }
-
-function nodeRow(node) {
-  const { state, actions } = mer;
+function nodeRow(node, state, actions) {
   const p = state.player;
   const rank = meridianRank(p, node.id);
   const free = meridianPointsFree(p);
   const maxed = rank >= node.maxRank;
+  const locked = p.level < (node.minStage ?? 1);
 
   const row = document.createElement('div');
   row.className = 'mer-row';
+  if (locked) row.classList.add('mer-locked');
 
   const info = document.createElement('div');
   info.className = 'mer-info';
@@ -128,7 +133,9 @@ function nodeRow(node) {
       <span class="dim">Rank ${rank}/${node.maxRank}</span></div>
     <div class="mer-desc dim">${node.desc}</div>
     <div class="mer-bonus">${bonusLine}</div>`;
-  info.title = `${node.name} — permanent +${node.perRank} ${STAT_LABELS[node.stat]} per rank, ranked ${rank}/${node.maxRank}. Free, permanent points earned one per breakthrough.`;
+  info.title = locked
+    ? `${node.name} opens at Foundation Establishment (stage ${node.minStage}).`
+    : `${node.name} — permanent +${node.perRank} ${STAT_LABELS[node.stat]} per rank, ranked ${rank}/${node.maxRank}. Free, permanent points earned one per breakthrough.`;
 
   const pips = document.createElement('div');
   pips.className = 'mer-pips';
@@ -139,8 +146,6 @@ function nodeRow(node) {
     pips.appendChild(pip);
   }
 
-  const locked = p.level < (node.minStage ?? 1);
-
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'mer-open-btn';
@@ -148,7 +153,6 @@ function nodeRow(node) {
     btn.textContent = 'Locked';
     btn.title = `${node.name} opens at Foundation Establishment (stage ${node.minStage}).`;
     btn.disabled = true;
-    row.classList.add('mer-locked');
   } else if (maxed) {
     btn.textContent = 'Opened';
     btn.title = `${node.name} is fully opened at rank ${node.maxRank}.`;
@@ -159,66 +163,27 @@ function nodeRow(node) {
     btn.title = free <= 0
       ? 'No free meridian points — break through a realm to earn one more.'
       : `Spend 1 meridian point for a permanent +${node.perRank} ${STAT_LABELS[node.stat]} (free — no spirit stones).`;
-    btn.addEventListener('click', () => { actions.allocate(node.id); rerender(); });
+    btn.addEventListener('click', () => actions.allocateMeridian(node.id));
   }
 
   row.append(info, pips, btn);
   return row;
 }
 
-export function renderMeridians(state) {
-  if (!overlay) return;
+// Renders the full passive node list into `container` (an existing DOM
+// element skilltree.js provides — e.g. a <div> inside #skills-menu).
+export function renderMeridianTree(container, state, actions) {
+  container.innerHTML = '';
   const p = state.player;
   const free = meridianPointsFree(p);
-  $('meridian-free').textContent = `— ${free} point${free === 1 ? '' : 's'} to open`;
-  $('meridian-free').title = `${free} unspent meridian point${free === 1 ? '' : 's'} — earned one per breakthrough, spent for free (no spirit stones).`;
-
-  const body = $('meridian-body');
-  body.innerHTML = '';
 
   const intro = document.createElement('p');
   intro.className = 'empty-note';
-  intro.textContent = 'Each breakthrough opens one meridian point — a permanent, always-on bonus. Choices are permanent; spend them to suit your path.';
-  body.appendChild(intro);
+  intro.textContent = `${free} point${free === 1 ? '' : 's'} free to open (${meridianPointsSpent(p)}/${meridianPointsEarned(p)} spent) — one earned per breakthrough, permanent, no spirit stones.`;
+  container.appendChild(intro);
 
   const list = document.createElement('div');
   list.className = 'mer-list';
-  for (const node of MERIDIAN_LIST) list.appendChild(nodeRow(node));
-  body.appendChild(list);
-}
-
-function rerender() {
-  renderMeridians(mer.state);
-}
-
-export function initMeridians(state, actions) {
-  mer = { state, actions };
-
-  const btn = document.createElement('button');
-  btn.id = 'btn-meridians';
-  btn.type = 'button';
-  btn.className = 'meridian-nav-btn';
-  btn.title = 'Meridians — spend breakthrough points on permanent passive bonuses';
-  btn.textContent = '☯ Meridians';
-  // IA restructure (Wave 1): Meridians now lives on the Skills tab.
-  ($('skills-menu') ?? document.getElementById('char-panel'))?.appendChild(btn);
-
-  overlay = document.createElement('div');
-  overlay.id = 'meridian-overlay';
-  overlay.className = 'hidden';
-  overlay.innerHTML = `
-    <div id="meridian-panel">
-      <div id="meridian-header">
-        <h2>Meridians <span id="meridian-free" class="dim"></span></h2>
-        <button id="btn-close-meridian" type="button" title="Close">✕</button>
-      </div>
-      <div id="meridian-body"></div>
-    </div>`;
-  document.body.appendChild(overlay);
-
-  const open = () => { renderMeridians(state); overlay.classList.remove('hidden'); };
-  const close = () => overlay.classList.add('hidden');
-  btn.addEventListener('click', open);
-  $('btn-close-meridian').addEventListener('click', close);
-  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+  for (const node of MERIDIAN_LIST) list.appendChild(nodeRow(node, state, actions));
+  container.appendChild(list);
 }

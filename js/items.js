@@ -17,6 +17,14 @@ export const RARITIES = {
   rare: { key: 'rare', label: 'Rare', mult: 1.8, attributes: 3, weight: 5, maxDurability: 60, repairPerPoint: 2, sellMult: 12 },
   epic: { key: 'epic', label: 'Epic', mult: 2.3, attributes: 4, weight: 0, maxDurability: 80, repairPerPoint: 3, sellMult: 30 },
   legendary: { key: 'legendary', label: 'Legendary', mult: 2.9, attributes: 5, weight: 0, maxDurability: 100, repairPerPoint: 5, sellMult: 75 },
+  // Two Wave-2 explicit-only tiers (weight 0 — never randomly rolled; reached
+  // only via generateItem(slot, level, 'superElite'|'titan', rng) from the
+  // Legendary/SE/Titan drop branches in game.js attack()). superElite sits
+  // between legendary and mythic on the raw power curve (rarer monster = better
+  // loot). titan is deliberately NOT slotted as "better than Mythic": its
+  // defining trait is the guaranteed qiRegen line (§1.4), not stat supremacy.
+  superElite: { key: 'superElite', label: 'Super Elite', mult: 3.25, attributes: 5, weight: 0, maxDurability: 110, repairPerPoint: 6, sellMult: 130 },
+  titan: { key: 'titan', label: 'Titan', mult: 3.10, attributes: 4, weight: 0, maxDurability: 110, repairPerPoint: 6, sellMult: 140 },
   mythic: { key: 'mythic', label: 'Mythic', mult: 3.6, attributes: 5, weight: 0, maxDurability: 120, repairPerPoint: 8, sellMult: 180 },
 };
 
@@ -56,8 +64,24 @@ const TEMPLATES = {
     ],
     legendary: [
       { name: 'Nine Calamities Sabre', setId: 'nineHeavens', attrs: [['damage', 1, 3], ['attack', 1, 2], ['armor', 1, 1], ['hp', 2, 4], ['defense', 1, 2]] },
-      { name: 'Sundering Heavens Spear', attrs: [['attack', 1, 3], ['damage', 1, 2], ['hp', 2, 4], ['defense', 1, 1], ['armor', 1, 1]] },
-      { name: 'Immortal-Slaying Jian', attrs: [['damage', 1, 2], ['attack', 1, 3], ['defense', 1, 2], ['armor', 1, 1], ['hp', 2, 4]] },
+      // "Legendary items ALWAYS Sets" (§1.2): the two formerly set-less legendary
+      // weapons now pair 1:1 with the new legendary robes below.
+      { name: 'Sundering Heavens Spear', setId: 'sunderingHeavens', attrs: [['attack', 1, 3], ['damage', 1, 2], ['hp', 2, 4], ['defense', 1, 1], ['armor', 1, 1]] },
+      { name: 'Immortal-Slaying Jian', setId: 'immortalSlaying', attrs: [['damage', 1, 2], ['attack', 1, 3], ['defense', 1, 2], ['armor', 1, 1], ['hp', 2, 4]] },
+    ],
+    // Super Elite weapons (§1.3) — always Sets, authored set-complete. Rarer than
+    // Legendary, so their loot reads a cut above.
+    superElite: [
+      { name: 'Voidsovereign Blade', setId: 'voidSovereign', attrs: [['damage', 2, 4], ['attack', 2, 3], ['defense', 1, 2], ['armor', 1, 2], ['hp', 3, 5]] },
+      { name: 'Thousand-Thunder Spear', setId: 'thousandThunder', attrs: [['attack', 2, 4], ['damage', 2, 3], ['hp', 3, 5], ['defense', 1, 2], ['armor', 1, 2]] },
+    ],
+    // Titan weapons (§1.4) — NEVER a Set (no setId), and attrs[0] is ALWAYS
+    // 'qiRegen' so the guaranteed Qi-regen line rolls (generateItem slices
+    // attrs.slice(0, RARITIES.titan.attributes=4) ≥ 1). qiRegen lives only in
+    // item.bonuses and is aggregated by gearQiRegenBonus, not effectiveStats.
+    titan: [
+      { name: 'Titanheart Warhammer', attrs: [['qiRegen', 1, 2], ['damage', 2, 4], ['attack', 1, 3], ['armor', 1, 2], ['hp', 3, 5]] },
+      { name: 'Colossus-Rending Axe', attrs: [['qiRegen', 1, 2], ['attack', 2, 4], ['damage', 1, 3], ['defense', 1, 2], ['hp', 3, 5]] },
     ],
     mythic: [
       { name: 'Dao-Severing Blade', attrs: [['damage', 1, 3], ['attack', 1, 2], ['armor', 1, 1], ['hp', 2, 4], ['defense', 1, 2]] },
@@ -89,7 +113,21 @@ const TEMPLATES = {
     ],
     legendary: [
       { name: 'Nine-Heavens Cloud Mantle', setId: 'nineHeavens', attrs: [['defense', 1, 3], ['armor', 1, 2], ['hp', 2, 5], ['attack', 1, 1], ['damage', 1, 1]] },
-      { name: 'Dragon-Scale Imperial Robe', attrs: [['armor', 1, 2], ['hp', 2, 5], ['defense', 1, 2], ['damage', 1, 1], ['attack', 1, 1]] },
+      // §1.2: Dragon-Scale Imperial Robe now completes the Sundering Heavens set;
+      // Voidfang Vestment is a NEW robe completing the Immortal-Slaying set, so
+      // the 3 legendary weapons and 3 legendary robes pair 1:1.
+      { name: 'Dragon-Scale Imperial Robe', setId: 'sunderingHeavens', attrs: [['armor', 1, 2], ['hp', 2, 5], ['defense', 1, 2], ['damage', 1, 1], ['attack', 1, 1]] },
+      { name: 'Voidfang Vestment', setId: 'immortalSlaying', attrs: [['defense', 1, 3], ['armor', 1, 2], ['hp', 2, 5], ['attack', 1, 1], ['damage', 1, 1]] },
+    ],
+    // Super Elite robes (§1.3) — always Sets, pairing with the SE weapons above.
+    superElite: [
+      { name: 'Voidsovereign Mantle', setId: 'voidSovereign', attrs: [['defense', 2, 4], ['armor', 2, 3], ['hp', 3, 6], ['attack', 1, 2], ['damage', 1, 2]] },
+      { name: 'Thousand-Thunder Raiment', setId: 'thousandThunder', attrs: [['hp', 4, 7], ['defense', 2, 3], ['armor', 1, 2], ['attack', 1, 2], ['damage', 1, 2]] },
+    ],
+    // Titan robes (§1.4) — NEVER a Set; attrs[0] ALWAYS 'qiRegen'.
+    titan: [
+      { name: 'Titanhide Mantle', attrs: [['qiRegen', 1, 2], ['armor', 2, 4], ['hp', 4, 7], ['defense', 1, 2], ['attack', 1, 2]] },
+      { name: 'Colossus-Bound Wrap', attrs: [['qiRegen', 1, 2], ['defense', 2, 4], ['hp', 4, 7], ['armor', 1, 2], ['damage', 1, 2]] },
     ],
     mythic: [
       { name: 'Voidsilk Shroud', attrs: [['defense', 1, 3], ['armor', 1, 2], ['hp', 2, 5], ['attack', 1, 1], ['damage', 1, 1]] },
@@ -219,8 +257,10 @@ export function mintNamedItem(namedId) {
   };
 }
 
-export function rollDrop(creatureLevel, rng) {
-  if (rng() >= DROP_CHANCE) return null;
+export function rollDrop(creatureLevel, rng, opts = {}) {
+  // opts.forceDrop (debug 100%-drop toggle, §4) skips the drop gate. Backward-
+  // compatible: every existing caller omits opts and keeps the DROP_CHANCE gate.
+  if (!opts.forceDrop && rng() >= DROP_CHANCE) return null;
   // A slice of drops are loose gems instead of gear (task U) — rolled after the
   // drop gate so gems are a fraction of loot, not an extra roll. Gems ride the
   // same inventory/save/sell path as gear (they carry id/name/rarity/level).

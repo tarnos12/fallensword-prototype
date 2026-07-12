@@ -20,6 +20,8 @@ const MOVE_KEYS = {
   arrowright: [1, 0], d: [1, 0],
 };
 
+import { activeTab } from './tabs.js';
+
 const $ = (id) => document.getElementById(id);
 
 function isTypingTarget(t) {
@@ -119,6 +121,7 @@ export function buildShortcutsOverlay() {
   const body = document.createElement('div');
   body.className = 'shortcuts-body';
   body.appendChild(shortcutRow(['↑', '↓', '←', '→', '/', 'W', 'A', 'S', 'D'], 'Move around the map'));
+  body.appendChild(shortcutRow(['1', '–', '9'], 'Attack the monster in that map slot'));
   body.appendChild(shortcutRow(['Esc'], 'Close the open dialog'));
   body.appendChild(shortcutRow(['?'], 'Show / hide this help'));
 
@@ -169,7 +172,13 @@ export function applyA11y() {
   }
 }
 
-export function initInput({ move }) {
+// `move(dx, dy)` reuses the game's move path (unchanged). Wave 2 adds two
+// optional injected callbacks for the digit-key attack shortcuts:
+//   attack(monsterId)      — resolve a fight against that monster (main.js's onAttack)
+//   getSlotMonster(index)  — the monster in tile-slot N (0-indexed) on the current
+//                            tile, or null. Both optional so older callers/tests
+//                            that pass only { move } keep working (digits no-op).
+export function initInput({ move, attack, getSlotMonster }) {
   applyA11y();
   buildShortcutsOverlay(); // inject the "?" help modal once, after the ARIA pass
 
@@ -199,8 +208,18 @@ export function initInput({ move }) {
       move(delta[0], delta[1]);
       return;
     }
-    // Digit keys 1–9 are intentionally left UNBOUND here (Wave 1): the Halls
-    // nav-menu they used to index into is dissolved. Wave 2 (CombatWorld) rebinds
-    // them to attack the monster in slot N on the Map surface.
+
+    // Digit keys 1–9 attack the monster in tile-slot N on the Map surface (Wave
+    // 2, doc 40 §6.3). Slot N = the Nth monster the side-panel lists (1-indexed
+    // to match the visible digit). Only fires on the Map tab and only if that
+    // slot holds a monster; otherwise a no-op (the Halls nav-menu that used these
+    // keys was fully dissolved in Wave 1, so no fallback binding is needed).
+    if (/^[1-9]$/.test(e.key)) {
+      if (!attack || !getSlotMonster) return;
+      e.preventDefault();
+      if (activeTab() !== 'map') return;
+      const monster = getSlotMonster(Number(e.key) - 1);
+      if (monster) attack(monster.id);
+    }
   });
 }

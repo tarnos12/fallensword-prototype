@@ -83,6 +83,7 @@ export function effectiveStats(player, now = Date.now()) {
   for (const item of Object.values(player.equipment)) {
     if (!item || item.durability <= 0) continue; // broken gear grants nothing
     for (const [stat, val] of Object.entries(item.bonuses)) {
+      if (stat === 'qiRegen') continue; // Titan-gear Qi-regen is NOT a combat stat (see items.js:gearQiRegenBonus, consumed by tickQi)
       if (stat === 'hp') eff.maxHp += val;
       else eff[stat] += val;
     }
@@ -170,4 +171,23 @@ export function allocateStat(player, stat) {
   player.allocated[stat] += 1;
   player.statPoints -= 1;
   return true;
+}
+
+// --- Costed stat respec (doc 30 §1.2). Pure single-file additions; the premium
+// shop (Economy's meritshop.js, Wave 2) charges the cost first, then calls these.
+// No new save fields — reuses statPoints/allocated (both already persisted).
+
+// Total stat points currently invested — the cost basis a "Stat Respec" shop row
+// scales against (baseCost + perPoint * statPointsSpent). Mirrors
+// meridianPointsSpent/techniquePointsSpent.
+export function statPointsSpent(player) {
+  return ALLOC_STATS.reduce((sum, s) => sum + (player.allocated?.[s] ?? 0), 0);
+}
+
+// Refund all allocated stat points back into the unspent pool.
+export function respecStats(player) {
+  const refunded = statPointsSpent(player);
+  player.statPoints += refunded;
+  player.allocated = { attack: 0, defense: 0, damage: 0, armor: 0, hp: 0 };
+  return { ok: true, refunded };
 }

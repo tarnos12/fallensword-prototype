@@ -184,7 +184,8 @@ export function initSalvage(state, actions) {
   btn.className = 'salvage-nav-btn';
   btn.title = 'Salvage — break gear into spirit essence & mend with it';
   btn.textContent = '♻ Salvage';
-  ($('nav-menu') ?? document.getElementById('char-panel'))?.appendChild(btn);
+  // IA restructure (Wave 1): Salvage lives on the Equipment tab.
+  ($('equipment-menu') ?? document.getElementById('equip-panel'))?.appendChild(btn);
 
   // Own modal DOM.
   overlay = document.createElement('div');

@@ -204,3 +204,32 @@
   .hud-label { font-size: 0.55rem; }
   .hud-value { font-size: 0.8rem; }
 }
+
+/* ============================================================
+   Wave 1 IA restructure: persistent HUD action icons (auction ◆,
+   premium ✧, settings ⚙, backup 💾), the Map debug-bar hook, and
+   the re-homed Beast Codex button on the Map surface.
+   ============================================================ */
+#hud-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.hud-icon-btn {
+  font-size: 1.05rem;
+  line-height: 1;
+  padding: 7px 11px;
+  cursor: pointer;
+  position: relative;
+}
+/* The empty Wave-2 debug-bar hook collapses until debug.js populates it. */
+#debug-bar:empty { display: none; }
+#debug-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+#map-tools { margin: 8px 0; }

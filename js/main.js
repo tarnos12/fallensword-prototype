@@ -25,8 +25,6 @@ import {
   marketList,
   marketCancel,
   marketCollect,
-  hireDisciple,
-  dismissDisciple,
   saveLoadoutAction,
   applyLoadoutAction,
   deleteLoadoutAction,
@@ -36,14 +34,7 @@ import {
   forgeRepair,
   acceptBounty,
   claimBounty,
-  attemptDailyTrial,
   tickPlaytime,
-  brewPill,
-  usePill,
-  tickPillBuffs,
-  startSectMission,
-  tickSectMissions,
-  collectSectMissions,
   ascend,
   salvageItemAction,
   essenceRepairAction,
@@ -64,22 +55,16 @@ import {
   initCodex,
   initPavilion,
   updatePavilionBadge,
-  initSect,
 } from './ui.js';
 import { initTutorial } from './tutorial.js';
 import { initSettings } from './settings.js';
 import { initLoadouts, renderLoadouts } from './loadouts.js';
 import { exportSave, importSave, saveGame } from './save.js';
-import { initProfile, setSparHandler } from './profile.js';
-import { initDuel, openDuel } from './duel.js';
 import { initAchievements, updateAchievementBadge, showAchievementToasts } from './achievements.js';
 import { initForge } from './crafting.js';
 import { initSalvage, renderSalvage } from './salvage.js';
 import { initBounties, renderBounties, updateBountyBadge } from './bounties.js';
-import { initSectMissions, renderSectMissions, updateSectMissionBadge } from './sectmissions.js';
 import { initAscension, renderAscension } from './ascension.js';
-import { initTrials, renderTrialBadge } from './trials.js';
-import { initAlchemy, renderPillBar } from './alchemy.js';
 import { initMeridians, allocateMeridian } from './meridians.js';
 import { initSockets, slotGem, unslotGem } from './sockets.js';
 import { INVENTORY_SIZE } from './items.js';
@@ -91,7 +76,6 @@ import { initTooltips } from './tooltips.js';
 import { initTabs, setActiveTab } from './tabs.js';
 import { initStats } from './stats.js';
 import { initTitles } from './titles.js';
-import { initEventBanner, renderEventBanner } from './events.js';
 
 const state = createGame();
 let inCombat = false;
@@ -189,10 +173,7 @@ function renderAll() {
   renderLoadouts(state);
   updateAchievementBadge(state);
   updateBountyBadge(state);
-  updateSectMissionBadge(state);
   showAchievementToasts(unlocked);
-  renderTrialBadge(state);
-  renderPillBar(state);
 }
 
 // Lightweight refresh for the per-second buff countdown: updates only the
@@ -220,7 +201,8 @@ function onTileClick(x, y) {
 function runPlayback(result, onDone) {
   if (inCombat) return;
   inCombat = true;
-  setActiveTab('combat'); // full-view tabs: a fight takes over the Combat screen
+  // IA restructure (Wave 1): combat resolves inline in the Map side-panel — no
+  // tab switch. ui.js's playCombat un-hides #combat-panel beside the grid.
   setReplayVisible(false); // hide replay controls during live playback
   renderPlayerBar(state);
   playCombat(state, result, () => {
@@ -358,19 +340,12 @@ initPavilion(state, {
   cancel: (id) => { marketCancel(state, id); renderAll(); },
   collect: () => { marketCollect(state); renderAll(); },
 });
-initSect(state, {
-  hire: (id) => { hireDisciple(state, id); renderAll(); },
-  dismiss: (id) => { dismissDisciple(state, id); renderAll(); },
-});
 initLoadouts(state, {
   save: (name) => { saveLoadoutAction(state, name); renderAll(); },
   apply: (i) => { applyLoadoutAction(state, i); renderAll(); },
   remove: (i) => { deleteLoadoutAction(state, i); renderAll(); },
 });
 initBackup();
-initProfile(state);
-initDuel(state); // sparring / offline PvP-preview modal
-setSparHandler((personaId) => openDuel(state, personaId)); // "Spar" on Profile rival rows
 initAchievements(state);
 initForge(state, {
   reforge: (id) => { forgeReforge(state, id); renderAll(); },
@@ -399,19 +374,6 @@ initBounties(state, {
     else if (r?.reason) toast(r.reason, 'error');
   },
 });
-initSectMissions(state, {
-  start: (personaId, typeId) => {
-    const r = startSectMission(state, personaId, typeId);
-    renderSectMissions(state); renderAll();
-    if (r?.ok) toast(`${r.discipleName} dispatched: ${r.typeName} (${r.minutes}m)`, 'info');
-    else if (r?.reason) toast(r.reason, 'error');
-  },
-  collect: () => {
-    const r = collectSectMissions(state);
-    renderSectMissions(state); renderAll();
-    if (r?.count > 0) toast(`Collected ${r.count} disciple reward(s): +${r.stones} ◆, +${r.xp} XP`, 'success');
-  },
-});
 initAscension(state, {
   ascend: () => {
     const r = ascend(state);
@@ -419,13 +381,6 @@ initAscension(state, {
     if (r?.ok) toast(`✦ Ascension ${r.ascension} — permanent +${r.bonusPct}% to all stats!`, 'success');
     else if (r?.reason) toast(r.reason, 'warn');
   },
-});
-initTrials(state, {
-  onAttempt: () => { const res = attemptDailyTrial(state); renderAll(); return res; },
-});
-initAlchemy(state, {
-  brew: (id) => { brewPill(state, id); renderAll(); },
-  use: (id) => { usePill(state, id); renderAll(); },
 });
 initMeridians(state, {
   allocate: (id) => {
@@ -448,13 +403,11 @@ initSockets(state, {
 initToasts(); // unified toast/feedback host (task X)
 initTooltips(); // global instant-tooltip engine — styled hover tips over native title="" (slice T1)
 initTabs(); // full-view tab shell — wire the tab bar (markup lives in index.html)
-// Leaving combat via "Continue" returns to the Map screen. addEventListener (not
-// onclick) so it coexists with ui.js's own close handler that hides the panel.
-document.getElementById('btn-close-combat')?.addEventListener('click', () => setActiveTab('map'));
+// Combat's "Continue" button just hides the inline side-panel (ui.js owns that
+// handler) — no tab switch needed now that the fight resolves on the Map.
 initReplay(state, { onReplay: (result) => runPlayback(result) });
-initStats(state); // 📊 Chronicle of Deeds (lifetime stats)
-initTitles(state); // 🏵 Cultivator Titles (read-only cosmetic)
-initEventBanner(); // world-events HUD strip under the header (task R)
+initStats(state); // 📊 Chronicle of Deeds (lifetime stats) — Cultivator › Records
+initTitles(state); // 🏵 Cultivator Titles (read-only cosmetic) — Cultivator › Records
 renderAll();
 initTutorial(); // first-run onboarding overlay (+ ❔ Help button); after renderAll so targets exist
 initSettings(); // ⚙ settings modal — after initTutorial so its "replay tutorial" can reach ❔ Help
@@ -466,15 +419,11 @@ initInput({ move: (dx, dy) => onTileClick(state.pos.x + dx, state.pos.y + dy) })
 // (once per second).
 setInterval(() => {
   tickPlaytime(state); // accrue active playtime for the Chronicle (task S3)
-  renderEventBanner(); // refresh the world-event HUD countdown (task R)
   const qiBefore = state.qi;
   tickQi(state);
   const stonesGained = tickStones(state); // spirit-stones/hour Spirit Cards
   const market = tickMarket(state); // rotate Pavilion listings + resolve sales
-  const sect = tickSectMissions(state); // resolve finished disciple missions (wall-clock)
   const buffExpired = tickBuffs(state);
-  const pillExpired = tickPillBuffs(state); // expire timed Alchemy pill buffs (task C)
-  renderPillBar(state); // keep the pill-buff countdown ticking every second
   const qiChanged = state.qi !== qiBefore;
   const hasBuffs = state.player.activeBuffs.length > 0;
 
@@ -482,8 +431,8 @@ setInterval(() => {
     if (qiChanged || stonesGained || market.changed) renderPlayerBar(state);
     return;
   }
-  if (qiChanged || buffExpired || pillExpired || stonesGained || market.changed || sect.changed) {
-    renderAll(); // Qi regen, passive stones, market/sect activity, or a fading buff
+  if (qiChanged || buffExpired || stonesGained || market.changed) {
+    renderAll(); // Qi regen, passive stones, market activity, or a fading buff
   } else if (hasBuffs) {
     refreshLive(); // just tick the countdown + buffed stats
   }

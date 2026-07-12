@@ -35,6 +35,7 @@ import {
   canUpgradeItem,
   reforgeCost,
   upgradeCost,
+  gearQiRegenBonus,
 } from './items.js';
 import * as Quests from './quests.js';
 import * as Techniques from './techniques.js';
@@ -53,10 +54,12 @@ import { pillById, applyPillBuffs, cleanPillBuffs } from './alchemy.js';
 import { salvageYield, essenceRepairCost, materialName } from './salvage.js';
 import { saveGame, loadGame, clearSave } from './save.js';
 
-// --- Qi (stamina) tuning. Prototype regen is fast so playtesting isn't
-// gated on a real clock; 1.0 tuning will slow this dramatically (GDD §9.3).
+// --- Qi (stamina) tuning. Retuned (doc 30 §1.1) from the prototype's fast
+// 1 Qi/3s (~1200/hr) to 1 Qi/48s (~75/hr, mid-band of the sourced 50–90/hr) so
+// Qi is actually scarce — the premise every ability cost + session-length knob
+// depends on. MAX_QI stays 120 (a full-from-empty tank now takes ~96 min).
 export const MAX_QI = 120;
-export const QI_REGEN_MS = 3_000; // 1 Qi per 3s, wall-clock
+export const QI_REGEN_MS = 48_000; // 1 Qi per 48s, wall-clock (~75/hr)
 const STONE_ACCRUAL_MS = 3_600_000; // spirit-stones/hour cards accrue per real hour
 
 // Effective Qi cap: base cap + Qi-cap bonuses from Spirit Cards (GDD §7.2) and
@@ -369,10 +372,13 @@ export function tickQi(state, now = Date.now()) {
     state.lastQiTick = now;
     return;
   }
-  const gained = Math.floor((now - state.lastQiTick) / QI_REGEN_MS);
-  if (gained > 0) {
-    state.qi = Math.min(cap, state.qi + gained);
-    state.lastQiTick += gained * QI_REGEN_MS;
+  // Titan gear (Wave 2) grants extra Qi per regen tick; gearQiRegenBonus is 0 for
+  // all current gear, so perTick is 1 today. Kept OUT of effectiveStats by design.
+  const perTick = 1 + gearQiRegenBonus(state.player);
+  const ticks = Math.floor((now - state.lastQiTick) / QI_REGEN_MS);
+  if (ticks > 0) {
+    state.qi = Math.min(cap, state.qi + ticks * perTick);
+    state.lastQiTick += ticks * QI_REGEN_MS;
   }
 }
 

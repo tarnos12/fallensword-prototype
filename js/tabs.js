@@ -14,7 +14,9 @@
 // Every element id in the views is unchanged, so all existing bindings hold.
 // =====================================================================
 
-const TABS = ['map', 'combat', 'char', 'quests', 'halls'];
+// IA restructure (Wave 1): Combat tab deleted (combat resolves in a Map
+// side-panel) and Halls dissolved. The five core surfaces:
+const TABS = ['map', 'cultivator', 'equipment', 'skills', 'quests'];
 let active = 'map';
 let bound = false;
 

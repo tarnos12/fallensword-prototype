@@ -24,11 +24,16 @@ export const MERIDIAN_POINTS_PER_STAGE = 1;
 // The eight extraordinary meridians, mapped to flat combat stats. Ranked to 5;
 // armor is +1/rank (armor is strong per point), the rest +2, HP +8.
 export const MERIDIAN_NODES = {
-  governing: { id: 'governing', name: 'Governing Vessel', stat: 'attack', perRank: 2, maxRank: 5, icon: '🗡', desc: 'Du Mai — channels Yang force into every strike.' },
-  yangLinking: { id: 'yangLinking', name: 'Yang Linking Vessel', stat: 'defense', perRank: 2, maxRank: 5, icon: '🛡', desc: 'Yangwei Mai — knits the body’s guard against harm.' },
-  thrusting: { id: 'thrusting', name: 'Thrusting Channel', stat: 'damage', perRank: 2, maxRank: 5, icon: '💥', desc: 'Chong Mai — the sea of blood; deepens a blow’s bite.' },
-  girdle: { id: 'girdle', name: 'Girdle Channel', stat: 'armor', perRank: 1, maxRank: 5, icon: '🧿', desc: 'Dai Mai — girds the waist, turning aside force.' },
-  conception: { id: 'conception', name: 'Conception Vessel', stat: 'hp', perRank: 8, maxRank: 5, icon: '❤', desc: 'Ren Mai — the sea of Yin; broadens the vessel of life.' },
+  // --- Tier 1 (Qi Condensation, open from level 1) ---
+  governing: { id: 'governing', name: 'Governing Vessel', stat: 'attack', perRank: 2, maxRank: 5, minStage: 1, icon: '🗡', desc: 'Du Mai — channels Yang force into every strike.' },
+  yangLinking: { id: 'yangLinking', name: 'Yang Linking Vessel', stat: 'defense', perRank: 2, maxRank: 5, minStage: 1, icon: '🛡', desc: 'Yangwei Mai — knits the body’s guard against harm.' },
+  thrusting: { id: 'thrusting', name: 'Thrusting Channel', stat: 'damage', perRank: 2, maxRank: 5, minStage: 1, icon: '💥', desc: 'Chong Mai — the sea of blood; deepens a blow’s bite.' },
+  girdle: { id: 'girdle', name: 'Girdle Channel', stat: 'armor', perRank: 1, maxRank: 5, minStage: 1, icon: '🧿', desc: 'Dai Mai — girds the waist, turning aside force.' },
+  conception: { id: 'conception', name: 'Conception Vessel', stat: 'hp', perRank: 8, maxRank: 5, minStage: 1, icon: '❤', desc: 'Ren Mai — the sea of Yin; broadens the vessel of life.' },
+  // --- Tier 2 (Foundation Establishment, minStage 10 — completes the eight, doc 30 §2.2) ---
+  yinLinking: { id: 'yinLinking', name: 'Yin Linking Vessel', stat: 'damage', perRank: 3, maxRank: 5, minStage: 10, icon: '⚔', desc: 'Yinwei Mai — a deeper current beneath the Thrusting Channel.' },
+  yangHeel: { id: 'yangHeel', name: 'Yang Heel Vessel', stat: 'attack', perRank: 3, maxRank: 5, minStage: 10, icon: '🗡', desc: 'Yangqiao Mai — quickens the strike beyond the Governing Vessel.' },
+  yinHeel: { id: 'yinHeel', name: 'Yin Heel Vessel', stat: 'armor', perRank: 2, maxRank: 5, minStage: 10, icon: '🧿', desc: 'Yinqiao Mai — a second girding, steadier than the first.' },
 };
 
 export const MERIDIAN_LIST = Object.values(MERIDIAN_NODES);
@@ -78,12 +83,22 @@ export function meridianBonuses(player) {
 export function allocateMeridian(player, id) {
   const node = MERIDIAN_NODES[id];
   if (!node) return { ok: false };
+  if (player.level < (node.minStage ?? 1)) return { ok: false, reason: 'locked' };
   if (!player.meridians) player.meridians = emptyMeridians();
   const rank = player.meridians.nodes[id] ?? 0;
   if (rank >= node.maxRank) return { ok: false, reason: 'max' };
   if (meridianPointsFree(player) <= 0) return { ok: false, reason: 'points' };
   player.meridians.nodes[id] = rank + 1;
   return { ok: true, node, rank: rank + 1 };
+}
+
+// Refund every opened meridian rank (doc 30 §2.5). Points are DERIVED from level
+// (free = earned − spent), so clearing `nodes` instantly restores the full pool
+// on the next read — no counter arithmetic. The premium shop charges first.
+export function resetMeridians(player) {
+  const refunded = meridianPointsSpent(player); // for the caller's toast/log text only
+  player.meridians = { nodes: {} };
+  return { ok: true, refunded };
 }
 
 // --- Self-contained view: a ☯ Meridians button (in the nav menu) + its modal. ---
@@ -124,10 +139,17 @@ function nodeRow(node) {
     pips.appendChild(pip);
   }
 
+  const locked = p.level < (node.minStage ?? 1);
+
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'mer-open-btn';
-  if (maxed) {
+  if (locked) {
+    btn.textContent = 'Locked';
+    btn.title = `${node.name} opens at Foundation Establishment (stage ${node.minStage}).`;
+    btn.disabled = true;
+    row.classList.add('mer-locked');
+  } else if (maxed) {
     btn.textContent = 'Opened';
     btn.title = `${node.name} is fully opened at rank ${node.maxRank}.`;
     btn.disabled = true;
@@ -178,7 +200,8 @@ export function initMeridians(state, actions) {
   btn.className = 'meridian-nav-btn';
   btn.title = 'Meridians — spend breakthrough points on permanent passive bonuses';
   btn.textContent = '☯ Meridians';
-  ($('nav-menu') ?? document.getElementById('char-panel'))?.appendChild(btn);
+  // IA restructure (Wave 1): Meridians now lives on the Skills tab.
+  ($('skills-menu') ?? document.getElementById('char-panel'))?.appendChild(btn);
 
   overlay = document.createElement('div');
   overlay.id = 'meridian-overlay';

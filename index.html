@@ -78,6 +78,15 @@
         <span class="hud-value" id="chip-points" title="Unspent stat points"></span>
       </div>
     </div>
+    <!-- Persistent HUD icons (IA restructure, Wave 1): the Auction House and the
+         premium Hall of Merit shop are HUD icons, not tabs; settings + save backup
+         are small utility icons. The ✧ premium button is a Wave-2 hook. -->
+    <div id="hud-actions">
+      <button id="btn-pavilion" class="hud-icon-btn pavilion-btn" type="button" title="Auction House — Treasure Pavilion">◆<span id="pavilion-mail-count" class="mail-badge hidden"></span></button>
+      <button id="btn-premium" class="hud-icon-btn" type="button" title="Hall of Merit — premium shop (opens soon)">✧</button>
+      <button id="btn-settings" class="hud-icon-btn settings-btn" type="button" title="Settings — display preferences, tutorial &amp; save">⚙</button>
+      <button id="btn-backup" class="hud-icon-btn backup-btn" type="button" title="Back up or restore your save">💾</button>
+    </div>
   </header>
 
   <!-- Full-view tab bar (UI revamp): top-level tabs switch the entire main area
@@ -85,16 +94,19 @@
        carry data-tab matching a .tab-view below; js/tabs.js wires them. -->
   <nav id="tab-bar" role="tablist" aria-label="Main sections">
     <button class="tab-btn tab-active" data-tab="map" role="tab" type="button" aria-selected="true"><span class="tab-icon">🗺</span><span class="tab-label">Map</span></button>
-    <button class="tab-btn" data-tab="combat" role="tab" type="button" aria-selected="false"><span class="tab-icon">⚔</span><span class="tab-label">Combat</span></button>
-    <button class="tab-btn" data-tab="char" role="tab" type="button" aria-selected="false"><span class="tab-icon">🧘</span><span class="tab-label">Cultivator</span></button>
+    <button class="tab-btn" data-tab="cultivator" role="tab" type="button" aria-selected="false"><span class="tab-icon">🧘</span><span class="tab-label">Cultivator</span></button>
+    <button class="tab-btn" data-tab="equipment" role="tab" type="button" aria-selected="false"><span class="tab-icon">⚔</span><span class="tab-label">Equipment</span></button>
+    <button class="tab-btn" data-tab="skills" role="tab" type="button" aria-selected="false"><span class="tab-icon">🌳</span><span class="tab-label">Skills</span></button>
     <button class="tab-btn" data-tab="quests" role="tab" type="button" aria-selected="false"><span class="tab-icon">📜</span><span class="tab-label">Quests</span></button>
-    <button class="tab-btn" data-tab="halls" role="tab" type="button" aria-selected="false"><span class="tab-icon">🏛</span><span class="tab-label">Halls</span></button>
   </nav>
 
   <main id="layout">
-    <!-- Map / exploration screen -->
+    <!-- Map / exploration screen. Combat now resolves inline in the side-panel
+         (#combat-panel, relocated from the deleted Combat tab) beside the grid.
+         #debug-bar is an empty Wave-2 hook the debug spawn bar injects into. -->
     <section id="view-map" class="tab-view tab-active" data-tab="map" role="tabpanel" aria-label="Map">
       <div id="map-panel">
+        <div id="debug-bar"></div><!-- Wave 2: debug spawn bar renders here, above the grid -->
         <div id="map-grid"></div>
         <p class="hint">Click an adjacent tile to move — orthogonal costs 1 Qi, diagonal costs 2 Qi. ☯ is you; red dots are demonic beasts. Return to the Sect Gate to repair and sell.</p>
       </div>
@@ -102,37 +114,70 @@
       <div id="tile-info" class="panel-box">
         <h2 id="tile-title">Location</h2>
         <div id="gate-actions" class="hidden"></div>
+        <div id="map-tools">
+          <button id="btn-codex" type="button" class="codex-btn" title="Beast Codex & Spirit Cards">📖 Beast Codex</button>
+        </div>
         <div id="monster-list"></div>
-      </div>
-    </section>
 
-    <!-- Combat screen (auto-activated when a fight starts) -->
-    <section id="view-combat" class="tab-view" data-tab="combat" role="tabpanel" aria-label="Combat">
-      <div id="combat-panel" class="panel-box hidden">
-        <h2 id="combat-title">Combat</h2>
-        <div id="combat-log"></div>
-        <div id="combat-outcome" class="hidden"></div>
-        <div class="combat-buttons">
-          <button id="btn-skip" type="button">Skip ▶▶</button>
-          <button id="btn-close-combat" type="button" class="hidden">Continue</button>
+        <!-- Combat side-panel: shows the live fight beside the map, then reverts
+             to the tile listing when closed. ui.js/combatfx.js look these ids up
+             by getElementById, so relocating the div needs no JS change. -->
+        <div id="combat-panel" class="panel-box hidden">
+          <h2 id="combat-title">Combat</h2>
+          <div id="combat-log"></div>
+          <div id="combat-outcome" class="hidden"></div>
+          <div class="combat-buttons">
+            <button id="btn-skip" type="button">Skip ▶▶</button>
+            <button id="btn-close-combat" type="button" class="hidden">Continue</button>
+          </div>
         </div>
       </div>
-      <p id="combat-empty" class="empty-note">No active battle. Find a demonic beast on the <strong>Map</strong> and strike to begin a hunt.</p>
     </section>
 
-    <!-- Cultivator screen: character sheet, gear, techniques -->
-    <section id="view-char" class="tab-view" data-tab="char" role="tabpanel" aria-label="Cultivator">
+    <!-- Cultivator screen: character sheet, stats, breakthrough, Ascension,
+         and the Records sub-panel (Titles + Achievements + Chronicle). -->
+    <section id="view-cultivator" class="tab-view" data-tab="cultivator" role="tabpanel" aria-label="Cultivator">
       <div id="char-panel">
         <div id="char-sheet" class="panel-box">
           <h2>Cultivator</h2>
           <div id="char-stats"></div>
+          <div id="cultivator-menu"></div><!-- Ascension button injects here -->
         </div>
 
+        <div id="records" class="panel-box">
+          <h2>Records</h2>
+          <div id="records-menu">
+            <button id="btn-achievements" type="button" class="achievements-btn" title="Achievements — cultivation milestones">🏆 Achievements <span id="achievements-badge" class="dim"></span></button>
+          </div><!-- Titles + Chronicle buttons inject here -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Equipment screen: artifacts, pack, and inline Forge / Salvage /
+         Jewelcraft / Loadouts (all re-homed off the old Halls tab). -->
+    <section id="view-equipment" class="tab-view" data-tab="equipment" role="tabpanel" aria-label="Equipment">
+      <div id="equip-panel">
         <div id="gear-box" class="panel-box">
           <h2>Artifacts</h2>
           <div id="equipment-slots"></div>
           <h3>Pack <span id="pack-count" class="dim"></span></h3>
           <div id="inventory-list"></div>
+        </div>
+        <!-- loadouts.js injects #loadouts-box right after #gear-box -->
+
+        <div id="equipment-menu" class="panel-box">
+          <h3 class="nav-dock-title">Smithing &amp; Gear</h3>
+          <!-- Forge, Salvage, Jewelcraft buttons inject here -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Skills screen: passive skill tree (Meridians) + active abilities. -->
+    <section id="view-skills" class="tab-view" data-tab="skills" role="tabpanel" aria-label="Skills">
+      <div id="skills-panel">
+        <div id="skills-menu" class="panel-box">
+          <h3 class="nav-dock-title">Passive Skill Tree</h3>
+          <!-- Meridians button injects here -->
         </div>
 
         <div id="tech-box" class="panel-box">
@@ -143,38 +188,21 @@
       </div>
     </section>
 
-    <!-- Quests screen -->
+    <!-- Quests screen: quest chains, chronicle log, and the Hunt board. -->
     <section id="view-quests" class="tab-view" data-tab="quests" role="tabpanel" aria-label="Quests">
       <div id="quest-panel" class="panel-box">
         <h2>Sect Missions</h2>
         <div id="quest-body"></div>
       </div>
 
+      <div id="quests-menu" class="panel-box">
+        <h3 class="nav-dock-title">Hunt Board</h3>
+        <button id="btn-bounties" type="button" class="bounties-btn" title="Hunt Bounties — slay beasts for bonus rewards">🏹 Hunt Bounties <span id="bounty-claim-count" class="mail-badge hidden"></span></button>
+      </div>
+
       <div id="event-log" class="panel-box">
         <h2>Chronicle</h2>
         <ul id="event-list"></ul>
-      </div>
-    </section>
-
-    <!-- Halls screen: feature-system buttons (each opens a modal) + save tools.
-         Modules (Forge, Meridians, Jewelcraft, Chronicle, Sect Dispatch,
-         Ascension, Titles) inject their buttons into #nav-menu at runtime. -->
-    <section id="view-halls" class="tab-view" data-tab="halls" role="tabpanel" aria-label="Halls">
-      <div id="nav-menu" class="panel-box">
-        <h3 class="nav-dock-title">Halls &amp; Pavilions</h3>
-        <button id="btn-codex" type="button" class="codex-btn" title="Beast Codex & Spirit Cards">📖 Beast Codex</button>
-        <button id="btn-pavilion" type="button" class="pavilion-btn" title="Treasure Pavilion — buy & sell artifacts">🏛 Treasure Pavilion <span id="pavilion-mail-count" class="mail-badge hidden"></span></button>
-        <button id="btn-sect" type="button" class="sect-btn" title="Your Sect — recruit disciples for passive buffs">⛩ Sect</button>
-        <button id="btn-profile" type="button" class="profile-btn" title="Your Profile — active buffs, rivals & recently-active cultivators">👤 Profile &amp; Rivals</button>
-        <button id="btn-achievements" type="button" class="achievements-btn" title="Achievements — cultivation milestones">🏆 Achievements <span id="achievements-badge" class="dim"></span></button>
-        <button id="btn-bounties" type="button" class="bounties-btn" title="Hunt Bounties — slay beasts for bonus rewards">🏹 Hunt Bounties <span id="bounty-claim-count" class="mail-badge hidden"></span></button>
-        <button id="btn-settings" type="button" class="settings-btn" title="Settings — display preferences, tutorial & save">⚙ Settings</button>
-        <button id="btn-trials" type="button" class="trials-btn" title="Daily Trial — a rotating challenge, one attempt per day">🗓 Daily Trial <span id="trials-badge" class="dim"></span></button>
-        <button id="btn-alchemy" type="button" class="alchemy-btn" title="Alchemy — brew pills for buffs, Qi & insight">🜁 Alchemy</button>
-      </div>
-
-      <div class="panel-box">
-        <button id="btn-backup" type="button" class="backup-btn" title="Back up or restore your save without an account">💾 Backup / Restore Save</button>
       </div>
     </section>
   </main>
@@ -203,17 +231,6 @@
         <button type="button" class="pav-tab" data-tab="mailbox">Mailbox <span id="pav-mail-badge" class="mail-badge hidden"></span></button>
       </div>
       <div id="pavilion-body"></div>
-    </div>
-  </div>
-
-  <div id="sect-overlay" class="hidden">
-    <div id="sect-panel">
-      <div id="sect-header">
-        <h2>Your Sect <span id="sect-count" class="dim"></span></h2>
-        <button id="btn-close-sect" type="button" title="Close">✕</button>
-      </div>
-      <div id="sect-summary"></div>
-      <div id="sect-body"></div>
     </div>
   </div>
 
@@ -253,28 +270,6 @@
 
         <p id="backup-status" class="backup-status"></p>
       </div>
-    </div>
-  </div>
-
-  <div id="profile-overlay" class="hidden">
-    <div id="profile-panel">
-      <div id="profile-header">
-        <h2>Profile &amp; Rivals</h2>
-        <button id="btn-close-profile" type="button" title="Close">✕</button>
-      </div>
-      <div id="profile-summary"></div>
-
-      <h3 class="profile-section-head">Active Buffs</h3>
-      <div id="profile-buffs"></div>
-
-      <h3 class="profile-section-head">Rivals
-        <button id="profile-add-rival" type="button" class="prof-mini-btn">+ Add rival</button>
-      </h3>
-      <div id="profile-rivals"></div>
-      <div id="profile-rival-picker" class="hidden"></div>
-
-      <h3 class="profile-section-head">Recently Active</h3>
-      <div id="profile-feed"></div>
     </div>
   </div>
 
@@ -326,38 +321,6 @@
       </div>
       <p class="bounty-note">Accept a hunt, slay the quarry out in the wilds, then return to claim bonus spirit stones and XP. The board refreshes over time.</p>
       <div id="bounty-body"></div>
-    </div>
-  </div>
-
-  <div id="duel-overlay" class="hidden">
-    <div id="duel-panel">
-      <div id="duel-header">
-        <h2 id="duel-title">Sparring</h2>
-        <button id="btn-close-duel" type="button" title="Close">✕</button>
-      </div>
-      <div id="duel-body"></div>
-    </div>
-  </div>
-
-  <div id="trials-overlay" class="hidden">
-    <div id="trials-panel">
-      <div id="trials-header">
-        <h2>Daily Trial</h2>
-        <button id="btn-close-trials" type="button" title="Close">✕</button>
-      </div>
-      <p class="trial-intro">A rotating challenger appears each day, scaled to your cultivation. One attempt per day — win for bonus spirit stones and insight. Losing costs nothing.</p>
-      <div id="trials-body"></div>
-    </div>
-  </div>
-
-  <div id="alchemy-overlay" class="hidden">
-    <div id="alchemy-panel">
-      <div id="alchemy-header">
-        <h2>Alchemy <span id="alchemy-stones" class="dim"></span></h2>
-        <button id="btn-close-alchemy" type="button" title="Close">✕</button>
-      </div>
-      <p class="alchemy-intro">Refine spirit stones into pills. Instant pills restore Qi or grant insight; buff pills sharpen your body for the next fights.</p>
-      <div id="alchemy-body"></div>
     </div>
   </div>
 

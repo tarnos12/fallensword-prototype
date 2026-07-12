@@ -161,7 +161,8 @@ export function initForge(state, actions) {
   btn.className = 'forge-nav-btn';
   btn.title = 'The Forge — reforge, temper & repair your artifacts';
   btn.textContent = '⚒ Forge';
-  ($('nav-menu') ?? document.getElementById('char-panel'))?.appendChild(btn);
+  // IA restructure (Wave 1): Forge lives on the Equipment tab.
+  ($('equipment-menu') ?? document.getElementById('equip-panel'))?.appendChild(btn);
 
   // Own modal DOM.
   overlay = document.createElement('div');

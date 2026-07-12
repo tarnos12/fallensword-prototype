@@ -136,7 +136,8 @@ export function initAscension(state, acts) {
   btn.className = 'ascension-nav-btn';
   btn.title = 'Ascension — at the peak of cultivation, reset for a permanent power bonus';
   btn.textContent = '✦ Ascension';
-  ($('nav-menu') ?? document.getElementById('char-panel'))?.appendChild(btn);
+  // IA restructure (Wave 1): Ascension button re-homed to the Cultivator tab.
+  ($('cultivator-menu') ?? document.getElementById('char-panel'))?.appendChild(btn);
 
   overlay = document.createElement('div');
   overlay.id = 'ascension-overlay';

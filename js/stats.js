@@ -161,7 +161,7 @@ export function initStats(state) {
   if (bound) return;
   bound = true;
 
-  const nav = document.getElementById('nav-menu');
+  const nav = document.getElementById('records-menu'); // IA restructure (Wave 1): Cultivator → Records
   if (nav && !document.getElementById('btn-stats')) {
     const btn = document.createElement('button');
     btn.id = 'btn-stats';

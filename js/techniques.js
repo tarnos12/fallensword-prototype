@@ -120,17 +120,22 @@ export function learn(player, id) {
   return { ok: true };
 }
 
-export function canCast(player, qi, id) {
+// canCast/cast take an optional costMultiplier (default 1 — no behavior change
+// for existing callers) so the caller (game.js) can apply the Dao Heart "Ascetic"
+// Qi discount from Economy's shop without techniques.js importing meritshop.js
+// (doc 30 §3.4).
+export function canCast(player, qi, id, costMultiplier = 1) {
   const t = TECHNIQUES[id];
   if (!t) return { ok: false };
   if (!isLearned(player, id)) return { ok: false, reason: 'Not learned.' };
-  if (qi < t.qiCost) return { ok: false, reason: `Need ${t.qiCost} Qi.` };
-  return { ok: true };
+  const cost = Math.max(1, Math.round(t.qiCost * costMultiplier));
+  if (qi < cost) return { ok: false, reason: `Need ${cost} Qi.` };
+  return { ok: true, cost };
 }
 
 // Cast (or refresh) a technique buff. Caller deducts res.cost from Qi.
-export function cast(player, qi, id, now = Date.now()) {
-  const check = canCast(player, qi, id);
+export function cast(player, qi, id, now = Date.now(), costMultiplier = 1) {
+  const check = canCast(player, qi, id, costMultiplier);
   if (!check.ok) return check;
   const t = TECHNIQUES[id];
   if (!player.activeBuffs) player.activeBuffs = [];
@@ -142,7 +147,25 @@ export function cast(player, qi, id, now = Date.now()) {
     duration: t.duration,
     expiresAt: now + t.duration,
   });
-  return { ok: true, cost: t.qiCost, duration: t.duration };
+  return { ok: true, cost: check.cost, duration: t.duration };
+}
+
+// --- Respec hooks the premium shop needs (doc 30 §3.4; unconditional). ---
+
+// Total technique points invested — the cost basis for the shop's Technique
+// Respec row. skillPoints is a stored counter, so this refunds directly.
+export function techniquePointsSpent(player) {
+  return (player.learnedTechniques ?? []).reduce((sum, id) => sum + (TECHNIQUES[id]?.cost ?? 0), 0);
+}
+
+// Unlearn every technique, refund the points, and drop any active ability buffs
+// (a dropped ability can't stay active).
+export function resetTechniques(player) {
+  const refunded = techniquePointsSpent(player);
+  player.skillPoints = (player.skillPoints ?? 0) + refunded;
+  player.learnedTechniques = [];
+  player.activeBuffs = [];
+  return { ok: true, refunded };
 }
 
 export function activeBuffs(player, now = Date.now()) {

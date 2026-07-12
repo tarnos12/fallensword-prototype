@@ -3,7 +3,6 @@
 //   • Arrow keys / WASD  → move to the adjacent tile (reuses the game's own move
 //     path via the injected `move(dx, dy)` callback — no duplicated `tryMove`).
 //   • Esc                → close the top-most open modal.
-//   • Digit keys 1–9     → open the Nth nav panel (📖 🏛 ⛩ 👤 …).
 //   • ARIA + a skip link → label the map and modals; `:focus-visible` styling
 //     lives in css/a11y.css.
 //
@@ -48,11 +47,6 @@ export function closeTopModal() {
   if (!open.length) return false;
   open[open.length - 1].classList.add('hidden');
   return true;
-}
-
-function openNavPanel(index) {
-  const buttons = document.querySelectorAll('#nav-menu button');
-  buttons[index]?.click();
 }
 
 // --- Keyboard-shortcuts help overlay ("?") -------------------------------
@@ -125,7 +119,6 @@ export function buildShortcutsOverlay() {
   const body = document.createElement('div');
   body.className = 'shortcuts-body';
   body.appendChild(shortcutRow(['↑', '↓', '←', '→', '/', 'W', 'A', 'S', 'D'], 'Move around the map'));
-  body.appendChild(shortcutRow(['1', '–', '9'], 'Open panels (Codex, Pavilion, Sect…)'));
   body.appendChild(shortcutRow(['Esc'], 'Close the open dialog'));
   body.appendChild(shortcutRow(['?'], 'Show / hide this help'));
 
@@ -206,10 +199,8 @@ export function initInput({ move }) {
       move(delta[0], delta[1]);
       return;
     }
-
-    if (/^[1-9]$/.test(e.key)) {
-      e.preventDefault();
-      openNavPanel(Number(e.key) - 1);
-    }
+    // Digit keys 1–9 are intentionally left UNBOUND here (Wave 1): the Halls
+    // nav-menu they used to index into is dissolved. Wave 2 (CombatWorld) rebinds
+    // them to attack the monster in slot N on the Map surface.
   });
 }

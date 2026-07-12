@@ -318,3 +318,16 @@ export function unequipItem(player, slot) {
   player.inventory.push(item);
   return true;
 }
+
+// Qi-regen bonus from equipped gear — a Wave-2 Titan-gear hook. Deliberately
+// kept OUT of effectiveStats (qiRegen is not a combat stat); its ONLY consumer
+// is game.js:tickQi. Returns 0 for all current gear (no item carries a qiRegen
+// bonus yet), so it is a no-op until Titan items land. Mirrors the *Bonuses()
+// convention of sockets.js/sets.js. Broken gear grants nothing.
+export function gearQiRegenBonus(player) {
+  let bonus = 0;
+  for (const item of Object.values(player.equipment ?? {})) {
+    if (item && item.durability > 0 && item.bonuses?.qiRegen) bonus += item.bonuses.qiRegen;
+  }
+  return bonus;
+}

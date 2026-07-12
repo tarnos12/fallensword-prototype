@@ -79,6 +79,7 @@ export function createPlayer() {
     statPoints: 0,
     skillPoints: 0,
     spiritStones: 20,
+    merit: 0, // premium currency (Wave 1) — earned in-game, spent in the Hall of Merit (Wave 2)
     base: { attack: 12, defense: 8, damage: 9, armor: 3, maxHp: 34 },
     allocated: { attack: 0, defense: 0, damage: 0, armor: 0, hp: 0 },
     equipment: { weapon: null, robe: null },

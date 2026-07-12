@@ -112,6 +112,39 @@ lives under `js/`, one file per concern, imported directly by the browser. Modul
 
 ## Current status
 
+**MAJOR REDESIGN landed 2026-07-12 (author-directed simplify + refocus).** Driven by research Sprints
+1–4 (`docs/research/**`) then a full build. The game was refocused onto a tight core loop and many
+Halls systems were cut/merged. **Design + build specs: `docs/research/proposal/10`–`60`.** Highlights:
+- **IA:** 5 tabs — **Map / Cultivator / Equipment / Skills / Quests** (the old **Combat** and **Halls**
+  tabs were removed; combat now resolves in a side-panel on the Map). Two HUD icons: ◆ auction, ✧
+  premium. `#nav-menu` (17 Halls entries) fully dissolved.
+- **Cull/merge:** Alchemy, Daily Trials, world-event calendar, Sect Dispatch **cut**; Sect/Profile/
+  Rivals/Sparring UI removed (providers/game-layer code retained, DEFER-2.0); Forge/Salvage/Jewelcraft
+  → Equipment, Bounties → Quests, Titles/Achievements/Chronicle → Cultivator Records, Beast Codex →
+  Map. **Spirit Cards kept functional** (only the Codex UI moved to Map — avoids a boss re-tune).
+- **Premium currency "Merit"** (`merit.js`) — earnable/tradeable in-game (drops/bosses/achievements,
+  sellable on the auction house), NO real-money on-ramp. **Hall of Merit shop** (`meritshop.js`) opened
+  from the ✧ icon: inventory/Qi upgrades, XP-loss protection, stat/meridian/technique respec, + a 3-way
+  exclusive **Dao Heart** pick. Auction house is now **dual-currency** (gold/Merit).
+- **Rarities/monsters:** new **Super-Elite** + **Titan** tiers. **Legendary & Super-Elite items are
+  always Sets** (flat Attributes; 4 new sets in `sets.js`); **Titan items are never Sets and always
+  grant Qi-regen**. Spawns (`rarespawns.js`): organic **Legendary** (per-slot roll), **1 Super-Elite
+  per zone**, and **Titans** (`titans.js`) that **move-and-chase** (~10 encounters, HP persists in
+  world state, 100% drop). Drop rates 25% / 50% / 100%. **`?dev=1` debug bar** above the map spawns
+  each tier + a force-100%-drop toggle. **Number keys 1–9 attack the monster in tile-slot N.**
+- **Progression/skills:** Qi regen retuned (~1200/hr → ~75/hr, `QI_REGEN_MS=48000`); the passive
+  **Meridian tree** completed to 8 nodes; techniques reshaped **9 → 4 long (10–15 min) active
+  abilities**; costed respec hooks. Passive + active unified in the **Skills** tab (`skilltree.js`).
+- **Feel:** ink-and-cinnabar visual system (self-hosted Cinzel/EB-Garamond fonts, SVG mask icons, the
+  6 "AI tells" removed) + new combat/loot/merit/breakthrough **SFX** (`audio.js`).
+- `combat.js` remains **byte-for-byte a pure resolver** (titan movement/HP live in game/world state).
+- **Constraint change:** the "each feature owns its own nav button" rule is **relaxed** (it produced
+  the Halls junk-drawer); modules now render into named containers on their host surface.
+- **Verified:** `node --check` all, real-Chromium 21/21 (0 console errors, no h-scroll), `balance.mjs`
+  ALL ROWS PASS. **Save compatibility intentionally NOT maintained** (author will handle save-compat
+  later) — existing saves may break.
+
+### Pre-redesign baseline (superseded by the above)
 **Stages 0–3 complete; the tree is demo/1.0-ready.** Playtested locally, balance-harness-green,
 TESTING scaffolding stripped.
 

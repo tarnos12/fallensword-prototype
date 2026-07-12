@@ -83,7 +83,7 @@
          are small utility icons. The ✧ premium button is a Wave-2 hook. -->
     <div id="hud-actions">
       <button id="btn-pavilion" class="hud-icon-btn pavilion-btn" type="button" title="Auction House — Treasure Pavilion">◆<span id="pavilion-mail-count" class="mail-badge hidden"></span></button>
-      <button id="btn-premium" class="hud-icon-btn" type="button" title="Hall of Merit — premium shop (opens soon)">✧</button>
+      <button id="btn-premium" class="hud-icon-btn" type="button" title="Hall of Merit — premium Merit shop">✧</button>
       <button id="btn-settings" class="hud-icon-btn settings-btn" type="button" title="Settings — display preferences, tutorial &amp; save">⚙</button>
       <button id="btn-backup" class="hud-icon-btn backup-btn" type="button" title="Back up or restore your save">💾</button>
     </div>
@@ -175,16 +175,9 @@
     <!-- Skills screen: passive skill tree (Meridians) + active abilities. -->
     <section id="view-skills" class="tab-view" data-tab="skills" role="tabpanel" aria-label="Skills">
       <div id="skills-panel">
-        <div id="skills-menu" class="panel-box">
-          <h3 class="nav-dock-title">Passive Skill Tree</h3>
-          <!-- Meridians button injects here -->
-        </div>
-
-        <div id="tech-box" class="panel-box">
-          <h2>Techniques</h2>
-          <div id="active-buffs"></div>
-          <div id="tech-list"></div>
-        </div>
+        <!-- skilltree.js renders the whole Skill Tree surface (passive Meridian
+             tree + 4 active abilities) into #skills-menu (Wave 3). -->
+        <div id="skills-menu" class="panel-box"></div>
       </div>
     </section>
 

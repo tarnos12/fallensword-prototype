@@ -7,12 +7,12 @@
 .cmp-block {
   margin-top: 6px;
   padding-top: 6px;
-  border-top: 1px dashed var(--panel-edge, #2c3040);
+  border-top: 1px dashed var(--panel-edge, #3a3122);
 }
 
 .cmp-head {
   font-size: 0.72rem;
-  color: var(--dim, #8a8778);
+  color: var(--dim, #9b8f74);
   margin-bottom: 3px;
 }
 
@@ -24,21 +24,21 @@
   line-height: 1.35;
 }
 
-.cmp-row .cmp-stat { color: var(--text, #d6d3c8); }
+.cmp-row .cmp-stat { color: var(--text, #e8e0cc); }
 .cmp-row .cmp-delta { font-variant-numeric: tabular-nums; font-weight: bold; }
 
-.cmp-up .cmp-delta { color: var(--win, #6fbf73); }
-.cmp-down .cmp-delta { color: var(--loss, #e57373); }
-.cmp-same .cmp-delta { color: var(--dim, #8a8778); font-weight: normal; }
+.cmp-up .cmp-delta { color: var(--win, #5fae7f); }
+.cmp-down .cmp-delta { color: var(--loss, #d4574a); }
+.cmp-same .cmp-delta { color: var(--dim, #9b8f74); font-weight: normal; }
 
 /* --- Rarity-tinted slot glow: deepen the existing .icon-<rarity> borders with a
    soft outer glow so tiers read at a glance in the icon grid. --- */
 
-.item-slot.icon-uncommon { box-shadow: 0 0 6px rgba(123, 198, 126, 0.35); }
-.item-slot.icon-rare { box-shadow: 0 0 7px rgba(100, 181, 246, 0.4); }
-.item-slot.icon-epic { box-shadow: 0 0 8px rgba(179, 136, 255, 0.45); }
-.item-slot.icon-legendary { box-shadow: 0 0 10px rgba(255, 183, 77, 0.5); }
-.item-slot.icon-mythic { box-shadow: 0 0 12px rgba(255, 138, 128, 0.55); }
+.item-slot.icon-uncommon { box-shadow: 0 0 6px rgba(111, 175, 135, 0.35); }
+.item-slot.icon-rare { box-shadow: 0 0 7px rgba(107, 147, 196, 0.4); }
+.item-slot.icon-epic { box-shadow: 0 0 8px rgba(161, 132, 201, 0.45); }
+.item-slot.icon-legendary { box-shadow: 0 0 10px rgba(212, 169, 78, 0.5); }
+.item-slot.icon-mythic { box-shadow: 0 0 12px rgba(235, 138, 114, 0.55); }
 .item-slot:hover { transform: translateY(-1px); }
 
 /* --- Clear "equipped" marker on the two equipment slots (not the pack). --- */
@@ -55,8 +55,8 @@
   line-height: 15px;
   text-align: center;
   border-radius: 50%;
-  background: var(--win, #6fbf73);
-  color: #14161d;
+  background: var(--win, #5fae7f);
+  color: #100d0a;
   font-weight: bold;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
   pointer-events: none;
@@ -65,7 +65,7 @@
 /* --- Tidier right-click context menu: a touch more breathing room + a subtle
    hover wash so entries read as a real menu. --- */
 
-#ctx-menu { padding: 2px; border-radius: 7px; }
+#ctx-menu { padding: 2px; border-radius: var(--radius-sm); }
 #ctx-menu button { transition: background-color 0.12s ease; }
-#ctx-menu button:hover:not(:disabled) { background: rgba(212, 175, 55, 0.12); }
-#ctx-menu .danger-btn:hover:not(:disabled) { background: rgba(229, 115, 115, 0.14); }
+#ctx-menu button:hover:not(:disabled) { background: rgba(200, 162, 74, 0.12); }
+#ctx-menu .danger-btn:hover:not(:disabled) { background: rgba(212, 87, 74, 0.14); }

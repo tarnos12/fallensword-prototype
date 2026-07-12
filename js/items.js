@@ -31,6 +31,14 @@ export const RARITIES = {
 export const INVENTORY_SIZE = 12; // small starting pack per GDD §6.2
 export const DROP_CHANCE = 0.22;
 
+// Effective pack size: the base plus the Hall of Merit "Pack Expansion" upgrade
+// (+2 slots per purchase, Wave 3 Economy). Reads meritShop purchases directly to
+// avoid an items.js -> meritshop.js import cycle. (The task sketched
+// `player.packSlots`, but purchases actually live under player.meritShop.)
+export function effectiveInventorySize(player) {
+  return INVENTORY_SIZE + (player?.meritShop?.purchases?.packSlots ?? 0) * 2;
+}
+
 // Templates: ordered attribute pools with level-1 roll ranges [stat, min, max].
 // The first attribute is the item's identity (a Common piece rolls only that);
 // higher rarities work down the list. Item TYPES are unique per rarity — the
@@ -353,7 +361,7 @@ export function equipItem(player, itemId) {
 export function unequipItem(player, slot) {
   const item = player.equipment[slot];
   if (!item) return false;
-  if (player.inventory.length >= INVENTORY_SIZE) return false; // pack full
+  if (player.inventory.length >= effectiveInventorySize(player)) return false; // pack full
   player.equipment[slot] = null;
   player.inventory.push(item);
   return true;

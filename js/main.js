@@ -38,6 +38,11 @@ import {
   ascend,
   salvageItemAction,
   essenceRepairAction,
+  debugSpawnLegendary,
+  debugSpawnSuperElite,
+  debugSpawnTitan,
+  currentTile,
+  maxQi,
 } from './game.js';
 import {
   renderPlayerBar,
@@ -46,8 +51,6 @@ import {
   renderCharSheet,
   renderGear,
   renderQuests,
-  renderTechniques,
-  renderActiveBuffs,
   renderEventLog,
   toggleInspect,
   playCombat,
@@ -65,7 +68,10 @@ import { initForge } from './crafting.js';
 import { initSalvage, renderSalvage } from './salvage.js';
 import { initBounties, renderBounties, updateBountyBadge } from './bounties.js';
 import { initAscension, renderAscension } from './ascension.js';
-import { initMeridians, allocateMeridian } from './meridians.js';
+import { allocateMeridian } from './meridians.js';
+import { initSkillTree, renderSkillTree } from './skilltree.js';
+import { initMeritShop, renderMeritShop, buyMeritUpgrade, pickDaoHeart } from './meritshop.js';
+import { initDebugBar, isDevMode } from './debug.js';
 import { initSockets, slotGem, unslotGem } from './sockets.js';
 import { INVENTORY_SIZE } from './items.js';
 import { toast, initToasts } from './toast.js';
@@ -101,16 +107,6 @@ if (state.loadedFromSave) {
 const allocHandler = (stat) => {
   allocateStat(state, stat);
   renderAll();
-};
-const techHandlers = {
-  onLearn: (id) => {
-    learnTechnique(state, id);
-    renderAll();
-  },
-  onCast: (id) => {
-    castTechnique(state, id);
-    renderAll();
-  },
 };
 
 function renderAll() {
@@ -166,8 +162,7 @@ function renderAll() {
     claimQuest(state);
     renderAll();
   });
-  renderTechniques(state, techHandlers);
-  renderActiveBuffs(state);
+  renderSkillTree(state);
   renderEventLog(state);
   updatePavilionBadge(state);
   renderLoadouts(state);
@@ -181,8 +176,7 @@ function renderAll() {
 function refreshLive() {
   renderPlayerBar(state);
   renderCharSheet(state, allocHandler);
-  renderTechniques(state, techHandlers);
-  renderActiveBuffs(state);
+  renderSkillTree(state);
 }
 
 function onTileClick(x, y) {
@@ -333,10 +327,10 @@ initPavilion(state, {
   buy: (id) => {
     const r = marketBuy(state, id);
     renderAll();
-    if (r?.ok) toast(`Bought ${r.item.name} for ${r.price} ◆${r.toMailbox ? ' → mailbox' : ''}`, 'success');
+    if (r?.ok) toast(`Bought ${r.item.name} for ${r.price} ${r.currency === 'merit' ? '✧' : '◆'}${r.toMailbox ? ' → mailbox' : ''}`, 'success');
     else if (r?.reason) toast(r.reason, 'error'); // e.g. "Not enough spirit stones"
   },
-  list: (itemId, price) => { marketList(state, itemId, price); renderAll(); },
+  list: (itemId, price, currency) => { marketList(state, itemId, price, currency); renderAll(); },
   cancel: (id) => { marketCancel(state, id); renderAll(); },
   collect: () => { marketCollect(state); renderAll(); },
 });
@@ -382,10 +376,44 @@ initAscension(state, {
     else if (r?.reason) toast(r.reason, 'warn');
   },
 });
-initMeridians(state, {
-  allocate: (id) => {
-    if (allocateMeridian(state.player, id).ok) saveGame(state);
-    renderAll(); // effective stats now reflect the opened meridian
+// Skill Tree (Wave 3): the meridian passive tree + the 4 active abilities, one
+// surface on the Skills tab (skilltree.js). Replaces the old initMeridians()
+// modal and ui.js's renderTechniques/renderActiveBuffs.
+// NOTE: allocateMeridian's real signature is (player, id) — adapted from the
+// task's (state, id) sketch. learnTechnique/castTechnique are game.js wrappers
+// (state, id) and already saveGame internally; the extra saveGame is harmless.
+initSkillTree(state, {
+  allocateMeridian: (id) => { allocateMeridian(state.player, id); saveGame(state); renderAll(); },
+  learnTechnique: (id) => { learnTechnique(state, id); saveGame(state); renderAll(); },
+  castTechnique: (id) => { castTechnique(state, id); saveGame(state); renderAll(); },
+});
+// Hall of Merit (Wave 3): premium shop off the ✧ HUD icon. meritshop.js applies
+// most effects itself; the instant qiRestore row returns { effect } for us to
+// apply to state.qi (mirrors ascend()). We re-render the modal after each action.
+initMeritShop(state, {
+  buy: (id) => {
+    const r = buyMeritUpgrade(state.player, id);
+    if (r.ok) {
+      if (r.effect?.qiRestore) {
+        const before = state.qi;
+        state.qi = Math.min(maxQi(state.player), state.qi + r.effect.qiRestore);
+        toast(`Restored ${state.qi - before} Qi.`, 'success');
+      } else if (typeof r.refunded === 'number') {
+        toast(`Refunded ${r.refunded} point(s) for ${r.cost} ✧.`, 'success');
+      } else {
+        toast(`Purchased for ${r.cost} ✧ Merit.`, 'success');
+      }
+      saveGame(state);
+      renderMeritShop(state);
+      renderAll();
+    } else if (r.reason) {
+      toast(r.reason, 'error');
+    }
+  },
+  pickDaoHeart: (id) => {
+    const r = pickDaoHeart(state.player, id);
+    if (r.ok) { saveGame(state); renderMeritShop(state); renderAll(); toast('Dao Heart path set.', 'success'); }
+    else if (r.reason) toast(r.reason, 'warn');
   },
 });
 initSockets(state, {
@@ -413,7 +441,19 @@ initTutorial(); // first-run onboarding overlay (+ ❔ Help button); after rende
 initSettings(); // ⚙ settings modal — after initTutorial so its "replay tutorial" can reach ❔ Help
 // Keyboard & accessibility (task L). Last, so every modal (incl. runtime-injected
 // ones + the tutorial overlay) exists for the ARIA pass. Movement reuses onTileClick.
-initInput({ move: (dx, dy) => onTileClick(state.pos.x + dx, state.pos.y + dy) });
+initInput({
+  move: (dx, dy) => onTileClick(state.pos.x + dx, state.pos.y + dy),
+  attack: onAttack,
+  getSlotMonster: (i) => currentTile(state).monsters[i] ?? null,
+});
+// Debug spawn bar (Wave 2/3): ?dev=1-gated; populates the #debug-bar container
+// above the map grid. Buttons spawn a Legendary / Super-Elite / Titan onto the
+// current tile; onChange re-renders so they appear immediately.
+initDebugBar(state, {
+  spawnLegendary: debugSpawnLegendary,
+  spawnSuperElite: debugSpawnSuperElite,
+  spawnTitan: debugSpawnTitan,
+}, renderAll);
 
 // Wall-clock Qi regen + passive spirit-stone income + technique-buff tick
 // (once per second).

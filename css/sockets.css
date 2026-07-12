@@ -8,7 +8,7 @@
   position: fixed;
   inset: 0;
   z-index: 80;
-  background: rgba(8, 9, 13, 0.78);
+  background: rgba(10, 7, 4, 0.78);
   backdrop-filter: blur(3px);
   display: flex;
   align-items: flex-start;
@@ -20,7 +20,7 @@
 #sockets-panel {
   background: var(--panel);
   border: 1px solid var(--gold);
-  border-radius: 8px;
+  border-radius: var(--radius-panel);
   width: 100%;
   max-width: 560px;
   padding: 16px 20px 22px;
@@ -42,7 +42,7 @@
 #btn-close-sockets {
   background: none;
   border: 0;
-  color: var(--dim, #8a8f9c);
+  color: var(--dim, #9b8f74);
   font-size: 1.1rem;
   cursor: pointer;
   line-height: 1;
@@ -54,7 +54,7 @@
 
 .sk-item {
   border: 1px solid var(--panel-edge);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg);
   padding: 10px 12px;
 }
@@ -84,8 +84,8 @@
 
 .sk-chip {
   border: 1px solid var(--panel-edge);
-  border-radius: 5px;
-  background: #1b1e28;
+  border-radius: var(--radius-sm);
+  background: #1d1811;
   color: inherit;
   font-size: 0.74rem;
   padding: 4px 8px;
@@ -97,9 +97,9 @@
 .sk-btn {
   margin-left: auto;
   border: 1px solid var(--panel-edge);
-  border-radius: 5px;
-  background: #1b1e28;
-  color: var(--dim, #8a8f9c);
+  border-radius: var(--radius-sm);
+  background: #1d1811;
+  color: var(--dim, #9b8f74);
   font-size: 0.74rem;
   padding: 4px 9px;
   cursor: pointer;

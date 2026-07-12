@@ -13,6 +13,13 @@ import { equipItem, unequipItem } from './items.js';
 
 export const MAX_LOADOUTS = 4;
 
+// Effective loadout cap: base plus the Hall of Merit "Combat Set Expansion"
+// upgrade (+1 slot per purchase, Wave 3 Economy). Reads meritShop purchases
+// directly (no meritshop.js import needed).
+export function effectiveMaxLoadouts(player) {
+  return MAX_LOADOUTS + (player?.meritShop?.purchases?.loadoutSlots ?? 0);
+}
+
 // Resolve an item id to the live item object (equipped or in the pack), or null.
 function itemById(player, id) {
   if (!id) return null;
@@ -37,8 +44,9 @@ export function saveLoadout(player, rawName) {
     player.loadouts[existing] = set;
     return { ok: true, set, overwrote: true };
   }
-  if (player.loadouts.length >= MAX_LOADOUTS) {
-    return { ok: false, reason: `You can keep at most ${MAX_LOADOUTS} combat sets.` };
+  const cap = effectiveMaxLoadouts(player);
+  if (player.loadouts.length >= cap) {
+    return { ok: false, reason: `You can keep at most ${cap} combat sets.` };
   }
   player.loadouts.push(set);
   return { ok: true, set };
@@ -109,8 +117,9 @@ export function renderLoadouts(state) {
   saveBtn.type = 'button';
   saveBtn.className = 'ld-save-btn';
   saveBtn.textContent = 'Save worn gear';
-  saveBtn.disabled = sets.length >= MAX_LOADOUTS;
-  if (saveBtn.disabled) saveBtn.title = `Max ${MAX_LOADOUTS} sets — delete one first`;
+  const cap = effectiveMaxLoadouts(p);
+  saveBtn.disabled = sets.length >= cap;
+  if (saveBtn.disabled) saveBtn.title = `Max ${cap} sets — delete one first`;
   saveBtn.addEventListener('click', () => {
     refs.actions.save(input.value);
     input.value = '';

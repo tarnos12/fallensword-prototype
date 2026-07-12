@@ -45,7 +45,9 @@ import {
   reforgeCost,
   upgradeCost,
   gearQiRegenBonus,
+  effectiveInventorySize,
 } from './items.js';
+import { meritShopBonuses } from './meritshop.js';
 import * as Quests from './quests.js';
 import * as Techniques from './techniques.js';
 import { rollCardDrop, acquireCard, cardBonuses, CARDS } from './cards.js';
@@ -74,7 +76,7 @@ const STONE_ACCRUAL_MS = 3_600_000; // spirit-stones/hour cards accrue per real 
 // Effective Qi cap: base cap + Qi-cap bonuses from Spirit Cards (GDD §7.2) and
 // sect disciples (GDD §4.3). Always derived so the cap tracks owned sources.
 export function maxQi(player) {
-  return MAX_QI + cardBonuses(player).meta.qiCap + guildBuffs(player).qiCap;
+  return MAX_QI + cardBonuses(player).meta.qiCap + guildBuffs(player).qiCap + meritShopBonuses(player).qiCap;
 }
 
 // Death penalty (GDD §8.3 starting values). XP loss is progress toward the
@@ -118,6 +120,9 @@ export function createGame() {
   if (!state.player.cards) state.player.cards = {};
   if (!state.player.guild) state.player.guild = { members: [] };
   if (!state.player.loadouts) state.player.loadouts = [];
+  // Hall of Merit state (Wave 3 Economy): premium-shop purchases + timed Merit buffs.
+  if (!state.player.meritShop) state.player.meritShop = { purchases: {}, daoHeart: null, daoHeartSwitches: 0 };
+  if (!state.player.meritBuffs) state.player.meritBuffs = [];
   normalizeBossState(state.player); // create {} for new saves; migrate old single-boss shape
   if (!state.player.achievements) state.player.achievements = [];
   if (!state.player.trials) state.player.trials = { lastDay: -1, plays: 0, wins: 0 };
@@ -240,7 +245,7 @@ export function attemptDailyTrial(state) {
     if (reward.itemChance && state.worldRng() < reward.itemChance) {
       const slot = state.worldRng() < 0.5 ? 'weapon' : 'robe';
       const item = generateItem(slot, p.level, null, state.worldRng);
-      if (p.inventory.length < INVENTORY_SIZE) {
+      if (p.inventory.length < effectiveInventorySize(p)) {
         p.inventory.push(item);
         granted.item = item;
       }
@@ -384,10 +389,13 @@ export function tickQi(state, now = Date.now()) {
   // Titan gear (Wave 2) grants extra Qi per regen tick; gearQiRegenBonus is 0 for
   // all current gear, so perTick is 1 today. Kept OUT of effectiveStats by design.
   const perTick = 1 + gearQiRegenBonus(state.player);
-  const ticks = Math.floor((now - state.lastQiTick) / QI_REGEN_MS);
+  // Hall of Merit's "Qi Current Talisman" shortens the regen interval (up to -30%).
+  const regenPct = meritShopBonuses(state.player).qiRegenPct;
+  const interval = Math.max(1, Math.round(QI_REGEN_MS * (1 - regenPct)));
+  const ticks = Math.floor((now - state.lastQiTick) / interval);
   if (ticks > 0) {
     state.qi = Math.min(cap, state.qi + ticks * perTick);
-    state.lastQiTick += ticks * QI_REGEN_MS;
+    state.lastQiTick += ticks * interval;
   }
 }
 
@@ -574,7 +582,7 @@ export function attack(state, monsterId) {
     st.stonesWon = (st.stonesWon || 0) + stones;
 
     if (drop) {
-      if (p.inventory.length < INVENTORY_SIZE) {
+      if (p.inventory.length < effectiveInventorySize(p)) {
         p.inventory.push(drop);
         st.itemsLooted = (st.itemsLooted || 0) + 1;
         addLog(state, `Loot: ${drop.name} (Lv ${drop.level}).`);
@@ -598,7 +606,8 @@ export function attack(state, monsterId) {
     grantXp(state, xp);
   } else if (result.outcome === 'loss') {
     const stonesLost = Math.floor(p.spiritStones * DEATH_STONE_LOSS);
-    const xpLost = Math.floor(p.xp * DEATH_XP_LOSS);
+    // Hall of Merit's "Ward Against Regression" reduces the XP lost on death.
+    const xpLost = Math.floor(p.xp * DEATH_XP_LOSS * meritShopBonuses(p).xpLossMult);
     p.spiritStones -= stonesLost;
     p.xp -= xpLost;
     result.penalty = { stonesLost, xpLost };
@@ -871,7 +880,7 @@ export function claimQuest(state) {
   if (!q || !qs.claimable) return false;
   const p = state.player;
   const r = q.reward;
-  if (r.item && p.inventory.length >= INVENTORY_SIZE) {
+  if (r.item && p.inventory.length >= effectiveInventorySize(p)) {
     addLog(state, 'Your pack is full — make room to claim the quest reward.');
     return false;
   }
@@ -920,11 +929,12 @@ export function marketMailbox(state) {
 export function marketBuy(state, listingId) {
   const res = state.marketProvider.buyNow(listingId);
   if (res.ok) {
+    const unit = res.currency === 'merit' ? 'Merit' : 'stones';
     addLog(
       state,
       res.toMailbox
-        ? `Bought ${res.item.name} for ${res.price} stones — pack full, delivered to your mailbox.`
-        : `Bought ${res.item.name} for ${res.price} stones.`
+        ? `Bought ${res.item.name} for ${res.price} ${unit} — pack full, delivered to your mailbox.`
+        : `Bought ${res.item.name} for ${res.price} ${unit}.`
     );
     saveGame(state);
   } else if (res.reason) {
@@ -933,10 +943,11 @@ export function marketBuy(state, listingId) {
   return res;
 }
 
-export function marketList(state, itemId, price) {
-  const res = state.marketProvider.listItem(itemId, price);
+export function marketList(state, itemId, price, currency = 'stones') {
+  const res = state.marketProvider.listItem(itemId, price, currency);
   if (res.ok) {
-    addLog(state, `Listed ${res.listing.item.name} in the Treasure Pavilion for ${res.listing.price} stones.`);
+    const unit = res.listing.currency === 'merit' ? 'Merit' : 'stones';
+    addLog(state, `Listed ${res.listing.item.name} in the Treasure Pavilion for ${res.listing.price} ${unit}.`);
     saveGame(state);
   } else if (res.reason) {
     addLog(state, res.reason);
@@ -959,10 +970,11 @@ export function marketCollect(state) {
   const res = state.marketProvider.collectMailbox();
   const bits = [];
   if (res.stones) bits.push(`${res.stones} spirit stones`);
+  if (res.merit) bits.push(`${res.merit} Merit`);
   if (res.items.length) bits.push(`${res.items.length} item(s)`);
   if (bits.length) addLog(state, `Collected ${bits.join(' and ')} from your mailbox.`);
   if (res.blocked) addLog(state, `${res.blocked} item(s) remain — clear pack space to collect them.`);
-  if (res.stones || res.items.length) saveGame(state);
+  if (res.stones || res.merit || res.items.length) saveGame(state);
   return res;
 }
 

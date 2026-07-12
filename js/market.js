@@ -9,7 +9,7 @@
 // backend with real player listings, and neither the UI nor the player's mental
 // model changes (GDD §4.3, §6.7.7).
 
-import { generateItem, sellValue, INVENTORY_SIZE } from './items.js';
+import { generateItem, sellValue, INVENTORY_SIZE, effectiveInventorySize } from './items.js';
 import { personaById, personaForLevel, randomPersona } from './personas.js';
 import { awardMerit, spendMerit } from './merit.js';
 
@@ -200,7 +200,7 @@ function buyNow(state, listingId, now) {
   m.listings.splice(idx, 1);
   // Instant delivery to the pack; if it is full, the item waits in the mailbox
   // (GDD §6.7.6 — completed purchases can land in the mailbox).
-  if (p.inventory.length < INVENTORY_SIZE) {
+  if (p.inventory.length < effectiveInventorySize(p)) {
     p.inventory.push(listing.item);
     return { ok: true, item: listing.item, toMailbox: false, price: listing.price, currency: listing.currency };
   }
@@ -255,7 +255,7 @@ function cancelListing(state, listingId) {
   const idx = m.playerListings.findIndex((l) => l.id === listingId);
   if (idx === -1) return { ok: false, reason: 'Listing not found.' };
   const p = state.player;
-  if (p.inventory.length >= INVENTORY_SIZE) return { ok: false, reason: 'Your pack is full — make room to reclaim it.' };
+  if (p.inventory.length >= effectiveInventorySize(p)) return { ok: false, reason: 'Your pack is full — make room to reclaim it.' };
   const [pl] = m.playerListings.splice(idx, 1);
   p.inventory.push(pl.item);
   return { ok: true, item: pl.item };
@@ -286,7 +286,7 @@ function collectMailbox(state) {
       continue;
     }
     // 'item' (purchase overflow) or 'return' (unsold listing)
-    if (p.inventory.length < INVENTORY_SIZE) {
+    if (p.inventory.length < effectiveInventorySize(p)) {
       p.inventory.push(entry.item);
       items.push(entry.item);
     } else {

@@ -49,7 +49,7 @@ const GEM_TIER_WEIGHTS = [['common', 70], ['uncommon', 24], ['rare', 6]];
 // How many sockets a piece of gear rolls, by rarity. Only Rare+ gear is socketed
 // — the reward for a better base item is also more enchant surface. Keyed by the
 // same rarity strings items.js uses; unknown/low rarities → 0 (no sockets).
-const SOCKET_COUNTS = { rare: 1, epic: 2, legendary: 2, mythic: 3 };
+const SOCKET_COUNTS = { rare: 1, epic: 2, legendary: 2, superElite: 3, titan: 2, mythic: 3 };
 
 export function socketCountFor(rarityKey) {
   return SOCKET_COUNTS[rarityKey] ?? 0;

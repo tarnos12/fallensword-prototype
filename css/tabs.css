@@ -42,7 +42,7 @@ body > * { flex: 0 0 auto; }
   gap: 4px;
   padding: 6px 10px 0;
   border-bottom: 1px solid var(--panel-edge);
-  background: var(--panel, #16181f);
+  background: var(--bg-deep, #100d0a);
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -60,14 +60,34 @@ body > * { flex: 0 0 auto; }
   border-bottom: none;
   border-radius: var(--radius, 6px) var(--radius, 6px) 0 0;
   background: transparent;
-  color: var(--dim, #9aa0ad);
-  font: inherit;
-  font-size: 0.92rem;
+  color: var(--dim, #9b8f74);
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
-.tab-btn .tab-icon { font-size: 1.05rem; line-height: 1; }
+/* Emoji tab glyphs are gone — each tab paints its own line-drawn SVG glyph
+   (masked, so it inherits the label color). The old .tab-icon span is hidden
+   rather than removed so the markup keeps working either way. */
+.tab-btn .tab-icon { display: none; }
+.tab-btn::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 17px;
+  height: 17px;
+  background: currentColor;
+  -webkit-mask: var(--tab-glyph) center / contain no-repeat;
+  mask: var(--tab-glyph) center / contain no-repeat;
+}
+.tab-btn[data-tab="map"] { --tab-glyph: var(--i-map); }
+.tab-btn[data-tab="cultivator"] { --tab-glyph: var(--i-lotus); }
+.tab-btn[data-tab="equipment"] { --tab-glyph: var(--i-sword); }
+.tab-btn[data-tab="skills"] { --tab-glyph: var(--i-tree); }
+.tab-btn[data-tab="quests"] { --tab-glyph: var(--i-scroll); }
 .tab-btn:hover:not(.tab-active) { color: var(--text); background: rgba(255, 255, 255, 0.04); }
 .tab-btn:focus-visible { outline: 2px solid var(--ring, var(--gold)); outline-offset: -2px; }
 
@@ -78,7 +98,8 @@ body > * { flex: 0 0 auto; }
   border-color: var(--panel-edge);
   border-bottom: 1px solid var(--bg);
   margin-bottom: -1px;            /* cover the tab-bar's bottom border */
-  font-weight: bold;
+  font-weight: 600;
+  box-shadow: inset 0 2px 0 var(--cinnabar, #c8433a); /* cinnabar seal rule */
 }
 
 /* A small count badge riding a tab (e.g. claimable bounties, mail). */
@@ -86,7 +107,7 @@ body > * { flex: 0 0 auto; }
   min-width: 16px;
   padding: 0 5px;
   border-radius: 9px;
-  background: var(--loss, #e0554e);
+  background: var(--loss, #c8433a);
   color: #fff;
   font-size: 0.68rem;
   font-weight: bold;
@@ -157,7 +178,7 @@ body > * { flex: 0 0 auto; }
   margin: 24px auto;
   padding: 18px;
   text-align: center;
-  color: var(--dim, #9aa0ad);
+  color: var(--dim, #9b8f74);
   border: 1px dashed var(--panel-edge);
   border-radius: var(--radius, 6px);
 }
@@ -191,11 +212,11 @@ body > * { flex: 0 0 auto; }
     font-size: 0.66rem;
     border-radius: var(--radius, 6px);
   }
-  .tab-btn .tab-icon { font-size: 1.15rem; }
+  .tab-btn::before { width: 19px; height: 19px; }
   .tab-btn.tab-active {
     margin-bottom: 0;
     border-bottom: 1px solid var(--panel-edge);
-    background: rgba(212, 175, 55, 0.12);
+    background: rgba(200, 162, 74, 0.12);
   }
 
   /* #layout must clear the fixed bottom dock. */

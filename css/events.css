@@ -7,37 +7,37 @@
   flex-wrap: wrap;
   padding: 6px 18px;
   font-size: 0.82rem;
-  border-bottom: 1px solid var(--panel-edge, #2c3040);
-  background: var(--panel, #1d2029);
+  border-bottom: 1px solid var(--panel-edge, #3a3122);
+  background: var(--panel, #1c1712);
 }
 
-#event-banner.event-calm { color: var(--dim, #8a8778); }
+#event-banner.event-calm { color: var(--dim, #9b8f74); }
 
 #event-banner.event-active {
-  background: linear-gradient(90deg, rgba(212, 175, 55, 0.14), rgba(212, 175, 55, 0.02));
-  border-bottom-color: var(--gold, #d4af37);
+  background: linear-gradient(90deg, rgba(200, 162, 74, 0.14), rgba(200, 162, 74, 0.02));
+  border-bottom-color: var(--gold, #c8a24a);
 }
 
 .event-icon { font-size: 1rem; }
 
-.event-name { font-weight: bold; color: var(--gold, #d4af37); letter-spacing: 0.5px; }
+.event-name { font-weight: bold; color: var(--gold, #c8a24a); letter-spacing: 0.5px; }
 
-#event-banner.event-calm .event-name { color: var(--dim, #8a8778); }
+#event-banner.event-calm .event-name { color: var(--dim, #9b8f74); }
 
-.event-blurb { color: var(--text, #d6d3c8); flex: 1 1 auto; min-width: 0; }
+.event-blurb { color: var(--text, #e8e0cc); flex: 1 1 auto; min-width: 0; }
 
-#event-banner.event-calm .event-blurb { color: var(--dim, #8a8778); }
+#event-banner.event-calm .event-blurb { color: var(--dim, #9b8f74); }
 
 .event-timer {
-  color: var(--dim, #8a8778);
+  color: var(--dim, #9b8f74);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 /* Per-event accent on the name, for a touch of variety. */
 .event-enlightenment .event-name { color: #7fd0ff; }
-.event-spirit_torrent .event-name { color: #ffd76a; }
-.event-blood_moon .event-name { color: #ff8a80; }
+.event-spirit_torrent .event-name { color: #e6c979; }
+.event-blood_moon .event-name { color: #eb8a72; }
 
 @media (max-width: 620px) {
   .event-blurb { flex-basis: 100%; order: 3; }

@@ -12,10 +12,10 @@
   z-index: 9999; /* above all modals and the item #tooltip */
   max-width: 260px;
   padding: 7px 10px;
-  background: #0e1015;
+  background: #0f0c08;
   color: var(--ink, #e8e2d0);
   border: 1px solid var(--gold, #c8a24a);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 0.78rem;
   line-height: 1.35;
   white-space: normal;

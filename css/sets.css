@@ -9,7 +9,7 @@
 }
 
 .tt-line.set-member { padding-left: 4px; font-size: 0.82rem; color: var(--dim); }
-.tt-line.set-member.on { color: var(--text, #d6d3c8); }
+.tt-line.set-member.on { color: var(--text, #e8e0cc); }
 
 .tt-line.set-bonus { padding-left: 4px; font-size: 0.82rem; }
-.tt-line.set-bonus.active { color: var(--win, #6fbf73); font-weight: 600; }
+.tt-line.set-bonus.active { color: var(--win, #5fae7f); font-weight: 600; }

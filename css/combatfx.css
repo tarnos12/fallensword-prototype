@@ -11,16 +11,16 @@
 .cfx-actor {
   flex: 1 1 0;
   min-width: 0;
-  background: var(--bg, #14161d);
-  border: 1px solid var(--panel-edge, #2c3040);
-  border-radius: 6px;
+  background: var(--bg, #100d0a);
+  border: 1px solid var(--panel-edge, #3a3122);
+  border-radius: var(--radius-sm);
   padding: 8px 10px 10px;
   position: relative;
   transition: box-shadow 0.2s ease, border-color 0.2s ease, opacity 0.3s ease;
 }
 
-.cfx-you { border-left: 3px solid var(--qi, #4fc3f7); }
-.cfx-foe { border-left: 3px solid var(--loss, #e57373); }
+.cfx-you { border-left: 3px solid var(--qi, #63b585); }
+.cfx-foe { border-left: 3px solid var(--loss, #d4574a); }
 
 .cfx-name {
   font-size: 0.82rem;
@@ -33,9 +33,9 @@
 
 .cfx-hpbar {
   height: 8px;
-  background: #0d0f14;
-  border: 1px solid var(--panel-edge, #2c3040);
-  border-radius: 5px;
+  background: #0f0c08;
+  border: 1px solid var(--panel-edge, #3a3122);
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
@@ -43,22 +43,22 @@
   display: block;
   height: 100%;
   width: 100%;
-  background: linear-gradient(90deg, #4fae5a, #6fbf73);
+  background: linear-gradient(90deg, #478f68, #5fae7f);
   transition: width 0.35s ease;
 }
 
-.cfx-hpfill.cfx-low { background: linear-gradient(90deg, #c0392b, #e57373); }
+.cfx-hpfill.cfx-low { background: linear-gradient(90deg, #b13a2e, #d4574a); }
 
 .cfx-hpnum {
   font-size: 0.7rem;
-  color: var(--dim, #8a8778);
+  color: var(--dim, #9b8f74);
   margin-top: 3px;
   font-variant-numeric: tabular-nums;
 }
 
 /* --- Hit flash + shake on the struck card --- */
-.cfx-hit { border-color: var(--loss, #e57373); box-shadow: 0 0 0 2px rgba(229, 115, 115, 0.45); }
-.cfx-you.cfx-hit { border-color: var(--loss, #e57373); }
+.cfx-hit { border-color: var(--loss, #d4574a); box-shadow: 0 0 0 2px rgba(212, 87, 74, 0.45); }
+.cfx-you.cfx-hit { border-color: var(--loss, #d4574a); }
 
 @keyframes cfx-shake {
   0%, 100% { transform: translateX(0); }
@@ -73,10 +73,10 @@
    normal hit feedback. Colour/glow are non-motion (kept under reduced-motion);
    the harder shake is gated below. --- */
 .cfx-crit-hit {
-  border-color: var(--loss, #e57373);
-  box-shadow: 0 0 0 3px rgba(229, 115, 115, 0.7), 0 0 18px 3px rgba(255, 138, 128, 0.65);
+  border-color: var(--loss, #d4574a);
+  box-shadow: 0 0 0 3px rgba(212, 87, 74, 0.7), 0 0 18px 3px rgba(235, 138, 114, 0.65);
 }
-.cfx-you.cfx-crit-hit { border-color: var(--loss, #e57373); }
+.cfx-you.cfx-crit-hit { border-color: var(--loss, #d4574a); }
 .cfx-crit-hit.cfx-shake { animation: cfx-crit-shake 0.34s ease; }
 
 @keyframes cfx-crit-shake {
@@ -91,9 +91,9 @@
 /* Brief arena-level flash punctuating a crit. */
 .cfx-crit-flash { animation: cfx-crit-flash 0.34s ease; }
 @keyframes cfx-crit-flash {
-  0% { background: rgba(255, 138, 128, 0); }
-  25% { background: rgba(255, 138, 128, 0.16); }
-  100% { background: rgba(255, 138, 128, 0); }
+  0% { background: rgba(235, 138, 114, 0); }
+  25% { background: rgba(235, 138, 114, 0.16); }
+  100% { background: rgba(235, 138, 114, 0); }
 }
 
 .cfx-dead { opacity: 0.5; filter: grayscale(0.6); }
@@ -122,9 +122,9 @@
   --cfx-dx: 0px;
 }
 
-.cfx-float.cfx-dmg { color: #ffd7d0; }
-.cfx-float.cfx-crit { color: #ff8a80; font-size: 1.5rem; }
-.cfx-float.cfx-miss { color: var(--dim, #8a8778); font-size: 0.9rem; }
+.cfx-float.cfx-dmg { color: #f2d3c2; }
+.cfx-float.cfx-crit { color: #eb8a72; font-size: 1.5rem; }
+.cfx-float.cfx-miss { color: var(--dim, #9b8f74); font-size: 0.9rem; }
 
 @keyframes cfx-rise {
   0% { opacity: 0; transform: translateX(calc(-50% + var(--cfx-dx))) translateY(6px) scale(0.7); }
@@ -142,14 +142,14 @@
   font-size: 1.4rem;
   font-weight: bold;
   letter-spacing: 3px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   pointer-events: none;
   animation: cfx-pop 0.5s ease-out;
 }
 
-.cfx-victory .cfx-flourish { color: #6fbf73; background: rgba(111, 191, 115, 0.14); text-shadow: 0 0 12px rgba(111, 191, 115, 0.7); }
-.cfx-defeat .cfx-flourish { color: #e57373; background: rgba(229, 115, 115, 0.14); text-shadow: 0 0 12px rgba(229, 115, 115, 0.6); }
-.cfx-draw .cfx-flourish { color: #b0a06a; background: rgba(176, 160, 106, 0.12); }
+.cfx-victory .cfx-flourish { color: #5fae7f; background: rgba(95, 174, 127, 0.14); text-shadow: 0 0 12px rgba(95, 174, 127, 0.7); }
+.cfx-defeat .cfx-flourish { color: #d4574a; background: rgba(212, 87, 74, 0.14); text-shadow: 0 0 12px rgba(212, 87, 74, 0.6); }
+.cfx-draw .cfx-flourish { color: #ab9868; background: rgba(171, 152, 104, 0.12); }
 
 @keyframes cfx-pop {
   0% { opacity: 0; transform: scale(0.6); }

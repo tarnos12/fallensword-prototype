@@ -6,14 +6,14 @@ import { maxQi, effectiveStats, stageName, totalRepairCost, marketListings, mark
 import { MAX_TURNS } from './combat.js';
 import { xpForBreakthrough, ALLOC_STATS, POINT_VALUE, MAX_STAGE, ASCENSION_STAT_PER_TIER } from './progression.js';
 import { meridianBonuses } from './meridians.js'; // per-source char-sheet stat breakdown
-import { sellValue, RARITIES, INVENTORY_SIZE, DROP_CHANCE } from './items.js';
+import { sellValue, RARITIES, INVENTORY_SIZE, DROP_CHANCE, effectiveInventorySize } from './items.js';
 import { currentQuest, progressText, QUESTS } from './quests.js';
 import { CREATURE_TYPES, creatureStatBlock } from './actors.js';
 import { CARDS, cardForCreature, cardBonuses, cardBonusText, ownedCardCount } from './cards.js';
 import { marketValue } from './market.js';
 import { personaById, personaLabel } from './personas.js';
 import { SECT_CAPACITY } from './guild.js';
-import { TECHNIQUES, CATEGORIES, get as getTech, isLearned, canLearn, canCast, activeBuffs } from './techniques.js';
+import { activeBuffs } from './techniques.js'; // char-sheet buff breakdown (Skill Tree UI moved to skilltree.js)
 import { BOSS_LIST, bossAtLair, bossLairStatus } from './boss.js';
 import { beginFx, turnFx, endFx } from './combatfx.js';
 import { compareRows, setCompareContext } from './itemcompare.js'; // task Y: hover deltas
@@ -517,10 +517,11 @@ export function renderGear(state, { onEquip, onUnequip, onSell, onDestroy, onSal
     );
   }
 
-  $('pack-count').textContent = `${p.inventory.length}/${INVENTORY_SIZE}`;
+  const packSize = effectiveInventorySize(p);
+  $('pack-count').textContent = `${p.inventory.length}/${packSize}`;
   const inv = $('inventory-list');
   inv.innerHTML = '';
-  for (let i = 0; i < INVENTORY_SIZE; i++) {
+  for (let i = 0; i < packSize; i++) {
     const item = p.inventory[i];
     if (!item) {
       inv.appendChild(makeItemSlot(null, {}));
@@ -620,89 +621,9 @@ export function renderQuests(state, onClaim) {
   }
 }
 
-// --- Techniques: learn (banked points) + cast (Qi) + active buff readout ---
-
-const EFFECT_LABELS = { attack: 'Attack', defense: 'Defense', damage: 'Damage', armor: 'Armor', hp: 'Max HP' };
-
-function effectText(effect) {
-  return Object.entries(effect)
-    .map(([s, v]) => `${v > 0 ? '+' : ''}${Math.round(v * 100)}% ${EFFECT_LABELS[s] ?? s}`)
-    .join(', ');
-}
-
-export function renderActiveBuffs(state, now = Date.now()) {
-  const box = $('active-buffs');
-  const buffs = activeBuffs(state.player, now);
-  box.innerHTML = '';
-  if (buffs.length === 0) {
-    box.innerHTML = '<p class="empty-note">No techniques active. Channel one before a hard fight.</p>';
-    return;
-  }
-  for (const b of buffs) {
-    const t = getTech(b.techniqueId);
-    const secs = Math.max(0, Math.ceil((b.expiresAt - now) / 1000));
-    const row = document.createElement('div');
-    row.className = 'buff-row';
-    row.title = `${t.name} — ${effectText(t.effect)}, fades in ${secs}s.`;
-    row.innerHTML = `<span class="buff-name cat-${t.category.toLowerCase()}">${t.name}</span>
-      <span class="buff-eff dim">${effectText(t.effect)}</span>
-      <span class="buff-time">${secs}s</span>`;
-    box.appendChild(row);
-  }
-}
-
-export function renderTechniques(state, { onLearn, onCast }) {
-  const p = state.player;
-  const list = $('tech-list');
-  list.innerHTML = '';
-
-  const head = document.createElement('p');
-  head.className = 'empty-note';
-  head.textContent = `Technique points: ${p.skillPoints}. Learn once, then channel (costs Qi) for a timed buff.`;
-  head.title = 'Technique points come from breakthroughs and are spent once to learn a technique; channelling it afterward costs Qi, not points.';
-  list.appendChild(head);
-
-  for (const cat of CATEGORIES) {
-    const catHead = document.createElement('h3');
-    catHead.className = `cat-${cat.toLowerCase()}`;
-    catHead.textContent = cat;
-    list.appendChild(catHead);
-
-    for (const t of Object.values(TECHNIQUES).filter((x) => x.category === cat)) {
-      const learned = isLearned(p, t.id);
-      const row = document.createElement('div');
-      row.className = 'tech-row';
-      if (learned) row.classList.add('learned');
-
-      const info = document.createElement('div');
-      info.className = 'tech-info';
-      info.innerHTML = `<span class="tech-name">${t.name}</span>
-        <span class="tech-desc dim">${t.desc}</span>
-        <span class="tech-meta dim">Qi ${t.qiCost} · ${Math.round(t.duration / 1000)}s · needs stage ${t.minStage}${t.prereqs.length ? ` · after ${t.prereqs.map((pr) => getTech(pr).name).join(', ')}` : ''}</span>`;
-      info.title = `${t.name} — ${t.desc} Once learned, channelling costs ${t.qiCost} Qi for a ${Math.round(t.duration / 1000)}s buff.`;
-      row.appendChild(info);
-
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      if (!learned) {
-        const chk = canLearn(p, t.id);
-        btn.textContent = `Learn (${t.cost}✦)`;
-        btn.disabled = !chk.ok;
-        btn.title = !chk.ok && chk.reason ? chk.reason : `Spend ${t.cost} technique point${t.cost === 1 ? '' : 's'} to learn ${t.name} permanently — channelling it later costs Qi, not points.`;
-        btn.addEventListener('click', () => onLearn(t.id));
-      } else {
-        const chk = canCast(p, state.qi, t.id);
-        btn.textContent = 'Channel';
-        btn.className = 'cast-btn';
-        btn.disabled = !chk.ok;
-        btn.title = !chk.ok && chk.reason ? chk.reason : `Spend ${t.qiCost} Qi to activate ${t.name} — ${effectText(t.effect)} for ${Math.round(t.duration / 1000)}s.`;
-        btn.addEventListener('click', () => onCast(t.id));
-      }
-      row.appendChild(btn);
-      list.appendChild(row);
-    }
-  }
-}
+// --- Techniques UI moved to js/skilltree.js (Wave 3). The old
+// renderTechniques/renderActiveBuffs lived here and referenced the removed
+// `prereqs` field; the Skill Tree surface supersedes them. ---
 
 export function renderEventLog(state) {
   const ul = $('event-list');
@@ -1123,20 +1044,25 @@ function renderBuyTab(body) {
     const seller = personaById(l.sellerPersonaId);
     const info = document.createElement('div');
     info.className = 'pav-info';
-    const fair = marketValue(l.item);
+    const isMerit = l.currency === 'merit';
+    const unit = isMerit ? '✧' : '◆';
+    const fair = marketValue(l.item, isMerit ? 'merit' : 'stones');
     const deal = l.price <= fair * 0.85 ? '<span class="pav-deal">bargain</span>' : l.price >= fair * 1.25 ? '<span class="pav-pricey">steep</span>' : '';
-    info.innerHTML = `<div class="pav-name rarity-${l.item.rarity}">${l.item.name} <span class="dim">Lv ${l.item.level} ${l.item.slot}</span></div>
+    const meritTag = isMerit ? ' <span class="pav-merit-tag">Merit</span>' : '';
+    info.innerHTML = `<div class="pav-name rarity-${l.item.rarity}">${l.item.name} <span class="dim">Lv ${l.item.level} ${l.item.slot}</span>${meritTag}</div>
       <div class="pav-sub dim">${personaLabel(seller)}</div>
-      <div class="pav-price">${l.price} ◆ ${deal} <span class="dim">· ${fmtLeft(l.expiresAt - now)}</span></div>`;
+      <div class="pav-price">${l.price} ${unit} ${deal} <span class="dim">· ${fmtLeft(l.expiresAt - now)}</span></div>`;
     const buy = document.createElement('button');
     buy.type = 'button';
     buy.className = 'pav-buy-btn';
     buy.textContent = 'Buy';
-    if (state.player.spiritStones < l.price) {
+    const balance = isMerit ? (state.player.merit ?? 0) : state.player.spiritStones;
+    const label = isMerit ? 'Merit ✧' : 'spirit stones ◆';
+    if (balance < l.price) {
       buy.disabled = true;
-      buy.title = `Not enough spirit stones — this costs ${l.price} ◆, you have ${state.player.spiritStones} ◆.`;
+      buy.title = `Not enough ${label} — this costs ${l.price} ${unit}, you have ${balance} ${unit}.`;
     } else {
-      buy.title = `Buy Now for ${l.price} spirit stones ◆.`;
+      buy.title = `Buy Now for ${l.price} ${label}.`;
     }
     buy.addEventListener('click', () => { hideTip(); actions.buy(l.id); afterPavAction(); });
     row.append(pavItemIcon(l.item), info, buy);
@@ -1147,7 +1073,7 @@ function renderBuyTab(body) {
 
 function renderSellTab(body) {
   const { state, actions } = pav;
-  body.appendChild(emptyNote('List an artifact from your pack. Price below its fair value to sell faster; overprice it and it may sit unsold. Proceeds arrive in your mailbox.'));
+  body.appendChild(emptyNote('List an artifact from your pack for spirit stones ◆ or Merit ✧. Price below its fair value to sell faster; overprice it and it may sit unsold. Proceeds arrive in your mailbox.'));
   const inv = state.player.inventory;
   if (inv.length === 0) {
     body.appendChild(emptyNote('Your pack is empty — nothing to sell.'));
@@ -1160,15 +1086,32 @@ function renderSellTab(body) {
     row.className = 'pav-row';
     const info = document.createElement('div');
     info.className = 'pav-info';
-    const fair = marketValue(item);
-    info.innerHTML = `<div class="pav-name rarity-${item.rarity}">${item.name} <span class="dim">Lv ${item.level} ${item.slot}</span></div>
-      <div class="pav-sub dim">Fair value ≈ ${fair} ◆ · vendor ${sellValue(item)} ◆</div>`;
+    const sub = document.createElement('div');
+    sub.className = 'pav-sub dim';
+    const nameLine = document.createElement('div');
+    nameLine.className = `pav-name rarity-${item.rarity}`;
+    nameLine.innerHTML = `${item.name} <span class="dim">Lv ${item.level} ${item.slot}</span>`;
+    info.append(nameLine, sub);
+
     const price = document.createElement('input');
     price.type = 'number';
     price.className = 'pav-price-input';
     price.min = '1';
-    price.value = String(fair);
-    price.title = `Asking price in spirit stones ◆ — fair value is ≈${fair} ◆. Price low to sell fast, high and it may sit unsold.`;
+
+    // Currency selector (Wave 3 dual-currency, doc 20 §4.7): stones or Merit.
+    // Changing it re-prices the fair-value default and the sub label.
+    const currency = selectControl('Currency', 'stones', [['stones', 'Stones ◆'], ['merit', 'Merit ✧']], (v) => sync(v));
+    const currencySel = currency.querySelector('select');
+
+    const sync = (cur) => {
+      const unit = cur === 'merit' ? '✧' : '◆';
+      const fair = marketValue(item, cur);
+      sub.textContent = `Fair value ≈ ${fair} ${unit} · vendor ${sellValue(item)} ◆`;
+      price.value = String(fair);
+      price.title = `Asking price in ${cur === 'merit' ? 'Merit ✧' : 'spirit stones ◆'} — fair value ≈${fair} ${unit}. Price low to sell fast, high and it may sit unsold.`;
+    };
+    sync('stones');
+
     const listBtn = document.createElement('button');
     listBtn.type = 'button';
     listBtn.className = 'pav-list-btn';
@@ -1176,10 +1119,10 @@ function renderSellTab(body) {
     listBtn.title = 'List this item at the Pavilion — it is held in escrow until it sells or you reclaim it; proceeds land in your Mailbox.';
     listBtn.addEventListener('click', () => {
       const p = parseInt(price.value, 10);
-      actions.list(item.id, p);
+      actions.list(item.id, p, currencySel.value);
       afterPavAction();
     });
-    row.append(pavItemIcon(item), info, price, listBtn);
+    row.append(pavItemIcon(item), info, currency, price, listBtn);
     list.appendChild(row);
   }
   body.appendChild(list);
@@ -1236,7 +1179,10 @@ function renderMailboxTab(body) {
     const row = document.createElement('div');
     row.className = 'pav-row mail-row';
     if (e.kind === 'sale') {
-      row.innerHTML = `<span class="mail-glyph">◆</span><div class="pav-info"><div class="pav-name">Sold <span class="rarity-${e.rarity}">${e.itemName}</span></div><div class="pav-sub dim">to ${e.buyerName} · +${e.stones} spirit stones</div></div>`;
+      const isMerit = e.currency === 'merit';
+      const glyph = isMerit ? '✧' : '◆';
+      const unitLabel = isMerit ? 'Merit' : 'spirit stones';
+      row.innerHTML = `<span class="mail-glyph">${glyph}</span><div class="pav-info"><div class="pav-name">Sold <span class="rarity-${e.rarity}">${e.itemName}</span></div><div class="pav-sub dim">to ${e.buyerName} · +${e.stones} ${unitLabel}</div></div>`;
     } else {
       const item = e.item;
       const label = e.kind === 'return' ? 'Returned (unsold)' : 'Purchased';

@@ -7,7 +7,7 @@
   position: fixed;
   inset: 0;
   z-index: 80;
-  background: rgba(8, 9, 13, 0.8);
+  background: rgba(10, 7, 4, 0.8);
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -18,7 +18,7 @@
 #ascension-panel {
   background: var(--panel);
   border: 1px solid var(--gold);
-  border-radius: 8px;
+  border-radius: var(--radius-panel);
   width: 100%;
   max-width: 540px;
   padding: 16px 20px 22px;
@@ -44,7 +44,7 @@
   gap: 10px;
   background: var(--bg);
   border: 1px solid var(--panel-edge);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 10px 12px;
 }
 .asc-tier { font-size: 1.05rem; }
@@ -58,7 +58,7 @@
 .asc-col {
   flex: 1 1 200px;
   border: 1px solid var(--panel-edge);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 8px 12px 10px;
   background: var(--bg);
 }

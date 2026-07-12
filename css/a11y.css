@@ -9,9 +9,9 @@
   left: 8px;
   z-index: 200;
   padding: 8px 14px;
-  background: var(--panel, #1d2029);
-  color: var(--gold, #d4af37);
-  border: 1px solid var(--gold, #d4af37);
+  background: var(--panel, #1c1712);
+  color: var(--gold, #c8a24a);
+  border: 1px solid var(--gold, #c8a24a);
   border-radius: var(--radius-sm, 5px);
   transform: translateY(-160%);
   transition: transform 0.18s ease;
@@ -50,7 +50,7 @@
   position: fixed;
   inset: 0;
   z-index: 90;
-  background: rgba(8, 9, 13, 0.78);
+  background: rgba(10, 7, 4, 0.78);
   backdrop-filter: blur(3px);
   display: flex;
   align-items: flex-start;
@@ -61,8 +61,8 @@
 #shortcuts-overlay.hidden { display: none; }
 
 #shortcuts-panel {
-  background: var(--panel, #1d2029);
-  border: 1px solid var(--gold, #d4af37);
+  background: var(--panel, #1c1712);
+  border: 1px solid var(--gold, #c8a24a);
   border-radius: var(--radius, 8px);
   width: 100%;
   max-width: 460px;
@@ -75,13 +75,13 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 10px;
-  border-bottom: 1px solid var(--panel-edge, #33363f);
+  border-bottom: 1px solid var(--panel-edge, #3a3122);
   padding-bottom: 8px;
   margin-bottom: 12px;
 }
 .shortcuts-header h2 {
   margin: 0;
-  color: var(--gold, #d4af37);
+  color: var(--gold, #c8a24a);
   font-weight: normal;
   letter-spacing: 1px;
   font-size: 1.15rem;
@@ -94,7 +94,7 @@
   align-items: center;
   gap: 12px;
   padding: 6px 4px;
-  border-bottom: 1px solid var(--panel-edge, #33363f);
+  border-bottom: 1px solid var(--panel-edge, #3a3122);
 }
 .shortcut-row:last-child { border-bottom: 0; }
 
@@ -115,9 +115,9 @@
   font-size: 0.8rem;
   line-height: 1.3;
   text-align: center;
-  color: var(--gold, #d4af37);
-  background: var(--bg, #12141a);
-  border: 1px solid var(--panel-edge, #33363f);
+  color: var(--gold, #c8a24a);
+  background: var(--bg, #100d0a);
+  border: 1px solid var(--panel-edge, #3a3122);
   border-bottom-width: 2px;
   border-radius: var(--radius-sm, 5px);
 }

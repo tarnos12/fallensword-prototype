@@ -10,6 +10,10 @@ import { spawnCreature } from './actors.js';
 // existing `import { ZONES } from './map.js'` is unchanged (behaviour-identical).
 import { ZONES } from './zones/registry.js';
 export { ZONES };
+// Organic rare-spawn economy (Wave 2/3): Legendary + Super-Elite variants of
+// native creatures, plus the per-zone move-and-chase Titan. Pure predicates/data.
+import { rollLegendary, LEGENDARY_STAT_MULT, anySuperEliteAlive, maybeRollSuperElite, SUPER_ELITE_STAT_MULT } from './rarespawns.js';
+import { anyTitanAlive, maybeNaturalTitanSpawn } from './titans.js';
 
 export const RESPAWN_MS = 30_000;
 
@@ -38,11 +42,26 @@ function pickType(zone, band, rng) {
   return spawns[spawns.length - 1].type;
 }
 
-function populateTile(zone, tile, rng) {
+// hasSE / hasTitan: is a Super-Elite / Titan already alive elsewhere in the zone?
+// Passed by the caller so the "1 SE / 1 Titan per zone" caps hold across tiles.
+function populateTile(zone, tile, rng, hasSE = false, hasTitan = false) {
   const count = tile.isStart ? 0 : Math.floor(rng() * 4); // 0-3 creatures
   tile.monsters = [];
   for (let i = 0; i < count; i++) {
-    tile.monsters.push(spawnCreature(pickType(zone, tile.band, rng), null, rng));
+    // Each ordinary slot independently rolls Legendary (uncapped, ~5%).
+    const legendary = !tile.isStart && rollLegendary(rng);
+    tile.monsters.push(
+      spawnCreature(pickType(zone, tile.band, rng), null, rng, legendary ? { legendary: true, statMult: LEGENDARY_STAT_MULT } : undefined)
+    );
+  }
+  // At most one Super-Elite alive per zone.
+  if (!tile.isStart && !hasSE && maybeRollSuperElite(rng)) {
+    tile.monsters.push(spawnCreature(pickType(zone, tile.band, rng), null, rng, { superElite: true, statMult: SUPER_ELITE_STAT_MULT }));
+  }
+  // At most one Titan alive per zone (rare natural manifestation).
+  if (!tile.isStart && !hasTitan) {
+    const t = maybeNaturalTitanSpawn(zone.id, rng);
+    if (t) tile.monsters.push(t);
   }
   tile.clearedAt = null;
 }
@@ -62,6 +81,7 @@ function makeMapObject(zoneId, tiles) {
 export function createZone(zoneId, rng) {
   const zone = ZONES[zoneId];
   const tiles = [];
+  let hasSE = false, hasTitan = false; // enforce the 1-per-zone caps as we fill
   for (let y = 0; y < zone.size; y++) {
     for (let x = 0; x < zone.size; x++) {
       const tile = {
@@ -72,7 +92,9 @@ export function createZone(zoneId, rng) {
         monsters: [],
         clearedAt: null,
       };
-      populateTile(zone, tile, rng);
+      populateTile(zone, tile, rng, hasSE, hasTitan);
+      hasSE ||= tile.monsters.some((m) => m.isSuperElite);
+      hasTitan ||= tile.monsters.some((m) => m.isTitan);
       tiles.push(tile);
     }
   }
@@ -91,7 +113,7 @@ export function portalAt(zoneId, x, y) {
 // Called when the player enters a tile: repopulate if it was cleared long enough ago.
 export function maybeRespawn(map, tile, rng, now = Date.now()) {
   if (tile.monsters.length === 0 && tile.clearedAt !== null && now - tile.clearedAt >= RESPAWN_MS) {
-    populateTile(ZONES[map.zoneId], tile, rng);
+    populateTile(ZONES[map.zoneId], tile, rng, anySuperEliteAlive(map.tiles), anyTitanAlive(map.tiles));
   }
 }
 

@@ -1,12 +1,14 @@
 /* Salvage / materials (task M). Own sheet — no collision with style.css. */
 
-.salvage-nav-btn { width: 100%; color: var(--gold, #d4af37); border-color: var(--gold, #d4af37); }
+/* Sits inline beside Forge/Jewelcraft in #equipment-menu now (was a full-width
+   Halls dock tile) — match its siblings. */
+.salvage-nav-btn { width: auto; color: var(--gold, #c8a24a); border-color: var(--gold, #c8a24a); }
 
 #salvage-overlay {
   position: fixed;
   inset: 0;
   z-index: 80;
-  background: rgba(8, 9, 13, 0.78);
+  background: rgba(10, 7, 4, 0.78);
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -15,9 +17,9 @@
 }
 
 #salvage-panel {
-  background: var(--panel, #1d2029);
-  border: 1px solid var(--gold, #d4af37);
-  border-radius: 8px;
+  background: var(--panel, #1c1712);
+  border: 1px solid var(--gold, #c8a24a);
+  border-radius: var(--radius-panel);
   width: 100%;
   max-width: 560px;
   padding: 16px 20px 22px;
@@ -29,24 +31,24 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 10px;
-  border-bottom: 1px solid var(--panel-edge, #2c3040);
+  border-bottom: 1px solid var(--panel-edge, #3a3122);
   padding-bottom: 8px;
   margin-bottom: 10px;
 }
 
-#salvage-header h2 { margin: 0; color: var(--gold, #d4af37); font-weight: normal; letter-spacing: 1px; }
+#salvage-header h2 { margin: 0; color: var(--gold, #c8a24a); font-weight: normal; letter-spacing: 1px; }
 
 #btn-close-salvage { padding: 2px 10px; }
 
-.salvage-intro { font-size: 0.82rem; color: var(--dim, #8a8778); margin: 0 0 14px; line-height: 1.6; }
+.salvage-intro { font-size: 0.82rem; color: var(--dim, #9b8f74); margin: 0 0 14px; line-height: 1.6; }
 
 .salvage-subhead {
   margin: 14px 0 8px;
   font-size: 0.86rem;
   font-weight: normal;
   letter-spacing: 0.5px;
-  color: var(--gold, #d4af37);
-  border-bottom: 1px solid var(--panel-edge, #2c3040);
+  color: var(--gold, #c8a24a);
+  border-bottom: 1px solid var(--panel-edge, #3a3122);
   padding-bottom: 4px;
 }
 
@@ -58,15 +60,15 @@
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  border: 1px solid var(--panel-edge, #2c3040);
-  border-radius: 6px;
-  background: var(--bg, #14161d);
+  border: 1px solid var(--panel-edge, #3a3122);
+  border-radius: var(--radius-sm);
+  background: var(--bg, #100d0a);
   font-size: 0.82rem;
 }
 
 .salvage-mat-icon { font-size: 1.1rem; }
-.salvage-mat-name { color: var(--text, #d6d3c8); }
-.salvage-mat-qty { color: var(--gold, #d4af37); font-weight: bold; }
+.salvage-mat-name { color: var(--text, #e8e0cc); }
+.salvage-mat-qty { color: var(--gold, #c8a24a); font-weight: bold; }
 
 /* Mend-gear list. */
 .salvage-list { display: flex; flex-direction: column; gap: 8px; }
@@ -76,9 +78,9 @@
   align-items: center;
   gap: 12px;
   padding: 9px 12px;
-  border: 1px solid var(--panel-edge, #2c3040);
-  border-radius: 6px;
-  background: var(--bg, #14161d);
+  border: 1px solid var(--panel-edge, #3a3122);
+  border-radius: var(--radius-sm);
+  background: var(--bg, #100d0a);
 }
 
 .salvage-icon { width: 44px; height: 44px; font-size: 1.3rem; flex: 0 0 auto; cursor: default; }
@@ -90,9 +92,9 @@
 .salvage-dur { font-size: 0.76rem; margin: 2px 0; }
 .salvage-where { font-size: 0.74rem; }
 
-.salvage-dur.broken { color: var(--loss, #e57373); }
+.salvage-dur.broken { color: var(--loss, #d4574a); }
 
 .salvage-actions { flex: 0 0 auto; }
 
-.salvage-btn { color: var(--win, #6fbf73); border-color: var(--win, #6fbf73); white-space: nowrap; font-size: 0.8rem; }
+.salvage-btn { color: var(--win, #5fae7f); border-color: var(--win, #5fae7f); white-space: nowrap; font-size: 0.8rem; }
 .salvage-btn:disabled { opacity: 0.5; }

@@ -27,9 +27,12 @@
   to   { opacity: 1; }
 }
 
+/* Ink-bleed reveal: the panel resolves out of a soft blur, like a brush
+   stroke soaking into paper, instead of a generic pop/scale. */
 @keyframes modalfx-panel-in {
-  from { opacity: 0; transform: translateY(6px) scale(0.98); }
-  to   { opacity: 1; transform: none; }
+  from { opacity: 0; transform: translateY(5px) scale(0.985); filter: blur(5px); }
+  55%  { filter: blur(0.6px); }
+  to   { opacity: 1; transform: none; filter: none; }
 }
 
 /* Fade the backdrop/scrim as the overlay is shown. */
@@ -43,7 +46,7 @@
  * child, so `> *` animates just that one element. */
 [id$="-overlay"]:not(.hidden) > [id$="-panel"],
 [id$="-overlay"]:not(.hidden) > * {
-  animation: modalfx-panel-in .18s cubic-bezier(.2, .7, .3, 1) both;
+  animation: modalfx-panel-in .24s cubic-bezier(.2, .7, .3, 1) both;
 }
 
 /* Reduced motion: no animation — modals appear instantly. */

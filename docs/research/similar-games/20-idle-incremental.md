@@ -369,6 +369,45 @@ combat, built entirely around prestige-layer depth as its core design identity.
 
 ---
 
+## Cross-cluster addendum — cultivation-flavored idle titles (accrual/pacing angle only)
+
+Researcher-Xianxia's cluster (`30-xianxia-cultivation.md`) independently sourced three cultivation-
+flavored idle games during their realm/tribulation/sect-flavor pass and shared the accrual-math angle
+back to this doc to avoid double research. Per our agreed lens split, **full realm/tribulation/
+alchemy-flavor treatment of these three lives in Xianxia's doc** — noted here only for the prestige-
+math/pacing data point each contributes, independently re-verified via WebSearch this pass:
+
+- **Idle Cultivation** ([Steam](https://store.steampowered.com/app/3697240/Idle_Cultivation/)) — its
+  Reincarnation/Soul Power system scales the permanent-currency payout by a **multiplier tied to which
+  tribulation tier you've cleared**, not by raw level: soul-power gain is your total skill level
+  multiplied by a tribulation-tier factor that is **0 until the first (Mortal) tribulation is cleared**,
+  then steps up through Earth/Heaven/Immortal tiers (0.2 / 0.6 / 1.0 / 1.5, confirmed via [Steam
+  discussion — soul point
+  gain](https://steamcommunity.com/app/3697240/discussions/0/517472842923799872/)). **[MED]** — a
+  fourth independent confirmation (after Realm Grinder/NGU/Antimatter Dimensions) that top idle games
+  gate a prestige currency's *rate*, not just its *amount*, behind a milestone/difficulty tier rather
+  than a flat formula — reinforces the "second prestige tier changes the economy, not just the number"
+  pattern from a cultivation-flavored angle specifically relevant to how a future Ascension-tier-2 might
+  gate its payout behind (for example) which realm-tier the player reached pre-Ascension, not just
+  total stats.
+- **xiuzhen idle** ([Steam](https://store.steampowered.com/app/1649730/xiuzhen_idle/)) — its rebirth/
+  reincarnation grants a **continuous talent bonus scaled to how far the previous life progressed**,
+  rather than NGU/Realm-Grinder-style discrete stepped tiers — per the store page's own framing, "you
+  will gain [a] talent bonus according to the previous life[']s practice, so that cultivation becomes
+  faster and easier" each successive life. **[LOW/MED]** — a useful *contrast* data point against the
+  stepped-tier prestige model (NGU's Normal/Evil/SADISTIC, Realm Grinder's Reincarnation/Ascension):
+  a smooth, continuously-scaling carry-over bonus is a simpler formula shape than a milestone-gated
+  step function, worth naming as an alternative if a future Ascension-tier-2 wants to avoid the
+  complexity of discrete gates.
+- **Idle Xanxia** (itch.io / Steam, per Xianxia's sourcing) — flagged by Xianxia as a small, non-gacha,
+  non-monetized solo-dev browser idle, the closest production-scale analog to Fallen Immortal itself in
+  this entire research sprint (small team, no monetization surface, cultivation flavor). **[UNVERIFIED
+  by this researcher — not independently re-searched this pass]**; Xianxia's doc is the source of
+  record for its specifics. Relevance noted here only as a "closest comparable scale" data point, not
+  for any specific mechanic claim.
+
+---
+
 ## Honorable mention — Idle Slayer (offline-cap contrast)
 
 **What it is:** A mobile/Steam tap-and-idle "slayer" game (Pablo Leban) — minions auto-attack, player
@@ -409,6 +448,7 @@ tier, milestone-gated, granting a qualitatively stronger currency" pattern.
 | Multi-character/multi-actor shared-economy idle MMO structure | Legends of IdleOn | **LOW/SKIP** | save schema / Actor model | Needs a fundamentally different save shape (N simultaneous player actors) that doesn't fit our single-cultivator framing; not a good architectural fit |
 | Aggressive real-money monetization layered on a F2P idle core | Idle Champions | **LOW/SKIP** | — | Explicitly against our no-monetization-surface design; included only as a cautionary contrast, not a lever to pull |
 | A survivability-gated offline-simulation model (offline gains scale with a specific "won't die while idle" stat) | Legends of IdleOn, Idle Champions | **MED** | `game.js` (Qi regen / passive stone income) | An alternative to a flat wall-clock rate — offline gains could theoretically scale with a stat, though this adds complexity our current flat-rate `tickQi` doesn't have and isn't clearly needed absent a stated problem |
+| Gate a prestige currency's *rate* (not just its amount) behind which milestone/difficulty tier was cleared pre-reset | Realm Grinder, NGU Idle, Antimatter Dimensions, Idle Cultivation (cross-cluster, via Researcher-Xianxia) | **MED** | `ascension.js` | Fourth independent idle game confirming the same pattern from a cultivation-flavored angle — a future Ascension-tier-2 could scale its payout by realm-tier reached, not just total stats, echoing the "qualitative, not just bigger" lesson above |
 
 ---
 

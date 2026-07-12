@@ -19,8 +19,7 @@ export const MERIT_REWARDS = {
   legendaryKill: 2,
   superEliteKill: 6,
   titanDefeat: 20,
-  bossClear: { xuanming: 8, zhulong: 10, jiuxiao: 12 },
-  dailyTrialWin: 1,
+  bossClear: { ancientTerror: 8, emberCalamity: 10, tribulationSovereign: 12 },
   achievementTier: { bronze: 3, silver: 6, gold: 12 },
 };
 

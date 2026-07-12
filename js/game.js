@@ -524,6 +524,7 @@ export function attack(state, monsterId) {
       xp = Math.round(br.xp * (1 + gb.xpPct));
       stones = Math.round(br.stones * (1 + gb.stonePct));
       drop = br.drop;
+      sfx('merit');
     } else if (monster.isTitan) {
       // Titan depleted after the ~10-encounter chase: fixed authored reward paid
       // ONCE, a guaranteed (100%) Titan-item drop, and +20 Merit (fires exactly

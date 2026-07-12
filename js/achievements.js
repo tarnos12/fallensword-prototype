@@ -14,6 +14,7 @@
 import { CREATURE_TYPES } from './actors.js';
 import { REALMS } from './progression.js';
 import { setBonuses } from './sets.js';
+import { awardMerit, MERIT_REWARDS } from './merit.js';
 
 const RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
 const TOTAL_CREATURES = Object.keys(CREATURE_TYPES).length;
@@ -139,7 +140,9 @@ export function recordAchievements(state) {
     if (!have.has(id)) {
       have.add(id);
       p.achievements.push(id);
-      fresh.push(BY_ID[id]);
+      const ach = BY_ID[id];
+      awardMerit(p, MERIT_REWARDS.achievementTier[ach.tier] ?? 0);
+      fresh.push(ach);
     }
   }
   return fresh;

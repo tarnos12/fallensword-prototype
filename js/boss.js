@@ -20,6 +20,7 @@
 
 import { createActor } from './actors.js';
 import { generateItem } from './items.js';
+import { awardMerit, MERIT_REWARDS } from './merit.js';
 
 // Each stat block is hand-authored and headless-tuned against player sheets at
 // the boss's gate realm: an under-geared cultivator is crushed, a mid-tier player
@@ -236,6 +237,7 @@ export function onBossDefeated(state, monster, rng, now = Date.now()) {
   const rarity = rng() < upgradeChance ? upgradeRarity : baseRarity;
   const drop = generateItem(slot, boss.drop.level, rarity, rng);
 
+  awardMerit(state.player, MERIT_REWARDS.bossClear[boss.id] ?? 8);
   return { xp: boss.reward.xp, stones: boss.reward.stones, drop };
 }
 

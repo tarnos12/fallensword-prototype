@@ -94,6 +94,16 @@ Failure cost must stay gentle (consumed materials/some banked progress, never ge
 regression) to match our already-deliberately-soft death penalty philosophy. Effort: M
 (`progression.js`, single-owner — needs lead sign-off; balance-harness gate).
 
+**Shape, confirmed with Analyst-Genre (converged):** tribulation is **additive, not a replacement** for
+the current silent XP-threshold auto-advance. The auto-advance stays as the zero-risk default once XP is
+banked — that "you always eventually get there, no gamble required" guarantee is itself part of our
+gentle-progression identity and shouldn't be taken away. Tribulation is an *optional* early-breakthrough
+attempt layered on top: transparent %, a reduced XP requirement to attempt it early, a small bonus on
+success, a gentle failure cost (consumed progress/materials, never a level regression) with pity-raised
+odds on retry, and — non-negotiable — it never gates either of the two capstone sagas (Heaven-Severing
+Blade, Stormcrown Mythic) behind a roll. This preserves the safe path for players who don't want to
+gamble while giving the xianxia flavor real teeth for players who do.
+
 Decoupling breakthrough *reward* from breakthrough *odds* (Tale of Immortal) — **ADAPT**: gives pills a
 second job (odds-boosting) beyond flat buffs, but mind the landmine Sprint 2 flagged: `pillBuffs`
 deliberately bypasses `effectiveStats` (architectural choice to avoid touching `ui.js`), so an
@@ -217,24 +227,43 @@ Effort: N/A — a framing decision for the lead/author, zero code.
 
 ---
 
-## Where I expect Analyst-Genre to disagree (flagging before cross-talk)
+## Cross-talk outcome — converged, no residual split
 
-1. **The Qi gate itself (tension 1a).** I hold this as non-negotiable identity; Analyst-Genre's opposite
-   prior ("adopt genre conventions, we're behind") will likely read Melvor's gateless model as evidence
-   we're leaving a whole design space unexplored. I don't think there's a middle ground on *removing* the
-   gate — but there may be room to converge on the regen-rate fix (1b) and the passive-income cap (1c) as
-   a shared "this is what 'fixing the gate' actually means" position.
-2. **How big the Ascension/Karma layer should be (tension 2).** I've scoped it small and curated on
-   purpose; I expect Analyst-Genre to argue for something closer to the full KoL Valhalla-tree model,
-   citing the three-cluster convergence as stronger evidence than I'm crediting it.
-3. **Sect combat-stat buffs (C7a) and mailbox harshness (tension 7/C2).** These are both places I'm
-   choosing restraint over genre-parity on "numbers you can read" / offline-friendliness grounds
-   specifically; Analyst-Genre may see the FS-fidelity gap (guilds grant real power; mailboxes have real
-   stakes) as underweighted here.
+Contrary to the brief's expectation that the two opposite-prior analysts would clash hardest here,
+cross-talk with Analyst-Genre resolved every flagged tension to a single shared verdict. Recording the
+converged position on each, since Phase 3 can build directly on these without the lead needing to
+adjudicate:
 
-Sending cross-talk to Analyst-Genre on all three now.
+1. **Qi gate (1a/1b/1c).** Full agreement: REJECT removing/softening the gate itself (Melvor solves a
+   different studio's problem). ADOPT the regen-rate retune toward FS's 50-90/hr band — Analyst-Genre
+   independently updated from a softer ADAPT to full ADOPT once framed as "making our own pillar real,"
+   not FS-fidelity for its own sake. ADAPT: cap passive stone accrual only (48-72h), leave Qi alone
+   (already capped via `maxQi()`). Zero residual disagreement.
+2. **Ascension/Karma depth (tension 2).** Converged: ADAPT — a short curated unlock list (3-5 items,
+   spendable in the existing Ascension modal), flat `+8%/tier` scalar stays the baseline, REJECT a
+   third qualitatively-different prestige tier (Antimatter Dimensions' lesson) as right-idea-wrong-scope
+   for 1.0. Analyst-Genre's refinement, which I accept: scale the unlock-currency's *amount* by how well
+   the run went (echoing Idle Cultivation's tribulation-tier-scaled payout) rather than a flat grant per
+   ascension — gives "how you played" a second dimension without a second currency. One shared verdict,
+   no split.
+3. **Sect combat-stat (C7a) + mailbox (C2).** Mailbox: full agreement, 48-72h generous window, not FS's
+   harsh 12h. Sect combat-stat: Analyst-Genre conceded to my pipeline-legibility argument (six flat
+   sources already; a seventh needs a stated playtest problem, not genre-parity alone) and moved from
+   ADOPT to DEFER. C7b (Sect capacity scaling, no stat-pipeline touch) stays ADOPT on both sides.
+4. **Tension 3 (tribulation), raised by Analyst-Genre as the one open mechanism question.** Confirmed:
+   tribulation is additive/opt-in on top of the existing silent auto-advance, not a replacement — see the
+   "Shape, confirmed with Analyst-Genre" note above. Converged.
+
+**Net finding for the lead:** the two opposite-prior lenses converged on every tension in this brief,
+including the ones both of us expected to be the sharpest fights (the Qi gate, Ascension depth). The
+residual "disagreement" that existed was mostly imprecision in how big/small each side's initial ADAPT
+scope was, not an actual pillar-vs-genre conflict — once we pinned down concrete mechanisms (regen rate
+vs. gate removal; curated list vs. open tree; capped mailbox window vs. FS's literal 12h), there was
+nothing left to split on. This is itself a signal worth weighing in `40-comparison.md`: it suggests the
+brief's 8 tensions are less "identity vs. genre" fault lines than "how much/how gently" calibration
+questions, which both lenses land on similarly once specifics are named.
 
 ---
 
-*Status: draft complete, cross-talk pending. Will update this footer once Analyst-Genre responds and any
-verdicts above are revised through discussion.*
+*Status: complete. Converged with Analyst-Genre on all flagged items (see above); Critic3 confirmed no
+accuracy/overclaim issues. Lead notified.*

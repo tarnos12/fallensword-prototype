@@ -71,11 +71,10 @@ cook" exploit than Qi ever is. Capping *that* specifically (a generous cap, e.g.
 own C2 mailbox-expiry precedent for "generous but real") closes an actual economy-balance gap without
 touching the Qi-gate identity question at all. **Effort S, `game.js` (single-owner constant + timestamp
 math already in place, no schema change).**
-**Expect disagreement with Lineage here:** I anticipate Lineage will argue any offline cap cuts against
-our "offline-complete" pillar (a stated design pillar, not just an idle-genre nice-to-have) and that a
-week-away player shouldn't come back to a diminished-feeling game. My counter: a *cap*, not a *penalty*
-— nobody loses anything, they just stop *gaining* past a generous window, exactly Melvor's shape. This
-is a genuinely arguable point and I'll message Lineage directly on it (see cross-talk below).
+**UPDATE post cross-talk:** I expected pushback here on offline-friendliness grounds; instead Lineage
+independently reached the identical position unprompted (cap passive stone accrual only, leave Qi alone
+since `maxQi()` already caps it structurally) — see the cross-talk summary at the end of this doc. No
+residual disagreement.
 
 ### 2. Prestige depth: flat +8%/tier Ascension vs. "prestige currency buys permanent chosen unlocks"
 
@@ -117,17 +116,20 @@ should change *what the player optimizes*, not just add a bigger multiplier) arg
 a *third* stacked reset tier on top of Ascension for its own sake — that's a DEFER-2.0-shaped idea at
 best, low priority, not something I'm pushing. The currency-and-choice layer is a depth add to the
 **existing single tier**, not a new tier — an important distinction Phase 3 should keep clean.
-**Expect disagreement with Lineage here:** I expect this is the tension where Lineage is most likely to
-argue "our Ascension is deliberately simple — `numbers you can read` extends to prestige too, and a
-shopping-list-of-permanent-unlocks is exactly the kind of scope creep CLAUDE.md's `readiness gate`
-warns about for a single-owner file." I'll make the counter-case directly to them (see cross-talk) that
-a short, curated list (3-5 items, not an open tree) keeps this legible while still being a real choice.
+**UPDATE post cross-talk:** Lineage's independent ADAPT verdict landed on almost exactly this shape
+(small/curated, flat scalar stays baseline, no third tier at 1.0) — see the cross-talk summary at the
+end of this doc for the one remaining open detail (how the currency's amount scales) I've sent them
+directly.
 
 ### 3. Progression tension: silent XP-threshold breakthroughs (zero risk, no alchemy roll) vs. cultivation tribulations (risky %-breakthrough + pity) and decoupled reward-vs-odds
 
-**ADAPT — strongly in favor of adoption, but the shape must be opt-in and the % must be shown. This is
-likely the single sharpest disagreement with Lineage in the whole document, and I want to make my
-strongest case for it.**
+**ADAPT — strongly in favor of adoption, with the shape opt-in and the % always shown. UPDATE post
+cross-talk: I expected this to be the sharpest fight with Lineage in the whole document; it turned out
+to be a convergence instead — Lineage independently landed on ADOPT-with-the-same-transparency-guardrail
+from the "protect lineage" angle (their read: tribulation is *more* xianxia-authentic than a silent
+XP-threshold, and the transparent-% pattern is just `hitChance` applied to a second system, not new
+architecture). The one open detail I'm resolving with them directly: whether tribulation *replaces* the
+safe auto-advance or sits *on top of it* as an opt-in early-attempt (my proposal, below) — see cross-talk.**
 
 Confirmed directly (Sprint 1 + the brief's own baseline check of our code): `progression.js` gates
 every realm breakthrough purely by an XP-cost curve — "enough XP → auto-advance," zero failure chance,
@@ -170,21 +172,20 @@ choosing the `effectiveStats`-adjacent pathway, not the `pillBuffs` fight-time-o
 persists through the breakthrough-attempt UI rather than needing an active fight). Needs a
 `tools/balance.mjs` pass for the XP-economy rows.
 
-**Cross-talk flag:** I will message Analyst-Lineage directly on this one — I expect they'll want a flat
-REJECT ("we deliberately built zero-risk progression, adding *any* RNG to it — even opt-in, even
-transparent — is a pillar violation, not a depth add"), and I want to push back with the opt-in framing
-before we hand the lead two flatly opposed verdicts.
+**Cross-talk status:** sent to Lineage directly — see the update at the top of this section and the
+cross-talk summary at the end of this doc; the only open piece is whether they intend tribulation as
+additive/opt-in (my proposal) or a full replacement of the auto-advance.
 
 ### 4. Respec: absent in ours; present in FS (paid) and Trimps (per-cycle)
 
-**ADOPT.** Sprint 1's own A3 opportunity already recommends this from the FS-fidelity angle (GDD §6.3
-proposed it, never built); Trimps' "one free respec per prestige cycle, paid/scarce beyond that" is an
-independent, well-tested genre precedent for exactly the shape a spirit-stone-gated respec should take —
-free-ish early, scarce/costed as a repeat convenience. I don't expect real disagreement here; this is a
-case where FS-fidelity and genre-evidence point the same direction, which is exactly the kind of item
-that should converge cleanly. **Effort S**, `progression.js` (single-owner, lead sign-off), stone-cost
-scaling with points invested, `tools/balance.mjs` gate to confirm the sink doesn't distort the economy
-Researcher-Meta already flagged as shared territory.
+**ADOPT** — with the cost/gating shape aligned to Sprint-1's own A3 proposal, not Trimps' literal "free
+per cycle" cadence. Trimps' "one free respec per prestige cycle, paid/scarce beyond that" is a genuine
+genre precedent that *some* repeatable respec should exist, but on reflection a free-and-frequent respec
+would undercut the meaningfulness of the original stat-allocation decision, which is a real cost even
+though it looks like pure upside. Converged shape: gate behind cultivation level (not a starter tool,
+matching FS's own "not from square one" framing), spirit-stone cost scaling with points invested, real
+(not free) from the first use. **Effort S**, `progression.js` (single-owner, lead sign-off), balance-harness
+gate to confirm the sink doesn't distort the economy Researcher-Meta already flagged as shared territory.
 
 ### 5. Combat push-through tiers: FS 40/60 + Gladiatus mode-caps
 
@@ -240,7 +241,7 @@ which is really tensions 2 and 3 again, not a new fight.
 
 | Item | Verdict | Reasoning | Effort | Module/pillar |
 |---|---|---|---|---|
-| **A1** Retune Qi regen toward FS's 50-90/hr band | **ADAPT** | I don't think blind FS-number-fidelity is the right target for a genre analyst — the *design goal* (make the buff-or-save-Qi tension in GDD §6.4 actually bite) matters more than matching FS's specific historical rate. Idle-genre evidence is mixed here: some idle titles have no gate at all (irrelevant to us per tension 1a), but none of them argue for a *specific* rate — that's purely an FS-fidelity argument, not a genre one. Tune via `tools/balance.mjs` to the point where technique/pill costs create a real decision, and stop there; don't treat FS's number as sacred. | M | `game.js` (single constant), balance-harness gate |
+| **A1** Retune Qi regen toward FS's 50-90/hr band | **ADOPT** (converged with Lineage — see cross-talk) | Originally I hedged this as ADAPT ("don't treat FS's number as sacred"), since no genre-cluster evidence argues for a *specific* rate on its own. But Lineage's framing resolved my hedge: at 1200/hr the gate is nominally present but functionally inert (a full pool refills in six minutes), so this isn't "FS-fidelity for its own sake" — it's the fix that makes our *own* "sessions not marathons" pillar and the buff-or-save-Qi tension (GDD §6.4) actually bite. Use FS's 50-90/hr as the anchor, confirmed/adjusted via `tools/balance.mjs`. | M | `game.js` (single constant), balance-harness gate |
 | **A2** `bound` field + reject in `listItem()` | **ADOPT** | Closes a real fidelity gap; no genre tension. | S | `items.js` + `market.js` |
 | **A3** Spirit-stone stat respec | **ADOPT** | Reinforced independently by Trimps' per-cycle respec (see tension 4). | S | `progression.js` (single-owner) |
 | **B1** 40/60-Qi push-through tier | **ADOPT** | Doubly genre-confirmed (FS + Gladiatus, see tension 5). | S | `combat.js` (parameterized), `game.js` |
@@ -253,7 +254,8 @@ which is really tensions 2 and 3 again, not a new fight.
 | **C4** Split Rivals into Favored/Marked | **ADOPT** | Low-stakes flavor fidelity; also echoes the wider genre's near-universal ally/enemy-shaped social list convention (Torn, FS itself). | S | `profile.js` |
 | **C5** Per-zone Beast Codex completion reward | **ADOPT** | Converts a passive record into an explicit goal — exactly the "investable collection" instinct behind tension 6, at near-zero cost. | S | `ui.js` codex section |
 | **C6** Longevity-flavored achievements | **ADOPT** | Genre-convergent single-player substitute for FS Medals' leaderboard-longevity *and* the idle genre's "come back tomorrow" retention hooks — cheap, high alignment with "leaving retention depth on the table" being my whole thesis. | S | `achievements.js` |
-| **C7** Small capped combat-stat Sect specialty + capacity scaling | **ADOPT** | FS relics/guild-structures grant real combat stats, not just economy buffs — our Sect currently grants zero. A small, capped addition (explicitly smaller than gear/cards, per Sprint-1's own framing) closes this without unbalancing gearing decisions. Sect capacity scaling with ascension/achievements also gives the Sect a long-term investment arc, mirroring Gladiatus/Outwar's "bigger guild = more power" shape at solo scale. | S/M | `guild.js`, coordinate on `progression.js` pipeline touch |
+| **C7a** Small capped combat-stat Sect specialty | **DEFER (converged with Lineage)** | Originally ADOPT on my part — FS relics/guild-structures grant real combat stats, our Sect grants zero, so it reads as "the most visible power-category gap versus FS guilds." Conceded to Lineage's counter on cross-talk: the stat pipeline already has six flat sources before ascension's scalar, and a seventh with no stated playtest problem behind it is exactly the kind of gradual legibility erosion our shared "numbers you can read" pillar warns against. Revisit only if real playtest signal says Sect feels irrelevant — not on genre-parity grounds alone. | — | `guild.js`/`progression.js` |
+| **C7b** Sect capacity scaling with ascension/achievements | **ADOPT** | Contained entirely to `guild.js`, no stat-pipeline touch — gives Sect a long-term investment arc (mirroring Gladiatus/Outwar's "bigger guild = more power" shape at solo scale) without C7a's legibility cost. Both Lineage and I land here independently. | M | `guild.js` |
 | **Tier D** (buff caster/target field, `recentlyActive()` shape stability, GvG/relics/Global-Quest leaderboards) | **DEFER-2.0** | Correctly gated on real multiplayer per the brief's own taxonomy — I agree with Sprint 1's framing outright, nothing to add. | — | provider-interface era |
 
 ---
@@ -300,22 +302,43 @@ which is really tensions 2 and 3 again, not a new fight.
 
 ---
 
-## Cross-talk summary (for the lead and for Analyst-Lineage directly)
+## Cross-talk summary (post-exchange with Analyst-Lineage)
 
-I'm messaging Analyst-Lineage now on the three tensions where I expect genuine, load-bearing
-disagreement rather than just different emphasis:
+Analyst-Lineage posted `10-lineage-view.md` and messaged cross-talk before I finished drafting. Reading
+their doc, we converge far more than either of us predicted going in. Resolved/converged:
 
-1. **Tension 3 (progression risk/tribulation)** — I expect a flat REJECT from Lineage on principle
-   ("zero-risk progression was a deliberate choice, don't add any RNG to it"); I'm arguing ADAPT via an
-   **opt-in**, transparent-%, capstone-quest-exempt early-breakthrough mechanic. This is the sharpest
-   likely conflict in the whole document.
-2. **Tension 1b (offline-accrual duration cap)** — I expect Lineage to weigh our "offline-complete"
-   pillar against any cap; I'm arguing the cap only needs to bite the *uncapped* stone-income tail (Qi
-   already self-caps via `MAX_QI`), so it's a narrower ask than "cap everything Melvor-style."
-3. **Tension 2 (prestige currency-and-choice layer)** — I expect Lineage may accept the *principle* but
-   push for something thinner than a shopping list of unlocks, worried about single-owner-file scope
-   creep in `ascension.js`/`progression.js`. I've pre-committed to a short, curated list (3-5 items) to
-   keep this from ballooning, and explicitly ruled out a third prestige *tier* to keep scope bounded.
+1. **Tension 1a (Qi gate itself)** — full agreement: REJECT removing/softening it. Not a real
+   disagreement, both independently land here for the same reason (it's a named pillar, not an
+   implementation default).
+2. **Tension 1b (Qi regen rate)** — converged on ADOPT (I softened my initial ADAPT hedge — see the A1
+   table row above — once I re-read Lineage's framing that the *pillar itself* is inert at 1200/hr, not
+   just "off-FS-spec").
+3. **Tension 1c / economy (offline-income cap)** — full agreement: cap passive stone accrual only (48-72h
+   generous window), leave Qi alone since `maxQi()` already caps it structurally.
+4. **Tension 2 (prestige currency-and-choice layer)** — much closer than expected: I had already scoped
+   my proposal as "a short, curated list (3-5 items)," which is effectively Lineage's own ADAPT position
+   (small/legible, flat scalar stays baseline, no third prestige tier at 1.0). Residual difference is
+   labeling (I called it ADOPT, Lineage ADAPT) not substance — recommend the lead record this as one
+   converged verdict: **ADAPT — add a small curated permanent-unlock currency layer on top of the
+   existing flat scalar, reject a third qualitatively-different tier pre-2.0.**
+5. **Tension 3 (breakthrough tribulation)** — surprise convergence on ADOPT-with-mandatory-transparency-
+   guardrail from both lenses (see the tension-3 update above). One open detail sent to Lineage directly:
+   does tribulation *replace* the safe auto-advance, or sit on top of it as my proposed opt-in early-
+   attempt? Awaiting their answer.
+6. **Tension 4 (respec)** — converged: cost-gated from first use (not Trimps' free-per-cycle), gated by
+   cultivation level, scaling with points invested — I revised my doc to match Lineage's framing exactly.
+7. **Tension 7 / C2 (mailbox expiry)** — full agreement: generous 48-72h window, not FS's 12h.
+8. **C7a (Sect combat-stat specialty)** — conceded to Lineage: DEFER, not ADOPT (see the C7 table rows
+   above) — their pipeline-legibility argument is sound and consistent with a pillar I hold too.
+9. **C7b (Sect capacity scaling)** — full agreement: ADOPT, no stat-pipeline touch.
 
-Will report back to the lead with the resolution (or documented non-resolution) of these three once
-Lineage responds.
+**Genuine residual disagreement to flag to the lead (only one left, and it's narrow):** none of the
+"big" tensions actually stayed split — the closest thing to a live disagreement is the tension-3
+mechanical detail (replace-vs-additive-opt-in for tribulation), which is a scoping question we're
+actively resolving directly, not a lens conflict. I'll update this section again once Lineage replies;
+if it resolves (likely), **this analyst pair may hand the lead a fully converged set of verdicts**,
+which is itself worth flagging as a finding — the "opposite priors" framing in the brief predicted more
+friction than the evidence actually supports once both lenses are applied honestly.
+
+Replying to Lineage and Critic3 now; will message the lead once the last open detail (tension 3's
+replace-vs-additive question) resolves.

@@ -26,9 +26,19 @@ proposal completes the promised 8 rather than leaving the comment stale.
 **Net shape:** nothing is deleted outright from the passive tree (it grows from 5→8 nodes, still one
 flat `effectiveStats` source). The active-ability side is where the real cut lives: **9 techniques →
 4 abilities**, dropping the entire tier/prereq/category-gating system. The stat-allocation layer is
-untouched. A structural merge (skill-tree points + technique points → one pool) is proposed as the
-piece that makes "passive tree + active abilities" read as *one system* instead of two — flagged for
-explicit lead sign-off since it's the widest blast radius in this doc.
+untouched. A structural merge (skill-tree points + technique points → one pool) was considered as the
+piece that would make "passive tree + active abilities" read as *one system* instead of two — **now
+demoted to an explicitly-deferred idea (§4)**, since Author-Economy's `20-economy-premium.md` already
+shipped a Hall of Merit catalog built against **separate** meridian/technique point pools
+(`meridianRespec`/`techniqueRespec` rows costed independently). Converging on separate-but-parallel
+respec functions (§2.5, §3.4) is what's actually build-ready now; see the update below.
+
+**Update (post-completion sync with Economy/Critic4):** Economy's shipped doc needed
+`resetMeridians(player)`/`resetTechniques(player)` as two independent exports, costed via
+`meridianPointsSpent`/`techniquePointsSpent` — not the conditional unified `respecSkillTree()` this doc
+originally offered. Both are now specified below (§2.5, §3.4) as the primary, unconditional design;
+§4's pool-merge is kept only as a clearly-labeled future idea, not something Economy or any build wave
+should wait on.
 
 **Reply to Critic4's audit (see thread):** all three of Critic4's checks are addressed inline below —
 (1) the passive tree stays a **swap-in-place of the existing `meridianBonuses` add-line**, not a
@@ -88,12 +98,22 @@ GDD §6.3 proposed this and it was never built; research confirms no respec of a
   ```
   Pure, single-owner-file addition to `progression.js`. No new save fields (reuses
   `statPoints`/`allocated`, both already persisted).
+- **Cost helper, to match Economy's `meridianPointsSpent`/`techniquePointsSpent` pattern (§2.5/§3.4):**
+  ```js
+  export function statPointsSpent(player) {
+    return ALLOC_STATS.reduce((sum, s) => sum + player.allocated[s], 0);
+  }
+  ```
+  Same shape as the other two respec-cost helpers, so a "Stat Respec" Hall of Merit row can cost itself
+  identically (`baseCost + costScalesWithPointsSpent * statPointsSpent(player)`).
 - **Cost/gating (Author-Economy's file, premium shop):** the brief's own hand-off note says respec
   "likely lives in the premium shop" — I agree. Recommend gating by **invested points** (scales with
   total stat points ever allocated, per the research's own suggestion) so it isn't a free undo-button,
   and gating availability from FE1 (stage 10) onward, matching FS's "not a starter tool" framing.
-  **Coordinate with Author-Economy on the exact currency (gold vs. premium currency vs. spirit stones)
-  and price curve** — I'm not deciding that here, only exposing `respecStats()` as the hook to call.
+  **Flag: Economy's shipped `20-economy-premium.md` catalog (§3.2) has rows for `meridianRespec` and
+  `techniqueRespec` but no "Stat Respec" row**, despite this doc naming `respecStats()` as "the hook to
+  call" — that's a gap between the two docs, not a decision either of us made. Asked Economy directly
+  to add a third respec row calling `respecStats()`, gated by `statPointsSpent()` above.
 
 ---
 
@@ -169,6 +189,27 @@ passive nodes and active abilities), my recommendation is **fold both into one "
 the Cultivator/char tab** rather than keeping Meridians as a separate modal — but the tab/IA
 restructure is Architect-Cull's surface to own; this is input, not a decision made here.
 
+### 2.5 Meridian respec — the exact export Economy's shop needs (unconditional, ships now)
+
+`js/meridians.js` already exports `meridianPointsSpent(player)` (sum of opened ranks) — Economy's
+`meritshop.js` costs its `meridianRespec` row off this real, existing function, no change needed there.
+The missing piece is the actual refund action, which Economy's §7.2 correctly flags doesn't exist
+under any name today:
+
+```js
+// js/meridians.js — new export
+export function resetMeridians(player) {
+  const refunded = meridianPointsSpent(player); // for the caller's log/toast text only
+  player.meridians = { nodes: {} };
+  return { ok: true, refunded };
+}
+```
+Because meridian points are **derived from level, not stored** (`meridianPointsFree = earned - spent`),
+resetting is just clearing `nodes` — `meridianPointsFree(player)` immediately recomputes back up to
+the player's full earned total on the very next read, no counter arithmetic needed. This works exactly
+the same whether or not §4's pool-merge ever ships, which is why it's specified here as the
+unconditional, build-ready contract rather than folded into the conditional §4.
+
 ---
 
 ## 3. Active abilities — CUT/MERGE (9 techniques → 4 abilities, drop the tier/prereq system)
@@ -186,6 +227,10 @@ skill tree. The reshape:
 | **Adamantine Ward** (`adamantineWard`) | Defense | `stoneSkin`, `goldenBell`, `adamantBody`, `immortalGoldenBody` | +20% Defense, +25% Armor, +15% Max HP | 1 | 24 | 12 min (720,000ms) |
 | **Vital Circulation** (`vitalCirculation`) | Special (safe) | `vitalMeditation` | +30% Max HP | 5 | 16 | 15 min (900,000ms) |
 | **Berserk Fervor** (`berserkFervor`, unchanged id) | Special (risky) | itself, unchanged | +35% Damage, −20% Armor | 8 | 20 | 10 min (600,000ms) |
+
+**Learn cost:** each of the 4 abilities costs a flat **2 skillPoints** to learn (`cost: 2` in the data
+shape below), replacing today's varying 1-3 cost — one less number for a player to weigh, and it holds
+regardless of whether §4's pool-merge ships (this is the unconditional, build-ready number).
 
 **Cut outright, no successor:** `spiritSeverance`, `goldenCoreAscendance`. Their "everything surges"
 flavor is redundant once Ascension (`ascension.js`) is the game's actual "everything gets stronger"
@@ -230,23 +275,134 @@ Art/Adamantine Ward up almost continuously once Qi allows it, rather than poppin
 **near-100%-uptime** of the new abilities' actual effect values, not the old 90s-window assumption,
 before any balance sign-off.
 
-### 3.3 The two-buff-pathway split (Sprint 1 note) — KEEP, unchanged
+### 3.3 The two-buff-pathway split (Sprint 1 note) — SUPERSEDED: `alchemy.js` is a full CUT, resolved below
 
-`js/alchemy.js`'s `pillBuffs` remain a **separate list, applied at combat-actor-snapshot time**
-(`applyPillBuffs`, called from `game.js:attack`/trial code, never touching `effectiveStats` or
-`player.activeBuffs`) — exactly as documented in `alchemy.js`'s own header comment. This proposal does
-**not** merge `activeBuffs` and `pillBuffs` into one list. Two parallel buff lists remain a deliberate,
-already-documented, file-ownership-respecting choice per the research note (§5.3) — worth revisiting
-only if a *third* timed-buff source is ever added, which is out of scope here.
+**Update (post-completion sync with Architect-Cull/Author-Economy):** this section originally said
+"KEEP the two-buff-pathway split unchanged," written before Architect-Cull's cull ledger confirmed
+`alchemy.js` is a **full CUT**. Economy already absorbed the module's *instant* Qi-restore effect into
+the Hall of Merit's `qiRestore` row (§3.6 of `20-economy-premium.md`). That left one orphaned piece
+neither doc claimed: Alchemy's **timed combat pill-buffs** (`PILLS` entries with `kind: 'buff'` —
+`might_pill`/`guard_pill`/`vigor_pill`, 60-90s percentage stat buffs, applied via `applyPillBuffs` at
+combat-actor-snapshot time, bypassing `effectiveStats`). Architect-Cull flagged this explicitly as my
+call to make, since it's structurally identical to what I'm already redesigning here.
+
+**My call: CUT outright, no successor.** Checking the actual overlap —
+
+| Old pill (60-90s, spirit-stone brewed) | Effect | Superseded by |
+|---|---|---|
+| Ashfury Pill (`might_pill`) | +25% Attack, +25% Damage | **Iron Fist Art** — +20% Attack/Damage, 12 min (§3.1) |
+| Ironbark Pill (`guard_pill`) | +30% Armor, +20% Defense | **Adamantine Ward** — +20% Defense/+25% Armor/+15% HP, 12 min |
+| Bloodsurge Pill (`vigor_pill`) | +30% Max HP | **Vital Circulation** — +30% Max HP, exact stat match, 15 min |
+
+All three pills' effect-space is a strict subset of what the 4 retuned active abilities already cover,
+at a small fraction of the duration and via a currency (spirit stones + a brew-then-quaff pouch step)
+that's more friction for a weaker, shorter result. Once active abilities are long-duration Qi-cost
+buffs, keeping a second, shorter/weaker percentage-buff system around is exactly the kind of duplicate
+system the author wants gone — there's no gap to fill, no flavor worth preserving that Iron Fist Art/
+Adamantine Ward/Vital Circulation don't already cover. **No new ability is added or reshaped to
+"absorb" pill flavor** — the existing 4 already do the job.
+
+**Consequence for this doc's own text:** `pillBuffs` (the list, the `applyPillBuffs` mechanism, the
+`player.pillBuffs` save field) leaves the game entirely along with the rest of `alchemy.js` — this is
+Architect-Cull's file to remove and clean up (their cull ledger already lists `alchemy.js` as CUT), not
+mine to migrate. My only stake: confirming `effectiveStats`/`activeBuffs`/`cast()` in my own files
+never referenced `pillBuffs` in the first place (confirmed — they don't; the two lists were always
+fully separate, per the original Sprint 1 design), so this CUT has **zero blast radius on
+`progression.js`/`meridians.js`/`techniques.js`**. The "two parallel buff lists" architecture note from
+Sprint 1 is now moot — there's only one timed-buff list (`activeBuffs`) going forward.
+
+(Aside, not my call: Alchemy's `xp_pill`/Enlightenment Pill — an instant flat-XP grant, unrelated to
+combat buffs — has no explicit successor named in Cull's or Economy's docs either, though Economy's
+`xpBoost` "Insight Charm" Hall of Merit row, a timed %-XP buff, covers similar flavor ground. Flagging
+for Economy/Cull to confirm, since it's outside my active-ability/passive-tree remit.)
+
+### 3.4 Technique respec + the Dao Heart "Ascetic" Qi-cost hook (unconditional, ships now)
+
+Mirrors §2.5. Economy's §7.2 needs both a cost helper and a refund function that don't exist today:
+
+```js
+// js/techniques.js — new exports
+export function techniquePointsSpent(player) {
+  return (player.learnedTechniques ?? []).reduce((sum, id) => sum + (TECHNIQUES[id]?.cost ?? 0), 0);
+}
+
+export function resetTechniques(player) {
+  const refunded = techniquePointsSpent(player);
+  player.skillPoints = (player.skillPoints ?? 0) + refunded;
+  player.learnedTechniques = [];
+  player.activeBuffs = (player.activeBuffs ?? []).filter(() => false); // dropped abilities can't stay active
+  return { ok: true, refunded };
+}
+```
+`player.skillPoints` is already a stored counter (unlike meridian points), so this is a direct refund,
+not a derived-recompute like `resetMeridians`. Same unconditional status: works today, independent of
+§4's pool-merge.
+
+**The Dao Heart "Path of the Ascetic" hook (`qiCostPct: -0.10`, Economy §3.4):** rather than have
+`techniques.js` import `meritshop.js` (a cross-module coupling neither file should need), `canCast`/
+`cast` gain an optional multiplier param that the **caller** (game.js's integration layer) supplies:
+
+```js
+// js/techniques.js — canCast/cast gain a costMultiplier param, default 1 (no behavior change
+// for any caller that doesn't pass one)
+export function canCast(player, qi, id, costMultiplier = 1) {
+  const t = TECHNIQUES[id];
+  if (!t) return { ok: false };
+  if (!isLearned(player, id)) return { ok: false, reason: 'Not learned.' };
+  const cost = Math.max(1, Math.round(t.qiCost * costMultiplier));
+  if (qi < cost) return { ok: false, reason: `Need ${cost} Qi.` };
+  return { ok: true, cost };
+}
+
+export function cast(player, qi, id, now = Date.now(), costMultiplier = 1) {
+  const check = canCast(player, qi, id, costMultiplier);
+  if (!check.ok) return check;
+  const t = TECHNIQUES[id];
+  if (!player.activeBuffs) player.activeBuffs = [];
+  player.activeBuffs = player.activeBuffs.filter((b) => b.techniqueId !== id);
+  player.activeBuffs.push({ techniqueId: id, effect: t.effect, castAt: now, duration: t.duration, expiresAt: now + t.duration });
+  return { ok: true, cost: check.cost, duration: t.duration };
+}
+```
+`game.js:castTechnique` (the existing wrapper) computes the multiplier and passes it through:
+```js
+export function castTechnique(state, id) {
+  const discount = 1 + (daoHeartBonuses(state.player).qiCostPct ?? 0); // Economy's meritshop.js export
+  const res = Techniques.cast(state.player, state.qi, id, Date.now(), discount);
+  if (res.ok) { state.qi -= res.cost; /* ...unchanged... */ }
+  return res;
+}
+```
+This is the exact hook Economy's §7.2 asked for, without either file importing the other — `game.js`
+(already the integration layer for both `techniques.js` and, per Economy's doc, `meritshop.js`) is
+where the two meet, same pattern as `meritShopBonuses`/`daoHeartBonuses` already being read there (the
+old `applyPillBuffs` call site goes away entirely with `alchemy.js`'s cut, §3.3).
+
+**No `maxQi()`/`tickQi()` collision (Economy §7.2's third concern):** confirming explicitly — nothing
+in this doc adds a Qi-cap or Qi-regen-rate source. §2.2 explicitly *deferred* a Qi-regen-rate meridian
+node rather than building one, specifically to avoid two teams touching `game.js:maxQi()`/`tickQi()`
+in the same milestone. Only Economy's `meritShopBonuses(player).qiCap`/`qiRegenPct` (§3.6 of their doc)
+and the §1.1 `QI_REGEN_MS` constant retune touch those functions — no concurrent-edit risk from
+Progression's side.
 
 ---
 
-## 4. Cross-cutting proposal: one shared "Skill Points" pool (needs lead sign-off)
+## 4. DEFERRED: one shared "Skill Points" pool (not needed this milestone — see §2.5/§3.4 instead)
 
-This is the piece that makes "passive tree + few active abilities" actually read as **one skill tree**
-instead of two separately-gated systems sharing a tab. Today there are two point currencies:
-`player.skillPoints` (banked int, spent in `techniques.js:learn`) and meridian points (derived live
-from `player.level`, spent in `meridians.js:allocateMeridian`). I recommend merging them.
+**Status update:** this section is **no longer the load-bearing design** — §2.5 (`resetMeridians`) and
+§3.4 (`resetTechniques`/`techniquePointsSpent`) now specify the unconditional, build-ready respec
+contracts that actually match what Economy's `20-economy-premium.md` shipped (two independent shop
+rows, two independent costs). This section is kept only as a **possible future simplification**, not
+a decision blocking this milestone or any build wave. Do not treat it as pending sign-off; treat §2.5/
+§3.4 as the real spec.
+
+This was originally the piece that would make "passive tree + few active abilities" read as **one
+skill tree** instead of two separately-gated systems sharing a tab. Today there are two point
+currencies: `player.skillPoints` (banked int, spent in `techniques.js:learn`) and meridian points
+(derived live from `player.level`, spent in `meridians.js:allocateMeridian`). Merging them was floated
+as a nice-to-have; it is not required for §2/§3 to ship, and Economy already built against the
+separate-pools assumption, so unifying now would mean re-plumbing a shipped design for a purely
+cosmetic "one pool" framing. Left here for the record in case a future milestone wants it:
 
 ### 4.1 Proposed shape
 
@@ -316,13 +472,14 @@ points back" edge case. Run in the **same** `createGame` back-fill pass as §4.2
 truthy guard inside `activeBuffs()`/`cleanExpired()` in case a save has a stale active buff referencing
 a cut id at the exact moment of migration (edge case, cheap to guard).
 
-**This is the widest blast radius in this doc** — it touches `progression.js` (points grant),
-`meridians.js` (points-earned formula), `techniques.js` (data + `learn`/`canLearn`), and `save.js`'s
-back-fill path, all in one PR. Per CLAUDE.md's single-owner-file rule this needs to **land as one
-serialized PR/session**, not split across concurrent build-wave agents. **If the lead wants to de-risk
-this milestone, the fallback is: don't merge the pools** — keep `skillPoints` and meridian-points
-separate as today, just apply §2 (8-node tree) and §3 (4 abilities) independently. Both pieces work
-fine without the merge; the merge is what makes it feel like *one* tree instead of two adjacent ones.
+**This would be the widest blast radius in this doc** if built — it would touch `progression.js`
+(points grant), `meridians.js` (points-earned formula), `techniques.js` (data + `learn`/`canLearn`),
+and `save.js`'s back-fill path, all in one PR, needing to land as one serialized PR/session per
+CLAUDE.md's single-owner-file rule. **This is exactly why it's deferred**: §2 (8-node tree) and §3
+(4 abilities) already ship independently and correctly without it, and Economy's shop is already built
+against the separate-pools shape — building this now would be re-work for a framing improvement, not
+a functional gap. Revisit only if a later milestone specifically wants "one pool" as a player-facing
+simplification.
 
 ---
 
@@ -332,10 +489,12 @@ fine without the merge; the merge is what makes it feel like *one* tree instead 
 |---|---|---|
 | Realms/stages/`MAX_STAGE`/`STAGE_XP`/`STAT_POINTS_PER_STAGE`/`POINT_VALUE`/`allocateStat` | **KEEP** | Works, no changes. |
 | `QI_REGEN_MS` (1200/hr → 75/hr) | **ADOPT/retune** | `game.js` constant only; highest-leverage fix per research. |
-| Stat respec | **ADD** | `respecStats()` in `progression.js`; cost/UI lives in Economy's premium shop. |
+| Stat respec | **ADD** | `respecStats()` + `statPointsSpent()` in `progression.js`; cost/UI lives in Economy's premium shop (Economy needs to add a "Stat Respec" row — gap flagged §1.2). |
 | Meridian nodes `governing/yangLinking/thrusting/girdle/conception` | **KEEP** | Unchanged stat/perRank/maxRank. |
 | Meridian nodes `yinLinking/yangHeel/yinHeel` | **ADD** | Completes the promised 8, FE-gated (Tier 2). |
 | `meridianBonuses()` → `effectiveStats` plug-in point | **KEEP** | Same add-line, same signature, no pipeline change. |
+| `resetMeridians()` / `resetTechniques()` + `techniquePointsSpent()` | **ADD** | The exact exports Economy's Hall of Merit rows need (§2.5/§3.4); unconditional, ships regardless of §4. |
+| `cast()`/`canCast()` `costMultiplier` param | **ADD** | Additive optional param (default 1, no behavior change for existing callers); the Dao Heart Ascetic hook (§3.4). |
 | Techniques `ironFist/blazingPalm/heavenStrike/voidRendingFist` | **MERGE** | → `ironFistArt`, one fixed +20%/+20% buff. |
 | Techniques `stoneSkin/goldenBell/adamantBody/immortalGoldenBody` | **MERGE** | → `adamantineWard`, one fixed buff. |
 | Technique `vitalMeditation` | **MERGE (rename)** | → `vitalCirculation`, same slot, safe/sustain flavor. |
@@ -343,22 +502,29 @@ fine without the merge; the merge is what makes it feel like *one* tree instead 
 | Techniques `spiritSeverance`, `goldenCoreAscendance` | **CUT** | Redundant with Ascension's "everything gets stronger" fantasy. |
 | Technique `tier`/`prereqs` gating | **CUT** | Replaced by flat `minStage`-only gating, no dependency graph. |
 | `activeBuffs`/`cast()` refresh-not-stack mechanism | **KEEP** | Unchanged; durations/costs retuned only. |
-| `pillBuffs` (alchemy.js) as a separate buff channel | **KEEP** | Two-pathway split from Sprint 1 stays as-is. |
-| `skillPoints` (technique) + meridian-points (derived) → one pool | **MERGE (conditional)** | Needs lead sign-off; fallback = don't merge, ship §2+§3 independently. |
+| `pillBuffs`' timed combat buffs (`might_pill`/`guard_pill`/`vigor_pill`, `alchemy.js`) | **CUT (no successor)** | §3.3 — effect-space fully superseded by the 4 retuned active abilities; `alchemy.js` is a full CUT per Architect-Cull, zero blast radius on my files. |
+| `skillPoints` (technique) + meridian-points (derived) → one pool | **DEFERRED** | Not needed this milestone (§4) — Economy already built against separate pools; §2.5/§3.4 are the real, unconditional spec. |
 
 ---
 
 ## 6. Cross-talk sent / pending
 
-- **Author-Economy:** (a) stat/skill-tree respec cost + gating belongs in the premium shop — I've
-  exposed `respecStats()`/`respecSkillTree()` as pure mechanic hooks, need your cost curve and where the
-  button lives; (b) confirm premium Qi-cap upgrades are tuned against the **75/hr** retuned baseline,
-  not the old 1200/hr; (c) the deferred Qi-regen-rate meridian node (§2.2) — flagging in case you want
-  it in the shop instead, or jointly designed.
+- **Author-Economy (resolved, post-sync):** §2.5/§3.4 now give the exact exports your §7.2 asked for —
+  `resetMeridians(player)` (costed via your already-correct `meridianPointsSpent`), `resetTechniques(player)`
+  + new `techniquePointsSpent(player)` (for your `techniqueRespec` row's cost), and the `costMultiplier`
+  param on `canCast`/`cast` for the Dao Heart Ascetic path (wired through `game.js:castTechnique`, no
+  cross-import needed). Also: (a) please add a third "Stat Respec" row calling `respecStats()`, costed
+  via the new `statPointsSpent()` — your catalog has none today despite my original doc naming
+  `respecStats()` as the hook; (b) confirmed no `maxQi()`/`tickQi()` collision — nothing in this doc adds
+  a Qi-cap/regen source, the deferred meridian node in §2.2 stays deferred; (c) confirm your shop's
+  Qi-cap/regen prices are tuned against my **75/hr** retuned baseline, not the old 1200/hr.
 - **Architect-Cull:** IA input in §2.4 — recommend folding Meridians' modal + Techniques' tab-embedded
   UI into one "Skill Tree" section, but the tab/surface decision is yours.
-- **Lead:** §4's pool-merge is the one item needing an explicit go/no-go before any build-wave agent
-  touches `progression.js`/`meridians.js`/`techniques.js`/`save.js` concurrently — please confirm before
-  freezing the build-wave assignment, and note it must land as one serialized PR if approved.
+- **Lead:** §4's pool-merge is now **deferred, not pending** — no go/no-go needed from you on it. The
+  build-ready surface is §1 (stat respec + Qi retune), §2 (8-node tree + `resetMeridians`), and §3
+  (4 abilities + `resetTechniques`/Dao Heart hook), all unconditional.
+- **Critic4:** the §7.2 mismatch you flagged (my doc only offered a conditional unified respec; Economy
+  had already shipped two separate rows expecting functions that didn't exist under any name) is
+  resolved — §2.5/§3.4 are the converged, unconditional spec both docs now agree on.
 
-Message sent to lead on completion, flagging §4 as the one open decision.
+Message sent to lead and Critic4 on completion of this sync.

@@ -1,15 +1,23 @@
 # 50 — Critique (Critic4)
 
-**Status: DRAFT-IN-PROGRESS.** Written against an independent code audit, updated as
-`10-cull-ia-feel.md` / `20-economy-premium.md` / `30-progression-skills.md` /
-`40-combat-world.md` land. Author-facing challenges were sent by direct message
-before this doc existed (per RULE 2) — this file is the durable record for the lead.
+**Status: COMPLETE.** Written against an independent code audit performed before any
+author doc existed (§0), then checked line-by-line against all four landed docs —
+`10-cull-ia-feel.md` (Architect-Cull), `20-economy-premium.md` (Author-Economy),
+`30-progression-skills.md` (Author-Progression), `40-combat-world.md`
+(Author-CombatWorld). Author-facing challenges were sent by direct message before
+each doc existed (per RULE 2), and two live cross-author mismatches were found and
+message-resolved during review (respec catalog rows, §5.7; Merit-award hook field
+naming, §5.8) — both closed by the authors themselves without needing lead
+adjudication.
 
-**Landed so far:** `10-cull-ia-feel.md` (Architect-Cull) ✓ reviewed below.
-`30-progression-skills.md` (Author-Progression) ✓ reviewed below — replied directly
-to all three of my pre-doc challenges, point by point. `20-economy-premium.md`
-(Author-Economy) ✓ reviewed below — exceptionally well cross-checked against the
-real code (see §1/§2). `40-combat-world.md` — pending.
+**Overall verdict: the proposal is build-ready and the simplify mandate is genuinely
+met.** Every one of the brief's specific asks (§1-§7, exact numbers included) is
+addressed by name in §4's checklist; every CUT names its blast radius (§2); the three
+hard constraints (`combat.js` purity, single `effectiveStats` pipeline, additive save
+schema) all PASS on independent verification (§3); and the net system-count math in
+§1 is real, not costumed. The one item still requiring the lead's own judgment call
+(not a defect, a genuine design decision) is the Dao Heart's T2-guardrail sufficiency
+(Economy's §3.4/§9.1) — flagged by Economy themselves, seconded here.
 
 ---
 
@@ -57,10 +65,13 @@ Established directly from the real code so every claim below is checkable, not v
 - **Nav-menu census** — modules that self-inject a button into `#nav-menu` today:
   `sockets.js` (💎 Jewelcraft), `titles.js` (🏵 Titles), `sectmissions.js` (Sect
   Dispatch), `stats.js` (📊 Chronicle of Deeds), `ascension.js` (✦ Ascension),
-  `meridians.js` (☯ Meridians), `crafting.js` (⚒ Forge), `salvage.js` (♻ Salvage), plus
-  `market.js`/`guild.js`/`bounties.js`/`trials.js`/`alchemy.js` via the same
-  self-contained-module pattern. **~13 nav entries today** — this is the number any
-  cull ledger must actually shrink, with the arithmetic shown.
+  `meridians.js` (☯ Meridians), `crafting.js` (⚒ Forge), `salvage.js` (♻ Salvage) — **8
+  self-injected**, plus **9 hard-coded directly in `index.html` L165-173**
+  (`btn-codex/pavilion/sect/profile/achievements/bounties/settings/trials/alchemy`).
+  **Corrected true count: 17 nav entries today** (my original ~13 estimate assumed
+  market/guild/bounties/trials/alchemy self-injected like the other 8; Architect-Cull's
+  doc caught this and I independently re-verified against `index.html` directly) — this
+  is the number any cull ledger must actually shrink, with the arithmetic shown.
 - **`ascension.js` `performAscension`** wipes `player.meridians = { nodes: {} }` and
   `player.loadouts = []` directly (lines 46-53) — if Progression's skill tree replaces
   `player.meridians` with a different shape, **`ascension.js`'s prestige-reset must be
@@ -123,19 +134,99 @@ itself, doesn't hide it): §4's skillPoints/meridian-point pool merge is the wid
 blast radius in the doc and is correctly flagged CONDITIONAL with a no-merge fallback
 that still ships the rest of the doc's value independently.
 
-### Gate applied, current standing
+### Author-Economy (`20-economy-premium.md`) — VERDICT: exceptionally well-verified, one real cross-author gap found (the respec rows)
+
+Independently spot-checked this doc's most load-bearing factual claims against the
+real code — all confirmed correct: the "10 existing `INVENTORY_SIZE` call sites
+across 5 files" claim is exact (verified: `items.js:316`, `game.js:231,525,764`,
+`market.js:163,208,230`, `ui.js:495,498`, `main.js:443` — precisely 10, precisely 5
+files). The doc also **caught its own bug mid-spec**: it initially planned to insert
+`listItem`'s new `currency` param before the trailing `now` param, then correctly
+flagged that this breaks any positional caller passing `now` explicitly, checked
+`game.js`'s `marketList` (the only other caller, confirmed at line 826-828, does not
+pass `now`), and fixed the signature to keep `now` last. That's the right instinct
+for a "build-ready spec" — I re-verified the same call sites independently and the
+fix is correct. `DEATH_XP_LOSS`/`DEATH_STONE_LOSS` line citations (`game.js:70-71`)
+also check out exactly. This is the standard the other docs should be held to.
+
+**Real gap found — the respec rows don't line up with what Progression actually exposed:**
+Economy's Hall of Merit catalog (§3.2) has two respec rows, `meridianRespec` and
+`techniqueRespec`, whose cost formula calls `meridianPointsSpent(player)` (real,
+confirmed export in `meridians.js`) and **`techniquePointsSpent(player)`** — which
+does **not exist** anywhere in the codebase and is **not proposed** by
+`30-progression-skills.md` either (grepped both the live code and the Progression doc
+— zero hits for that name). Meanwhide, Progression's doc exposes exactly **two**
+respec hooks: `respecStats()` (stat-allocation respec — refunds `player.allocated`
+points) and a conditional, **unified** `respecSkillTree()` (only if the §4 pool-merge
+ships — one function resetting BOTH meridian ranks and learned abilities together,
+not two separate resets). Economy's catalog:
+- Has **zero row** for `respecStats()` — despite Progression explicitly naming it "the
+  hook to call" for the shop (their §1.2) and Economy's own §7.2 saying "the actual
+  point-refund logic... does not exist today... must be added by Progression" (true
+  for meridian/technique, but Progression already wrote `respecStats()` for the OTHER
+  respec — stat points — and nobody's shop row calls it).
+- Has **two** rows (`meridianRespec`/`techniqueRespec`) that don't match either of
+  Progression's two proposed shapes: if the pool-merge ships, the "right" catalog
+  entry is ONE unified "Skill Tree Respec" row calling `respecSkillTree()`, not two;
+  if the pool-merge is rejected (Progression's own stated fallback), Progression
+  hasn't proposed separate meridian-only/technique-only reset functions under ANY
+  name — Economy assumed they'd exist and named them speculatively.
+- This is exactly the "specified twice, differently, or not at all" failure mode the
+  brief warned about, and it's on the single most cross-cutting mechanic in either
+  doc (respec touches `progression.js`, `meridians.js`, `techniques.js`, AND
+  `meritshop.js`/`game.js`). Flagged directly to both authors with the specific
+  mismatch (function names + the missing stat-respec row) so they can reconcile
+  before the lead freezes the build-wave contracts.
+
+Everything else in the doc is sound: Merit's earn-source table directly answers my
+pre-doc challenge #3 with concrete, hook-level specificity (exact file/line per
+source) and correctly frames achievements as a bounded bootstrap, not the main-line
+source (my exact concern, addressed head-on); the Dao Heart is an honest, capped
+attempt at the T2 exclusive-choice guardrail with a stated fallback if the lead judges
+it too thin; the real-money flag is properly deferred, not baked in; the CUT ledger
+(§8) correctly declines to unilaterally cut anything, leaving that to Architect-Cull
+as the brief assigns it.
+
+### Author-CombatWorld (`40-combat-world.md`) — VERDICT: honest about being 100% ADD; the ADD is real new content, correctly not disguised as a cut
+
+This doc's charter is inherently additive (rarities/spawns/titan/debug/combat-UI) and
+it doesn't pretend otherwise — the ADD ledger at the end explicitly lists 3 new
+modules, 2 new rarity tiers, and **4 new sets** as "real new content surface, not
+hidden in a one-liner, per Critic4's flag" (a direct, named response to my pre-doc
+challenge #2). This is the right way to handle an ADD-shaped charter inside a
+simplify-mandated proposal: name it plainly rather than dress it up. The one
+CUT/consolidation this doc contributes is real: Legendary/Super-Elite are the SAME
+creature entity as their native template (flagged + stat-multiplied), not new
+entities — so `cards.js`, the Beast Codex, and `Quests.onFace/onKill` need zero
+changes. That's a genuinely clever design choice that avoids a content-multiplication
+trap (a naive design could have doubled the creature roster).
+
+**The sockets keep-vs-cut call Architect-Cull explicitly punted to CombatWorld is
+answered: KEEP**, with a one-line `SOCKET_COUNTS` extension for the two new rarities
+— resolves cross-author-conflict item that was open in §2/§5.
+
+### Gate applied — final standing across all four docs
 
 For every one of the 17 nav-menu systems: verdict named ✓, after-count is an explicit,
 independently-checkable number (0 nav entries, 5 tabs + 2 HUD icons) ✓, lower than
 before ✓. No ADD is being relabeled as simplification merely by hiding behind an icon
 — the CUT list actually deletes modules/save-usage, and the MERGE list is honest
-about what moves where. **Verdict so far (2 of 4 docs reviewed): simplification is
-real, not costumed.** Still pending: Economy's "absorption" claims (does the premium
-shop actually delete the systems it says it absorbs, or just add a shop skin on top of
-them still existing?) and CombatWorld's net-new surface (rarities/spawns/titan/debug
-buttons/combat-panel — this doc is 100% ADD by its own charter; the question is
-whether it also executes the sockets keep-vs-cut call Architect-Cull explicitly
-punted to it).
+about what moves where. Economy's "absorption" claims hold up: the inventory/loadout
+caps genuinely become "base + shop bonus" (not a cosmetic skin), and Economy
+explicitly declines to cut anything itself, leaving that call to Architect-Cull as
+the brief assigns it. CombatWorld's net-new surface is honestly labeled ADD, not
+disguised.
+
+**Final verdict: real simplification, not costumed.** Counting every author's own
+ledger: Architect-Cull CUTs 5 modules + defers 4 + merges 17 nav entries + 1 tab into
+0; against that, the ADD side is Merit + Hall of Merit (Economy), a passive-tree
+completion + activity consolidation that's roughly net-neutral in surface count
+(Progression), and CombatWorld's genuinely-new rarity/spawn/titan/debug content
+(honestly labeled, not hidden). The CUT side removes far more standing surface
+(modules, nav buttons, a whole tab) than the ADD side introduces (a handful of new
+files/data tables gated behind 2 HUD icons and inline UI, not new tabs or nav
+buttons) — the headline "does it simplify" question resolves to **yes**, on the
+concrete, checkable terms the brief demanded (a real number, not a vibe).
 
 ---
 
@@ -215,35 +306,39 @@ still the right call, it's just a two-step operation, not one).
 
 ## 3. Constraint fidelity
 
-### 3a. `combat.js` purity (titan)
-**Unresolved pending `40-combat-world.md`.** The load-bearing question sent to
-Author-CombatWorld: `resolveCombat` today resolves an entire encounter in one call
-(up to 20 rounds) and every existing caller relies on that. A "attack once → titan
-moves → attack again ×10" design needs an EXACT call-shape answer — e.g. is each
-"hit" a fresh `resolveCombat(player, titanActorSnapshot, seed)` call artificially
-capped to extract just the first exchange, with the titan's position/hit-counter kept
-in `game.js`/a new module and NOT fed back into `combat.js` as new parameters? If the
-doc doesn't show the literal function signatures on both sides of that boundary, the
-"combat.js stays pure" claim is asserted, not demonstrated, and QA should reject it at
-the exit gate.
+### 3a. `combat.js` purity (titan) — RESOLVED, verified line-by-line against the real return shape
 
-### 3b. Single `effectiveStats` pipeline
-**Unresolved pending `30-progression-skills.md`/`40-combat-world.md`.** Two claimed new
-flat sources need to land as literal add-lines in the existing 7-step order, not a
-parallel pipeline:
-- Passive skill tree replacing `meridianBonuses()` — same slot, same shape.
-- Titan-item Qi-regen ("always give some stamina/Qi regeneration as a defining stat")
-  — Qi is **not** one of the stats `effectiveStats` aggregates today (it aggregates
-  `attack/defense/damage/armor/maxHp`; Qi regen is a *rate*, tracked via
-  `lastQiTick`/`QI_REGEN_MS` in `game.js`, entirely outside `effectiveStats`). A titan
-  item granting "Qi regen" as a *stat* needs either (a) a new parallel small pipeline
-  for regen-rate modifiers analogous to `effectiveStats` but distinct, or (b) folding
-  into `maxQi()`/`tickQi()` instead of `effectiveStats`. CombatWorld's doc must say
-  which, explicitly — "plugs into effectiveStats" is imprecise/wrong if Qi regen isn't
-  an effectiveStats field at all today.
-- Sets granting flat Attributes is already exactly how `sets.js`/`setBonuses()` works
-  today (add-line #6) — this one is genuinely just "keep the existing mechanism,
-  extend the set roster." Low risk, unlike the two above.
+**`40-combat-world.md` clears this cleanly, independently verified.** The design:
+`resolveCombat(attacker, defender, seed)` is called **exactly once per `attack()`**,
+completely unmodified — no new params, no titan-awareness inside `combat.js`. The
+Titan's HP is a persisted world value (`monster.titanHp`), synced into the transient
+`hp` field the resolver already reads (`monster.hp = monster.titanHp`) immediately
+before the call, then read back out via the **existing** return shape
+(`result.turns[result.turns.length-1].defenderHpAfter`) immediately after. I traced
+this against `combat.js`'s actual loop: when the defender is felled mid-fight, the
+pushed turn sets `defenderHpAfter = 0` explicitly (confirmed at combat.js's
+`win`-branch); when the fight ends in a loss or draw, the last turn's
+`defenderHpAfter` still correctly reflects the chip damage the titan took, since the
+attacker always swings first every round (confirmed in `swing()`/`resolveCombat`'s
+loop order) — so a titan can be legitimately "chipped" even in an encounter the
+player loses, matching the doc's explicit claim. `combat.js` itself is untouched;
+`game.js`/`js/titans.js` own 100% of the movement/hit-counter state. This is exactly
+the demonstration (not just assertion) the exit gate should require — verdict: PASS.
+
+### 3b. Single `effectiveStats` pipeline — RESOLVED for both claimed sources
+
+- **Passive skill tree replacing `meridianBonuses()`** — confirmed same slot, same
+  signature, same shape (Progression's doc, verified above).
+- **Titan-item Qi-regen** — CombatWorld's doc gets this exactly right, and directly
+  answers the imprecision I flagged pre-doc: `qiRegen` is explicitly kept **out** of
+  `effectiveStats` ("it is not one of effectiveStats' combat stats... and must not be
+  added there") and instead gets its own tiny parallel aggregator
+  (`gearQiRegenBonus(player)`, same shape/spot as `sockets.js`/`sets.js`'s
+  `*Bonuses()` convention) consumed by `tickQi()` — option (b) from my original
+  challenge, correctly chosen and correctly separated from the stat pipeline. No
+  parallel *stat* pipeline was created; this is precise, not hand-wavy.
+- Sets granting flat Attributes: confirmed unchanged, `setBonuses()` is generic over
+  `SETS`, the 4 new sets plug in for free — as expected, low risk.
 
 ### 3c. Save schema (additive-or-migrated)
 Every CUT/ADD must show its `save.js` field explicitly. Established pattern (score
@@ -254,12 +349,15 @@ doc should propose a VERSION bump for a field that's merely new — that would b
 over-engineering relative to the established, working pattern.
 
 ### 3d. Premium currency stays offline-earnable
-**Unresolved pending `20-economy-premium.md`.** Must name concrete in-game sources
-(not "drops/achievements" in the abstract) and confirm no real-money hook is wired in
-(only flagged as the author's future decision, per the brief). Watch specifically for
-achievements as a *primary* source — `achievements.js` has 23 finite milestones; that's
-a bounded well a player exhausts, not a sustainable earn loop, and shouldn't be the
-load-bearing source in the final design.
+**RESOLVED — `20-economy-premium.md` lands this cleanly.** Merit is earned entirely
+in-game: per-kill/per-clear amounts hooked to exact call sites (`game.js attack()`
+win branch, `boss.js onBossDefeated()`, `attemptDailyTrial()`, `achievements.js`'s
+unlock path) plus a recurring Auction-House Merit-priced-listing sale path. Achievements
+are explicitly scoped as a **bounded bootstrap** ("23 total ≈ 130 Merit lifetime... not
+the main-line source"), not the load-bearing loop — exactly the risk I flagged
+pre-doc, addressed head-on rather than glossed over. Real-money on-ramp is explicitly
+NOT built, deferred to the author with a clean drop-in seam (`awardMerit`/a future
+`purchaseMerit` stub) — matches the brief's ask precisely.
 
 ---
 
@@ -267,82 +365,102 @@ load-bearing source in the final design.
 
 | # | Directive ask | Owner (per brief) | Status |
 |---|---|---|---|
-| 1 | Cull ledger for every non-core system | Architect-Cull | pending doc |
-| 2 | Core loop: combat/equipment/auction/premium-shop/leveling/skill-tree | all four | pending docs |
-| 3 | Legendary always-Set / SE always-Set / Titan not-Set | CombatWorld | pending doc — **contradicts any CUT of `sets.js`**, see §2 |
-| 4 | Sets grant flat Attributes only (no exotic effects) | CombatWorld | matches existing `sets.js` mechanism already — low risk |
-| 5 | Legendary: multiple/area, SE: exactly 1/area | CombatWorld | pending doc — **no existing spawn-table mechanism**, see §0 |
-| 6 | Titan: move-and-chase, ~10 hits, then drops | CombatWorld | pending doc — **combat.js purity unresolved**, see §3a |
-| 7 | Debug spawn buttons (Legendary/SE/Titan, multi-spawn) | CombatWorld | pending doc — note PROJECT.md: all TESTING/debug scaffolding was deliberately **stripped** in PR #13 ("real values are live... any future dev tooling must be URL-flag-gated `?dev=1`, never always-on"). A bare "debug buttons above the map" contradicts that constraint unless gated behind `?dev=1`; author must reconcile explicitly. |
-| 8 | Drop rates 25% / 50% / 100% | CombatWorld | pending doc |
-| 9 | Debug 100%-drop toggle | CombatWorld | pending doc — same `?dev=1` gating requirement as #7 |
-| 10 | Combat results on side of map, Combat tab removed | CombatWorld ↔ Architect-Cull | pending docs — blast radius named in §0 (tabs.js/index.html/main.js) |
-| 11 | 1-9 attacks monster in slot | CombatWorld | pending doc — **collides with existing input.js digit-nav**, see §0 |
-| 12 | Premium currency name/flavor/earn/sink, tradeable on AH | Economy | pending doc |
-| 13 | Premium upgrade shop (icon-opened), absorbs scattered sinks | Economy | pending doc |
-| 14 | Auction house dual-currency | Economy | pending doc — **market.js has no currency-type field today**, see message to Economy |
-| 15 | Leveling + stats (existing) | Progression | presumably KEEP as-is — confirm explicitly rather than silently assuming |
-| 16 | Passive skill tree consolidating meridians.js | Progression | pending doc |
-| 17 | Few active abilities consolidating techniques.js, Qi cost, 10+min duration | Progression | pending doc |
+| 1 | Cull ledger for every non-core system | Architect-Cull | ✓ landed — 17 nav entries verdicted, count math verified independently |
+| 2 | Core loop: combat/equipment/auction/premium-shop/leveling/skill-tree | all four | ✓ Cull/Economy/Progression land their pieces; CombatWorld's combat piece pending |
+| 3 | Legendary always-Set / SE always-Set / Titan not-Set | CombatWorld | ✓ landed — 2 legendary templates that lacked a setId fixed, 2 new SE sets authored from scratch, Titan gear never gets a setId (enforced by omission, verified correct) |
+| 4 | Sets grant flat Attributes only (no exotic effects) | CombatWorld | ✓ matches existing `sets.js` mechanism, 4 new sets all flat-stat only |
+| 5 | Legendary: multiple/area, SE: exactly 1/area | CombatWorld | ✓ landed — `js/rarespawns.js`, per-slot independent roll (Legendary) + zone-wide `anySuperEliteAlive` cap (SE), new module as expected |
+| 6 | Titan: move-and-chase, ~10 hits, then drops | CombatWorld | ✓ landed and verified — see §3a, PASS on independent trace |
+| 7 | Debug spawn buttons (Legendary/SE/Titan, multi-spawn) | CombatWorld | ✓ landed, `?dev=1`-gated per the PR #13 constraint — doc asserts "lead-approved" override of the no-always-on-debug rule; **worth the lead confirming that approval actually happened** (I have no visibility into it), though the `?dev=1` gating itself satisfies the constraint's substance regardless |
+| 8 | Drop rates 25% / 50% / 100% | CombatWorld | ✓ landed exactly as specified, with citations to the exact `attack()` branch |
+| 9 | Debug 100%-drop toggle | CombatWorld | ✓ landed — `js/debug.js`, same `?dev=1` gating as #7 |
+| 10 | Combat results on side of map, Combat tab removed | CombatWorld ↔ Architect-Cull | ✓ both halves landed and cross-confirmed — DOM ids unchanged (`getElementById`, not tab-relative), zero `ui.js`/`combatfx.js` changes needed per CombatWorld's own trace |
+| 11 | 1-9 attacks monster in slot | CombatWorld | ✓ both halves landed, sequenced (Cull's removal lands first, CombatWorld's rebind second, avoiding a simultaneous `input.js` edit) |
+| 12 | Premium currency name/flavor/earn/sink, tradeable on AH | Economy | ✓ landed — Merit, concrete hook-level earn table, verified |
+| 13 | Premium upgrade shop (icon-opened), absorbs scattered sinks | Economy | ✓ landed — Hall of Merit, 12-row catalog, opens from HUD Merit chip per directive |
+| 14 | Auction house dual-currency | Economy | ✓ landed — `currency` field on listings, verified call-site-safe param ordering |
+| 15 | Leveling + stats (existing) | Progression | ✓ landed — explicit KEEP-as-is, confirmed rather than silently assumed |
+| 16 | Passive skill tree consolidating meridians.js | Progression | ✓ landed — 5→8 nodes, same add-line, same signature |
+| 17 | Few active abilities consolidating techniques.js, Qi cost, 10+min duration | Progression | ✓ landed — 9→4, tier/prereq graph deleted, durations stretched to 10-15 min |
 | 18 | Sound effects | Lead (cross-cutting synthesis) | out of scope for the four authors; confirm lead owns it as stated in brief |
-| 19 | Visual-identity "less like AI" direction | Architect-Cull | pending doc |
-| — | **Quests / `quests.js` fate** | **unassigned** | **gap — flagging to lead, see §0** |
+| 19 | Visual-identity "less like AI" direction | Architect-Cull | ✓ landed — concrete palette/type/icon/motion direction, CSS variable citations verified accurate |
+| — | **Quests / `quests.js` fate** | **unassigned in brief** | **✓ RESOLVED by Architect-Cull — explicit KEEP, absorbs Bounties** |
+| — | **Respec catalog rows vs. Progression's exposed hooks** | Economy ↔ Progression | **✓ RESOLVED — both sides converged on `statRespec`/`resetMeridians`/`resetTechniques`, see §5.7** |
+| — | **Merit-award hook field naming (`monster.tier` vs. boolean flags)** | Economy ↔ CombatWorld | **open — found during this review, see §5.8; flagged to both authors directly** |
 
 ---
 
 ## 5. Cross-author conflicts for the lead to adjudicate
 
-1. **Sets vs. Cull — RESOLVED, no contradiction.** Architect-Cull's ledger explicitly
-   KEEPs `items.js`/`sets.js` as the Equipment pillar and names CombatWorld as owner of
-   the rarity/set rules ("Author pillar. CombatWorld owns the rarity/set rules") — so
-   the feared contradiction (Cull trims sets.js while CombatWorld depends on it) does
-   not materialize in what's landed so far. Still need CombatWorld's doc to confirm it
-   actually grows the 3-set roster to cover procedurally-generated Legendary/SE drops
-   (the real new-build item, per my code audit in §0) rather than just restating "sets
-   stay."
-2. **1-9 keys — RESOLVED in Architect-Cull's doc, pending CombatWorld's mirror.**
-   Architect-Cull explicitly removes the `openNavPanel` digit binding (dead once Halls
-   dissolves) and hands 1-9 to CombatWorld for "attack monster in slot N," recorded in
-   `10-cull-ia-feel.md` §2.1 with the exact line numbers. Both sides message-confirmed
-   this resolution. Outstanding: confirm `40-combat-world.md` records the same
-   resolution rather than independently re-deciding it.
-3. **Premium-currency sourcing — still open.** Economy names the currency and its
-   sinks; *where it drops* plausibly belongs to CombatWorld's rarity/spawn system
-   (titan/SE/Legendary kills are the obvious high-value source). Asked both directly
-   to confirm who specifies the drop rate/source so it isn't specified twice,
-   differently, or not at all. Pending both docs.
+1. **Sets vs. Cull — RESOLVED.** Architect-Cull KEEPs `sets.js` as the Equipment
+   pillar; CombatWorld's doc confirms it grows the roster (3→7 sets: the original
+   `nineHeavens` plus 2 new Legendary-tier sets fixing the 2 previously set-less
+   templates, plus 2 brand-new Super-Elite sets) to actually cover the procedural
+   Legendary/SE drop economy, not just restate "sets stay." No contradiction anywhere
+   in the landed docs.
+2. **1-9 keys — RESOLVED, both sides confirmed and sequenced.** Architect-Cull removes
+   the `openNavPanel` digit binding; CombatWorld adds the slot-attack rebind after,
+   explicitly sequenced (not simultaneous) to avoid a merge collision on the shared
+   `input.js` file. Both docs record the same resolution independently — verified
+   consistent.
+3. **Premium-currency sourcing — RESOLVED.** Economy's Merit-award table (§1.3) names
+   exact amounts per source (Legendary +2, SE +6, Titan +20, boss clears +8/+10/+12,
+   daily trial +1, achievements by tier) hooked to exact call sites; CombatWorld's
+   cross-talk section correctly declines to also specify Merit amounts (leaves that to
+   Economy) while confirming the sell-value multipliers (`RARITIES.superElite.sellMult
+   = 130`, `.titan = 140`) are provisional/tunable. Division of labor is clean — no
+   double-specification. (The one loose thread from this handoff is the **field-naming
+   mismatch** in item 8 below, not the amounts/ownership split.)
 4. **Ascension vs. Progression — de-risked, not fully closed.** `ascension.js`'s
    `performAscension` wipes `player.meridians = {nodes:{}}` and resets
    `player.skillPoints = 0`/`learnedTechniques = []` directly. Progression's doc keeps
-   `player.meridians.nodes` the same open `{id:rank}` shape (just adds 3 more possible
-   keys) — Ascension's existing reset line needs zero changes for that part. If the
-   §4 conditional skillPoints/meridian-point **pool merge** ships, Ascension's existing
-   `skillPoints = 0` reset already zeroes the merged pool correctly — but neither
-   Progression's doc nor Ascension (single-owner, different file) states this
-   explicitly. Recommend the lead require one line in the build-wave notes confirming
-   `ascension.js` needs **no code change** for the pool-merge case, so nobody "fixes"
-   a file that doesn't need touching and reintroduces risk. Economy's premium-shop
-   respec (§1.2 of Progression's doc: mechanic in `progression.js`, cost/gating in the
-   shop) is a *different* action from the Ascension prestige reset — both docs treat
-   them as distinct, which is correct; just flagging that a third doc (Economy) also
-   touches this territory and should say so explicitly when it lands.
-5. **Qi-regen as an effectiveStats source — still open, pending CombatWorld.** Flagged
-   directly: Qi regen is **not** part of `effectiveStats` today (it's a rate, tracked
-   via `lastQiTick`/`QI_REGEN_MS` in `game.js`, wholly outside the stat-aggregation
-   pipeline). Titan items granting "Qi regeneration" as a defining stat need a named
-   mechanism (new small pipeline analogous to but distinct from `effectiveStats`, or
-   folding into `maxQi()`/`tickQi()`) — CombatWorld's doc must say which explicitly,
-   not assume a slot that doesn't exist. Also now intersects with Progression's own
-   Qi-regen retune (`QI_REGEN_MS` 3000→48000ms, i.e. 1200/hr→75/hr, §1.1 of
-   `30-progression-skills.md`) — CombatWorld's titan Qi-regen stat needs to be sized
-   against the **retuned 75/hr baseline**, not the old prototype rate, or the titan
-   item will be balanced against a number that's about to change 16x.
+   `player.meridians.nodes` the same open `{id:rank}` shape — Ascension's existing
+   reset line needs zero changes for that part. Progression has since demoted the §4
+   pool-merge to deferred/non-blocking (per their message during this review), which
+   further de-risks this item, but the lead should still require one explicit line in
+   the build-wave notes confirming `ascension.js` needs no code change regardless of
+   which respec shape ships.
+5. **Qi-regen as an effectiveStats source — RESOLVED.** CombatWorld correctly keeps
+   `qiRegen` out of `effectiveStats` entirely, aggregating it in a small parallel
+   helper (`gearQiRegenBonus`) consumed by `tickQi()` — see §3b. Also correctly
+   intersects with Progression's `QI_REGEN_MS` retune (3000→48000ms): CombatWorld's
+   `tickQi()` rewrite multiplies the *existing* `QI_REGEN_MS` constant rather than
+   hardcoding the old value, so whichever retune lands, the Titan Qi-regen bonus
+   automatically applies against the current constant — no stale-baseline risk.
 6. **Quests.js ownership — RESOLVED.** Architect-Cull's ledger explicitly KEEPs
-   `quests.js` on its own tab and merges Hunt Bounties into it — closing the gap I
-   flagged pre-doc (no charter mentioned it). No longer a silent-drop risk.
+   `quests.js` on its own tab and merges Hunt Bounties into it.
+7. **Respec catalog rows vs. Progression's exposed hooks — RESOLVED.** Found during
+   this review (Economy's `meridianRespec`/`techniqueRespec` rows called a
+   `techniquePointsSpent(player)` function that existed nowhere, and Progression's
+   actual hooks were named differently). Both authors converged directly: Progression
+   now exports unconditional `resetMeridians`/`resetTechniques`/`techniquePointsSpent`
+   matching Economy's shipped two-row shape exactly (demoting their own §4 pool-merge
+   to non-blocking-deferred rather than forcing Economy to wait on it), and Economy
+   added the missing `statRespec` row calling Progression's real `respecStats()`. Full
+   resolution confirmed by both authors' messages during this review.
+8. **Merit-award hook field naming — RESOLVED, and correctly re-verified by Economy
+   rather than taken on faith.** My original flag was raised against the version of
+   `40-combat-world.md` on disk at the time (boolean flags only, no `monster.tier`).
+   By the time I circled back, CombatWorld had already added a callout ("resolving the
+   Author-Economy/Critic4 cross-doc flag") setting **both** the booleans (which
+   `game.js attack()` branches on internally) **and** a `monster.tier` string
+   alongside them, specifically so Economy's hook has one field to check. Notably,
+   **Author-Economy did not just accept my second message at face value** — they
+   re-checked the live doc themselves, found their original design was already correct
+   against the current revision, and told me so (with the useful process note that a
+   flag should be timestamp-checked against the doc's current state before resending).
+   That's exactly what an adversarial-review loop should produce: authors verifying
+   claims independently rather than deferring to the critic by default. While
+   reconciling, **Economy also self-caught a real, previously unflagged gap**:
+   `market.js`'s `MARKET_PREMIUM` table is a hardcoded per-rarity map with a `?? 2`
+   fallback — `superElite`/`titan` listings would have silently priced at a generic 2×
+   premium instead of a tier-appropriate one. Fixed in their §4.2/§7.3 with explicit
+   entries (`superElite: 3.8, titan: 3.5`, correctly slotted between `legendary: 3.6`
+   and `mythic: 4.2` to match CombatWorld's own power-curve ordering). Both authors
+   converged without needing lead adjudication.
 
 ---
 
-*(This document will be updated in place as each author's doc lands; the lead will be
-notified via SendMessage when all four have been reviewed and this file reflects their
-actual content rather than the pre-audit baseline above.)*
+*(All four author docs reviewed; all findings above reflect their final landed
+content. Two live cross-author mismatches were found and resolved during this review
+(§5.7, §5.8) — both closed by the authors themselves. Lead notified via SendMessage.)*

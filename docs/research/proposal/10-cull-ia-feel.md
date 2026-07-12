@@ -47,6 +47,7 @@ upgrade shop · leveling+stats · passive skill tree + few active abilities**. "
 | Map / world (`map.js`, `zones/*`, `actors.js`) | **KEEP** | Map tab | CombatWorld adds Legendary/SE/Titan spawns + debug buttons. |
 | Bosses (`boss.js`) | **KEEP** | Map (world content) | Extended by CombatWorld. |
 | Equipment (`items.js`, `sets.js`) | **KEEP** | **Equipment tab** (new prominence) | Author pillar. CombatWorld owns the rarity/set rules. |
+| Gem Sockets (`sockets.js`) | **KEEP — CombatWorld's ruling** | **Equipment tab** (per-item socket UI alongside gear) | Orthogonal per-item flat-stat source (`effectiveStats`'s 5th flat source, `progression.js` L107); extending it to the two new rarities is one line (`SOCKET_COUNTS` gains `superElite`/`titan` — `socketBonuses`/`socketCountFor` are already generic over rarity keys). No cut, no re-tune needed on its own. |
 | Leveling + stats (`progression.js`) | **KEEP** | **Cultivator tab** | `effectiveStats` stays the single pipeline. |
 | Auction house (`market.js`, `personas.js`) | **KEEP** | **HUD icon** (was Halls button) | Economy adds dual-currency (gold + premium). |
 | Quests (`quests.js`) | **KEEP** (explicit, per lead) | Quests **top-level tab** | It's a first-class tab, **not** Halls clutter — the "too many systems hidden in Halls" complaint is about the nav-menu sprawl, not the quest tab. The two capstone sagas (Heaven-Severing Blade Legendary, Stormcrown Mythic) are our endgame item sources. Absorbs bounties (below). |
@@ -71,14 +72,14 @@ upgrade shop · leveling+stats · passive skill tree + few active abilities**. "
 | Titles (`titles.js`) | **MERGE** | **Cultivator → Records** sub-panel + keep the HUD title chip | Cosmetic; derives read-only from state. Only `main.js` imports it. Low. |
 | Achievements (`achievements.js`) | **MERGE** | **Cultivator → Records** sub-panel | `player.achievements` KEPT. Imported by `game.js`, `stats.js`, `titles.js`, `main.js`. Low (data untouched, just re-homed). |
 | Chronicle of Deeds (`stats.js`) | **MERGE** | **Cultivator → Records** sub-panel (same panel as titles/achievements) | `player.stats` KEPT. Only `main.js` imports the modal. Low. |
-| Beast Codex (in `ui.js` + `cards.js` seen-set) | **MERGE** | A lightweight **bestiary reference** reachable from the Map monster panel (keep "seen" flavor; strip the card-collection grind — see cards CUT below) | Codex render lives in `ui.js`; the *card stat grind* is the part being cut. Medium — see cards. |
+| Beast Codex (in `ui.js` + `cards.js` seen-set) | **MERGE** | A lightweight **bestiary reference** reachable from the Map monster panel (keep "seen" flavor; strip the card-collection grind — see cards CUT below) | Codex render lives in `ui.js`; the *card stat grind* is the part being cut. Medium — see cards. **CombatWorld-confirmed:** Legendary/Super-Elite monsters are the SAME creature entity as their native zone type (flagged + stat-boosted, not new entities) — so the new spawn tiers need **zero** Codex/`cards.js`/quest changes on top of the merge already planned. |
 
 ### CUT — remove from 1.0; not core, actively adds noise (BREAKING — needs migration §4)
 
 | System (file) | Verdict | Why | Migration blast radius |
 |---|---|---|---|
 | **Spirit Cards** (`cards.js`) | **CUT** (keep bestiary flavor only) | The archetypal "collection grind hidden away" the author is complaining about; also a passive-stone idle source. | **HIGH — content re-tune, not a mechanical removal (Critic4-verified, see §4.4).** `cardBonuses` is a flat source in `effectiveStats` (`progression.js` L91) — removing it makes every existing save weaker. Imported by `ui.js`, `profile.js`, `game.js`, `achievements.js`, `progression.js`, `stats.js`, `titles.js` (7). `player.cards` → orphan. Passive `lastStoneTick` income (`tickStones`) shrinks. **The three calamity bosses (`boss.js`) were hand-tuned against a "maxed+buffed" sheet that explicitly includes all-cards** (`tools/balance.mjs` `playerAt(..., { cards: 'all', ... })`, L378/383/388) — cutting cards may require **re-authoring the boss stat blocks themselves**, not just re-running the harness. See §4.4. |
-| **Alchemy** (`alchemy.js`) | **CUT** | A *second* timed-buff system competing with techniques/active abilities; pills are a stone sink → noise. Qi-restore function moves to the Premium Shop / natural regen. | Medium. `player.consumables` + `player.pillBuffs` → orphan; `applyPillBuffs`/`tickPillBuffs` removed from combat + tick path (`game.js`, `main.js`). No `effectiveStats` line (buffs are combat-time). → tell Economy the "restore Qi" sink moves to the shop. |
+| **Alchemy** (`alchemy.js`) | **CUT** | A *second* timed-buff system competing with techniques/active abilities; pills are a stone sink → noise. Qi-restore function moves to the Premium Shop / natural regen. | Medium. `player.consumables` + `player.pillBuffs` → orphan; `applyPillBuffs`/`tickPillBuffs` removed from combat + tick path (`game.js`, `main.js`). No `effectiveStats` line (buffs are combat-time). → tell Economy the "restore Qi" sink moves to the shop. **Resolved (Author-Progression, §5 handoff):** the three timed pill-buffs (Ashfury/Ironbark/Bloodsurge) are a strict subset of their 4 retuned active abilities (Iron Fist Art, Adamantine Ward, Vital Circulation match or exceed each stat-for-stat) — **cut outright, no successor needed**, confirmed zero blast radius on `progression.js`/`meridians.js`/`techniques.js` (pill buffs and ability buffs were always separate lists). **Resolved (Author-Economy, `20-economy-premium.md` §7.1):** `xp_pill` ("Enlightenment Pill," `alchemy.js` L22 — an *instant flat* XP grant, `xpPerLevel: 80`) gets **no successor row** — an instant-XP purchase reads as buying levels directly, a sharper pay-to-win shape than anything else in the shop catalog, so it stays cut with nothing replacing it; `xpBoost`/"Insight Charm" (timed % buff) already covers "spend Merit to level faster" within the doc's Eldevin "convenience never power" commitment. This was the last open thread across all four proposal docs — **the cull ledger is now fully closed.** |
 | **Daily Trials** (`trials.js`) | **CUT** | A daily-login retention gimmick, one fight/day, hidden in Halls. Not the core fantasy. | Low. `player.trials` → orphan; `attemptDailyTrial` + badge removed (`game.js`, `main.js`). Trivial to re-add later. |
 | **World-event calendar** (`events.js`) | **CUT** | A cosmetic banner/calendar bucket; pure decoration hidden behind a HUD strip. | Low. `game.js`+`main.js` ref it; no save field of substance. |
 | **Sect Dispatch** (`sectmissions.js`) | **CUT** | Timed idle "send disciple, wait, collect" busywork — the exact hidden-idle pattern being culled. | Low–medium. `player.sectMissions` → orphan; provider + badge removed (`game.js`, `main.js`). Depends on Sect (below). |
@@ -91,7 +92,6 @@ upgrade shop · leveling+stats · passive skill tree + few active abilities**. "
 | **Sect / disciples** (`guild.js`) | **DEFER-2.0** | A fake-multiplayer roster on `GuildProvider`; the passive economy buff is the only single-player value. Belongs to the networked 2.0, per PROJECT.md's provider-era plan. | Medium. `player.guild` → dormant (keep field, hide UI). Imported by `ui.js`, `profile.js`, `game.js`. Keep `createGuildProvider` as the stub. |
 | **Profile / Rivals / Sparring** (`profile.js`, `rivals.js`, `duel.js`) | **DEFER-2.0** | Fake-multiplayer PvP-preview; no PvP in the author's core loop. | Low (isolated: `main.js`→profile/duel, `duel`→rivals). Keep `ProfileProvider` stub for 2.0; remove the Halls buttons. |
 | **Ascension / NG+** (`ascension.js`) | **KEEP (thin) — DEFER the T2 deepening** | The endgame prestige loop is one button + a `player.ascension` integer read straight in `effectiveStats` (L131). Cheap to keep as the long-tail. **Do NOT** build the comparison-doc T2 "chosen-unlock currency" this pass — it adds complexity against the simplify mandate. | Low. `player.ascension` KEPT (scalar source stays). Re-home its button off Halls (into Cultivator or a gate action). |
-| **Gem Sockets** (`sockets.js`) | **DEFER (lean CUT) — CombatWorld decides** | A flat `effectiveStats` source (`progression.js` L107) + a whole gem drop/currency layer on top of the rarity redesign CombatWorld is already doing. One deepening layer too many for 1.0. | **HIGH if cut.** `socketBonuses` in `effectiveStats`; gem ids counter in `save.js` (L8, L29, L64); imported by `ui.js`, `items.js`, `progression.js`, `save.js`, `main.js` (5). **→ Author-CombatWorld owns rarities/sets — they arbitrate keep-vs-cut; I flag it as the single most tangled optional source.** |
 
 ### ADD — the author's new systems (owned by the other three docs; listed so the ledger nets honestly)
 
@@ -107,10 +107,10 @@ upgrade shop · leveling+stats · passive skill tree + few active abilities**. "
 | Sound effects | Lead synthesis / `audio.js` | Author §7. |
 
 **Net ledger:** ADD 4 player-facing systems (premium shop, premium currency, new monster tiers,
-titan mechanic) but CUT 5 (cards, alchemy, trials, events, sect-dispatch), DEFER 4 (sect, profile/
-rivals/duel, ascension-deepening, sockets-lean), and MERGE 7 Halls buttons into existing surfaces.
-**Surfaces go from 5 tabs + 17 Halls buttons → 5 tabs + 2 HUD icons.** This is a real simplification,
-not a costumed addition.
+titan mechanic) but CUT 5 (cards, alchemy, trials, events, sect-dispatch), DEFER 3 (sect, profile/
+rivals/duel, ascension-deepening — **sockets is KEEP, see CombatWorld's ruling below**), and MERGE 7
+Halls buttons into existing surfaces. **Surfaces go from 5 tabs + 17 Halls buttons → 5 tabs + 2 HUD
+icons.** This is a real simplification, not a costumed addition.
 
 ---
 
@@ -125,8 +125,11 @@ Today (`tabs.js` L17) tabs are `['map','combat','char','quests','halls']`, and `
 **New shape:** combat resolves **inline on the Map surface** in a side-panel docked beside the grid.
 - Repurpose the existing right-hand `#tile-info` column on `#view-map` (`index.html` L102–106) to host
   a **combat side-panel**: the monster/tile list when idle, the live combat log + outcome when a fight
-  is active. This is where Author-CombatWorld's presentation work lands — coordinate the DOM ids so
-  `playCombat`/`combatfx` render into the map-side panel instead of `#view-combat`.
+  is active. **CombatWorld-confirmed implementation detail:** `#combat-panel`/`#combat-log`/
+  `#combat-outcome`/`btn-skip`/`btn-close-combat` are all looked up by plain `document.getElementById`
+  in `ui.js`'s `playCombat` and `combatfx.js`'s `beginFx` — **not** tab-relative queries — so this is
+  purely an `index.html` move (relocate the `#combat-panel` div into `#tile-info`, as a sibling of
+  `#monster-list`) with **zero changes needed to `ui.js` or `combatfx.js`**.
 - `combat.js` **stays pure** — this is presentation only. Each attack still calls `resolveCombat`;
   the titan's move-and-chase counter is game-layer state (per the constraint).
 - **Number keys 1–9** attack the monster in slot N of the current tile (Author-CombatWorld owns the
@@ -140,17 +143,21 @@ Today (`tabs.js` L17) tabs are `['map','combat','char','quests','halls']`, and `
   CombatWorld owns *what renders into* the relocated side-panel, not the tab-array/section teardown.
   This slice must be **one PR** since those three files are shared/single-owner.
 
-**1–9 key collision — resolved with Author-CombatWorld.** Digit keys 1–9 are **already bound** in
-`input.js` (L210–213) to `openNavPanel(n-1)` — "open the Nth Halls panel." Because this restructure
-**dissolves the Halls nav-menu entirely**, that affordance is obsolete: there is no nav-menu to index
-into. So the digit keys come free. **I remove the `openNavPanel` digit binding** (it's an IA/nav
-concern) and **Author-CombatWorld rebinds 1–9 to "attack the monster in slot N"** (their combat
-concern) — both edits land in `input.js`, so we coordinate a single `input.js` change or a clean
-sequence. Recorded here per Critic4's flag; CombatWorld's doc should record the same resolution.
-**Per the lead's ruling:** the nav shrink is *designed* so no surviving surface depends on 1–9 —
-every re-homed destination is reached via a **tab** or a **HUD icon** (auction ◆, premium ✧, settings,
-backup), never a digit shortcut. Because Halls is fully dissolved (not just shrunk), the digit keys are
-unconditionally free for combat; there is no residual "open panel N" affordance to preserve.
+**1–9 key collision — resolved with Author-CombatWorld, sequenced not simultaneous.** Digit keys 1–9
+are **already bound** in `input.js` (L210–213) to `openNavPanel(n-1)` — "open the Nth Halls panel."
+Because this restructure **dissolves the Halls nav-menu entirely**, that affordance is obsolete: there
+is no nav-menu to index into. So the digit keys come free. **Confirmed sequencing:** I remove the
+`openNavPanel` digit binding first; Author-CombatWorld adds the slot-attack rebind after (new
+`getSlotMonster`/`attack` callbacks into `initInput`, gated on `activeTab() === 'map'`) — both edits
+land in `input.js`, done as two ordered commits rather than a simultaneous edit. **Per the lead's
+ruling:** the nav shrink is *designed* so no surviving surface depends on 1–9 — every re-homed
+destination is reached via a **tab** or a **HUD icon** (auction ◆, premium ✧, settings, backup), never
+a digit shortcut. Because Halls is fully dissolved (not just shrunk), the digit keys are
+unconditionally free for combat; there is no residual "open panel N" affordance to preserve —
+**CombatWorld's rebind design assumes this is fully gone; if any digit-addressable panel somehow
+survives the cull, flag it back to them so they can restore an `openNavPanel(slot)` else-branch
+fallback.** (It doesn't survive — every Halls entry above is MERGE/CUT/DEFER, none stays a
+digit-addressable modal.)
 
 ### 2.2 The five core surfaces (Halls dissolved)
 
@@ -195,7 +202,7 @@ button that today lands in it must be re-homed or deleted:
 | ⚒ Forge | injected by `crafting.js` L164 | → Equipment (inline) |
 | ♻ Salvage | injected by `salvage.js` L187 | → Equipment (inline) |
 | Meridians | injected by `meridians.js` L181 | → **Skills** tab |
-| Sockets/Jewelcraft | injected by `sockets.js` L289 | **DEFER** (CombatWorld) |
+| Sockets/Jewelcraft | injected by `sockets.js` L289 | **KEEP → Equipment tab** (CombatWorld's ruling — orthogonal per-item stat system, one-line extension to the new rarities) |
 | Ascension | injected by `ascension.js` L139 | → Cultivator |
 | Sect Dispatch | injected by `sectmissions.js` L231 | **CUT** |
 | Titles | injected by `titles.js` L317/L362 | → Cultivator **Records** |
@@ -208,13 +215,15 @@ self-injected at runtime (`crafting`⚒, `salvage`♻, `meridians`☯, `sockets`
 `sectmissions`, `titles`🏵, `stats`📊). (Critic4 estimated ~13 assuming market/guild/bounties/trials/
 alchemy self-inject; they're actually hard-coded in `index.html` — the true figure is **17**.)
 After the cull: **5 CUT** (trials, alchemy, sect-dispatch + the event banner + spirit-cards codex-grind),
-**4 DEFER** (sect, profile, sockets, ascension-deepening → ascension keeps a thin button re-homed to
-Cultivator), **7 MERGE** into existing surfaces (codex, pavilion→HUD, achievements, bounties, forge,
-salvage, meridians, titles, stats). **Net: 17 Halls entries → 0**, plus the whole **Combat tab
-deleted**. New surface count = **5 tabs + 2 HUD icons (auction ◆, premium ✧) + settings/backup
-utility icons**. Against the ADD list (premium shop, premium currency, monster tiers, titan, skill
-tree — 5 new player-facing systems, but the skill tree is a *rename* of meridians+techniques, net +4),
-the cull removes/defers **9 modules** and **17 nav entries + 1 tab** — the deletions dominate the
+**3 DEFER** (sect, profile, ascension-deepening → ascension keeps a thin button re-homed to
+Cultivator), **8 MERGE/KEEP-relocated** into existing surfaces (codex, pavilion→HUD, achievements,
+bounties, forge, salvage, meridians, titles, stats, sockets→Equipment — sockets is a **KEEP**, per
+CombatWorld's ruling, not a cut, but it still loses its standalone Halls button). **Net: 17 Halls
+entries → 0**, plus the whole **Combat tab deleted**. New surface count = **5 tabs + 2 HUD icons
+(auction ◆, premium ✧) + settings/backup utility icons**. Against the ADD list (premium shop, premium
+currency, monster tiers, titan, skill tree — 5 new player-facing systems, but the skill tree is a
+*rename* of meridians+techniques, net +4), the cull removes/defers **8 modules** and **17 nav
+entries + 1 tab** — the deletions dominate the
 additions, so the build nets *simpler*, not busier.
 
 **Self-contained-module note:** the surviving modules currently follow the "inject my own nav button"
@@ -311,11 +320,11 @@ fields additively (`game.js` L104–116). Two distinct migration concerns:
    risk. Cutting **Spirit Cards** deletes `cardBonuses` from the pipeline (`progression.js` L91) →
    every existing character loses that flat power and their passive stone income drops. Any save mid-
    progression could fall below its zone's difficulty band. **This requires a `tools/balance.mjs`
-   re-tune and ALL-ROWS-PASS before merge** (PROJECT.md gate). If CombatWorld also cuts **sockets**
-   (`socketBonuses`, L107), that's a second lost source stacking on the same re-tune — sequence them
-   and re-balance once, together.
-   - Gem-id counter (`save.js` L8/L29/L64) becomes dead if sockets are cut — remove the import + the
-     `counters.gem` field write (harmless if left, but tidy it).
+   re-tune and ALL-ROWS-PASS before merge** (PROJECT.md gate). **Resolved: sockets is a KEEP**
+   (CombatWorld's ruling — `socketBonuses`, L107, is orthogonal and extends to the two new rarities in
+   one line), so this is a **single** lost source, not two stacking — no shared re-tune sequencing
+   needed against sockets. It still stacks with the **boss re-tune** required by the cards cut (§4.4
+   below) — that's the one sequencing dependency that matters.
 
 3. **Provider stubs stay.** DEFER-2.0 systems (Sect, Profile) keep their `createXProvider` interface
    and their `player.*` field dormant — do **not** delete the field, so a future 2.0 network provider
@@ -358,35 +367,65 @@ a Chromium smoke test that every re-homed surface renders with zero console erro
 - **→ Author-Economy (premium shop = consolidation home).** These MERGE/CUT sinks should become shop
   upgrades so the cull nets into *your* surface, not the void: **respec** (comparison-doc ADOPT),
   **inventory-slot expansion**, **stamina / max-Qi upgrades** (also the home for Alchemy's cut
-  Qi-restore), **loadout slots**, **XP-protection**. Salvage should pay **gold or premium** now that
-  its essence currency is cut — confirm which. The shop must *absorb*, not add a parallel system.
-- **→ Author-CombatWorld (combat side-panel + tab removal + sockets).** The Combat tab is deleted and
-  combat renders into the Map's right-hand `#tile-info` column — coordinate the DOM ids for
-  `playCombat`/`combatfx` and the 1–9 attack handler (via `input.js`). You also arbitrate the
-  **sockets** keep-vs-cut since you own the rarity/set redesign — I've flagged it as the most tangled
-  optional `effectiveStats` source.
+  instant Qi-restore), **loadout slots**, **XP-protection**. **RESOLVED — Economy's doc
+  (20-economy-premium.md) is done**, confirms all five absorptions as Hall of Merit rows
+  (`packSlots`, `qiCap`/`qiRegenPct`, `qiRestore`, `loadoutSlots`, `xpProtection`), and rules
+  **salvage pays gold, not Merit** (high-frequency/low-value action; Merit stays scarcity-reserved for
+  Legendary/SE/Titan/boss/achievement/AH sources — reasoning accepted). **One open gap Economy
+  flagged:** Alchemy also had **timed combat pill-buffs** (distinct from the instant Qi-restore they
+  absorbed) — if those are meant to survive anywhere, that's **Author-Progression's** territory
+  (active-ability buffs on the Skills tab), not a shop row. Flagging to Progression below so it
+  doesn't fall through the crack between docs.
+- **→ Author-CombatWorld (combat side-panel + tab removal).** **RESOLVED — confirmed in
+  40-combat-world.md §6.2/6.3.** Combat-panel relocation is a pure `index.html` move (`#combat-panel`
+  becomes a sibling of `#monster-list` inside `#tile-info`) — `ui.js`'s `playCombat` and
+  `combatfx.js`'s `beginFx` use plain `getElementById`, so **zero code changes** needed in either file.
+  1–9 keys: sequenced (I remove `openNavPanel`'s digit binding first, CombatWorld adds the slot-attack
+  rebind after — both in `input.js`, two ordered commits). **Sockets: CombatWorld rules KEEP** (see
+  §1 — moved out of DEFER). CombatWorld also confirmed Legendary/Super-Elite monsters are the *same*
+  creature entity as their native zone type (flagged + stat-boosted), so the new spawn tiers need zero
+  Beast Codex/`cards.js`/quest changes beyond the Codex merge already planned.
 - **→ Author-Progression.** `meridians.js` → the passive skill tree surface; `techniques.js` → the few
   10-min actives. Both live on the new **Skills** tab; today's technique durations are 45–120s
-  (`techniques.js` L18–90) and must stretch to 10+ min per author §6.
+  (`techniques.js` L18–90) and must stretch to 10+ min per author §6. **RESOLVED — ruled cut outright,
+  no successor:** verified all three timed pill-buffs are a strict subset of the 4 retuned active
+  abilities (Ashfury→Iron Fist Art, Ironbark→Adamantine Ward, Bloodsurge→Vital Circulation — exact or
+  better stat match each), zero blast radius on `progression.js`/`meridians.js`/`techniques.js` (the
+  two buff lists were always separate). Documented in `30-progression-skills.md` §3.3/§5.
 - **→ Lead / Hard-Problem-Balance owner (Spirit Cards cut = its own re-tune task, see §4.4).** Do not
   bundle the `boss.js` re-tune into the same task/PR as the mechanical `cards.js` removal. Sequence:
   mechanical cut lands first (cards removed from `effectiveStats` + `balance.mjs` fixtures updated to
   drop `cards:'all'`/`'zone'`) → dedicated re-tune pass re-authors the three `BOSSES` stat blocks against
   the card-less "maxed+buffed" sheet → gate on `tools/balance.mjs` ALL ROWS PASS with the three boss
   rows specifically re-validated (crushed/gamble/reliable), not a generic green run.
+- **`xp_pill` — RESOLVED (Author-Economy, `20-economy-premium.md` §7.1).** `alchemy.js`'s `xp_pill`
+  ("Enlightenment Pill," L22, `xpPerLevel: 80` instant flat grant) gets **no successor** — ruled a
+  sharper pay-to-win shape than anything else in the shop catalog (buying levels directly), so it's cut
+  with nothing replacing it; the timed `xpBoost`/"Insight Charm" row already covers "spend Merit to
+  level faster" within Economy's own convenience-never-power commitment. This closes the last unclaimed
+  thread from the whole cull.
 - **→ Lead.** Load-bearing cut decisions flagged: **Spirit Cards CUT is HIGH blast radius** (7
-  importers + an `effectiveStats` source → mandatory balance re-tune); **Ascension T2 deepening
-  DEFERRED** against the comparison-doc greenlight (simplify mandate wins); **sockets** left to
-  CombatWorld; the **"own nav button" constraint is deliberately relaxed** and PROJECT.md must be
-  updated in the same wave. `replay.js` is a CUT-candidate I'm leaving to your call.
+  importers + an `effectiveStats` source → mandatory balance re-tune, PLUS a dedicated `boss.js`
+  re-tune per §4.4 — Critic4-verified); **Ascension T2 deepening DEFERRED** against the comparison-doc
+  greenlight (simplify mandate wins); **sockets is now RESOLVED as KEEP** (CombatWorld's ruling);
+  **salvage currency is RESOLVED as gold** (Economy's ruling); **Alchemy's timed pill-buffs are
+  RESOLVED as cut-outright, no successor** (Progression's ruling); **`xp_pill` is RESOLVED as
+  cut-outright, no successor** (Economy's ruling, above); the **"own nav button" constraint is
+  deliberately relaxed** and PROJECT.md must be updated in the same wave. `replay.js` is a
+  CUT-candidate I'm leaving to your call. **Every cross-doc thread on my ledger is now closed.**
 
 ---
 
 ## 6. What I'm proposing to CUT vs KEEP vs MERGE vs ADD (one line)
 
 - **CUT:** Spirit Cards, Alchemy, Daily Trials, world-event calendar, Sect Dispatch (+ replay?).
-- **DEFER-2.0:** Sect/disciples, Profile/Rivals/Sparring, Ascension-deepening (keep thin), sockets (CombatWorld's call).
-- **MERGE:** Forge, Salvage, Loadouts → Equipment; Bounties → Quests; Titles + Achievements + Chronicle → Cultivator/Records; Beast Codex → Map.
-- **KEEP:** Combat (as map side-panel), Map/bosses, Equipment, leveling+stats, Auction house (HUD icon), Quests, meridians→Skill Tree, techniques→active abilities.
+- **DEFER-2.0:** Sect/disciples, Profile/Rivals/Sparring, Ascension-deepening (keep thin).
+- **MERGE:** Forge, Salvage, Loadouts, Sockets → Equipment; Bounties → Quests; Titles + Achievements + Chronicle → Cultivator/Records; Beast Codex → Map.
+- **KEEP:** Combat (as map side-panel), Map/bosses, Equipment, Sockets (CombatWorld's ruling), leveling+stats, Auction house (HUD icon), Quests, meridians→Skill Tree, techniques→active abilities.
 - **ADD (others' docs):** premium currency + shop, dual-currency auction, Legendary/SE/Titan spawns, combat side-panel, sound.
 - **Net:** 5 tabs + 17 Halls buttons → **5 tabs + 2 HUD icons + 0 Halls**. The Combat tab and the Halls tab both disappear.
+- **Cross-doc status — FULLY RECONCILED, zero open threads:** Economy's shop absorptions are final
+  (salvage→gold; `xp_pill`→no successor, pay-to-win guardrail); CombatWorld's combat-panel move needs
+  zero `ui.js`/`combatfx.js` changes and rules sockets KEEP; 1–9 keys sequenced; Progression ruled
+  Alchemy's timed pill-buffs cut outright, no successor (verified strict subset of their 4 active
+  abilities). Every cross-author dependency raised across all four proposal docs is now closed.

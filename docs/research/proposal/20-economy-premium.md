@@ -17,22 +17,27 @@ auction-house dual-currency. Audited: `js/market.js`, `js/personas.js`, `js/item
   author's future call (§6).
 - **New shop: the Hall of Merit**, opened from the premium-currency icon (✧) in the HUD (per the
   author's directive, confirmed by Architect-Cull's IA pass — neither this shop nor the Auction
-  House `◆` icon is a tab). A twelve-row catalog: eleven stacking convenience/capacity/consumable
-  upgrades (the FallenSword-style "buy it all eventually" queue the author asked for — now also the
-  confirmed consolidation home for Architect-Cull's CUT/MERGE ledger: respec, inventory slots,
-  Qi cap/regen, loadout slots, XP protection, and Alchemy's Qi-restore, see §3.2/§7.1) plus **one
-  exclusive, re-pickable-at-a-cost build choice** (the Dao Heart), so the shop isn't *purely* a
-  flat-power queue — see the T2/Idle-Slayer guardrail discussion in §3.5.
+  House `◆` icon is a tab). A thirteen-row catalog: twelve stacking convenience/capacity/consumable/
+  respec upgrades (the FallenSword-style "buy it all eventually" queue the author asked for — now
+  also the confirmed consolidation home for Architect-Cull's CUT/MERGE ledger: three respec rows,
+  inventory slots, Qi cap/regen, loadout slots, XP protection, and Alchemy's Qi-restore, see
+  §3.2/§7.1) plus **one exclusive, re-pickable-at-a-cost build choice** (the Dao Heart), so the shop
+  isn't *purely* a flat-power queue — see the T2/Idle-Slayer guardrail discussion in §3.5.
 - **Auction House dual-currency:** `market.js` listings (NPC and player) gain a `currency` field;
   a small share of NPC listings price in Merit instead of stones (FS's "gold or FSP" pattern),
   and players may choose to list their own drops in Merit. This is the tradeable half of "earnable
   + tradeable in-game" — a player who doesn't want to farm Legendaries can instead sell a good drop
   for Merit.
-- **Ledger:** ADD Merit + Hall of Merit + dual-currency AH. MERGE-candidate: loadout-slot cap
-  (`loadouts.js`), inventory-slot cap (`items.js`), meridian/technique respec (new, doesn't exist
-  today) all fold into the Hall of Merit as premium-gated upgrades — **coordinated with
-  Architect-Cull and Author-Progression, see §7**. CUT: none proposed by Economy (Architect-Cull
-  owns the CUT ledger for nav-menu bloat) — full line in §8.
+- **Ledger:** ADD Merit + Hall of Merit + dual-currency AH + the new `xpProtection` row. MERGE
+  (confirmed with Architect-Cull, §7.1): loadout-slot cap, inventory-slot cap, Qi cap/regen, three
+  costed-respec rows (final shape converged with Progression/Critic4 over three rounds — calling the
+  real `respecStats()`/`resetMeridians()`/`resetTechniques()`, §7.2), and Alchemy's instant-Qi-restore
+  effect (Alchemy.js itself is CUT by Architect-Cull, not by Economy) all fold into the Hall of Merit
+  as premium-gated upgrades. Salvage's payout currency question (Architect-Cull asked) is answered
+  **gold, not Merit** — keeps Merit scarce (§7.1). CUT: none directly by Economy — full line in §8.
+  All cross-doc coordination items (Architect-Cull, Progression, CombatWorld, two rounds with
+  Critic4) are now resolved — no open conflicts remain; see §7 for the full trail and §9 for the
+  handful of non-blocking build-time confirmations still outstanding.
 
 ---
 
@@ -178,12 +183,16 @@ IA pass, since the HUD/nav layout is their territory this sprint).
 Rows are tagged with a `kind` so `buyMeritUpgrade` (below) knows how to resolve the purchase:
 `'stacking'` (raises a capacity counter, read by `meritShopBonuses()`), `'timed'` (pushes/extends a
 `meritBuffs` entry), `'instant'` (applies once, immediately, nothing persists), or `'respec'`
-(signals the caller to invoke Progression's reset function). Rows 6-8 below (`meridianRespec`,
-`techniqueRespec`, `xpProtection`, `qiRestore`) are the confirmed absorption of Architect-Cull's
-cull ledger — respec (comparison-doc ADOPT item), inventory/Qi/loadout capacity, XP protection (an
-FS staple that didn't exist in any form here before), and Alchemy's Qi-restore consumable (Alchemy
-itself is being CUT by Architect-Cull; its instant-Qi-restore effect needed a new home, confirmed
-here rather than vanishing — see §7.1):
+(signals the caller to invoke one of Progression's three reset functions — `respecFn` names exactly
+which one, `costFn` names the matching cost-basis getter, both per Progression's final
+`30-progression-skills.md` shape, after two rounds of cross-doc correction with Critic4: my first
+draft invented hooks that didn't exist; Progression's own first revision over-corrected to a single
+conditional pool; the final shape is three independent, unconditional respec rows — see §7.2). Rows
+6-10 below (`xpProtection`, `statRespec`, `meridianRespec`, `techniqueRespec`, `qiRestore`) are the
+confirmed absorption of Architect-Cull's cull ledger — respec (comparison-doc ADOPT item), inventory/
+Qi/loadout capacity, XP protection (an FS staple that didn't exist in any form here before), and
+Alchemy's Qi-restore consumable (Alchemy itself is being CUT by Architect-Cull; its instant-Qi-
+restore effect needed a new home, confirmed here rather than vanishing — see §7.1):
 
 ```js
 // js/meritshop.js
@@ -220,12 +229,16 @@ export const MERIT_UPGRADES = {
     // an FS staple (per Architect-Cull); stacking rather than one-shot so it's
     // priced/felt the same way as the rest of the capacity queue.
   },
+  statRespec: {
+    name: 'Cultivation Respec Talisman', kind: 'respec', respecFn: 'respecStats', costFn: 'statPointsSpent',
+    maxPurchases: Infinity, baseCost: 20, costScalesWithPointsSpent: 2, gateStage: 10, // FE1+, matches FS's "not a starter tool"
+  },
   meridianRespec: {
-    name: 'Cultivation Respec Talisman', kind: 'respec',
-    maxPurchases: Infinity, baseCost: 20, costScalesWithPointsSpent: 2, // cost = 20 + 2 * meridianPointsSpent(player)
+    name: 'Meridian Respec Talisman', kind: 'respec', respecFn: 'resetMeridians', costFn: 'meridianPointsSpent',
+    maxPurchases: Infinity, baseCost: 20, costScalesWithPointsSpent: 2,
   },
   techniqueRespec: {
-    name: 'Technique Respec Talisman', kind: 'respec',
+    name: 'Technique Respec Talisman', kind: 'respec', respecFn: 'resetTechniques', costFn: 'techniquePointsSpent',
     maxPurchases: Infinity, baseCost: 20, costScalesWithPointsSpent: 2,
   },
   qiRestore: {
@@ -247,13 +260,26 @@ export const MERIT_UPGRADES = {
 
 // Cost of the NEXT purchase. 'respec' rows scale with invested points instead
 // of a geometric owned-count curve (a deep respec should cost more than a
-// shallow one) — needs meridianPointsSpent(player)/techniquePointsSpent(player)
-// from Progression's files (see §7.2); 'instant'/'timed' rows repeat at a flat
-// cost (costGrowth: 1.0) since they're consumables, not a capacity ladder.
+// shallow one) — three independent respec resources, three independent cost
+// getters, all confirmed real exports from Progression's files (final shape
+// per their 30-progression-skills.md §1.2/§2.5/§3.4, after two rounds of
+// cross-doc correction with Critic4 — see §7.2):
+//   statPointsSpent(player)      — js/progression.js (new)
+//   meridianPointsSpent(player)  — js/meridians.js (already existed, unchanged)
+//   techniquePointsSpent(player) — js/techniques.js (new)
+// meritshop.js imports all three by name via each row's `costFn`. 'instant'/
+// 'timed' rows repeat at a flat cost (costGrowth: 1.0) since they're
+// consumables, not a capacity ladder.
+import { statPointsSpent } from './progression.js';
+import { meridianPointsSpent } from './meridians.js';
+import { techniquePointsSpent } from './techniques.js';
+
+const RESPEC_COST_FNS = { statPointsSpent, meridianPointsSpent, techniquePointsSpent };
+
 export function meritUpgradeCost(upgradeId, player) {
   const u = MERIT_UPGRADES[upgradeId];
   if (u.kind === 'respec') {
-    const spent = upgradeId === 'meridianRespec' ? meridianPointsSpent(player) : techniquePointsSpent(player);
+    const spent = RESPEC_COST_FNS[u.costFn](player);
     return u.baseCost + u.costScalesWithPointsSpent * spent;
   }
   const owned = player.meritShop.purchases[upgradeId] ?? 0;
@@ -264,6 +290,7 @@ export function canBuyMeritUpgrade(player, upgradeId) {
   const u = MERIT_UPGRADES[upgradeId];
   const owned = player.meritShop.purchases[upgradeId] ?? 0;
   if (u.kind === 'stacking' && owned >= u.maxPurchases) return { ok: false, reason: 'Fully upgraded.' };
+  if (u.gateStage && player.level < u.gateStage) return { ok: false, reason: `Unlocks at Foundation Establishment (stage ${u.gateStage}).` };
   const cost = meritUpgradeCost(upgradeId, player);
   if (player.merit < cost) return { ok: false, reason: 'Not enough Merit.' };
   return { ok: true, cost };
@@ -293,7 +320,13 @@ export function buyMeritUpgrade(player, upgradeId, now = Date.now()) {
       // reach-in, since meritshop.js doesn't own `state.qi`.
       break;
     case 'respec':
-      return { ok: true, cost: check.cost, needsRespec: upgradeId }; // caller invokes Progression's reset fn
+      // caller (game.js wrapper) invokes the named reset function — `respecFn`
+      // is 'respecStats' (progression.js), 'resetMeridians' (meridians.js), or
+      // 'resetTechniques' (techniques.js). The refund itself is NOT applied
+      // here — meritshop.js only charges Merit and names which function the
+      // game.js wrapper must call next, same division of labor as `ascend()`
+      // wrapping `performAscension()`.
+      return { ok: true, cost: check.cost, needsRespec: u.respecFn };
     case 'stacking':
     default:
       player.meritShop.purchases[upgradeId] = (player.meritShop.purchases[upgradeId] ?? 0) + 1;
@@ -344,18 +377,25 @@ non-overlapping without needing a shared data structure or cross-file coordinati
 
 `docs/research/comparison/40-comparison.md`'s T2 finding is explicit: a currency-buys-unlocks menu
 that a patient player eventually buys out *in full* isn't a real choice, it's "Idle Slayer's
-Ultra-Ascension bigger-bonus-in-a-costume" pattern — a queue, not a decision. The eleven rows above
-(packs, Qi cap/regen, loadout/market slots, XP protection, the two respec talismans, the Qi-restore
+Ultra-Ascension bigger-bonus-in-a-costume" pattern — a queue, not a decision. The twelve rows above
+(packs, Qi cap/regen, loadout/market slots, XP protection, the three respec talismans, the Qi-restore
 draught, the two timed elixirs) are **deliberately NOT trying to pass that test** — they're
 capacity/convenience/consumables in the Eldevin "paid-buys-convenience" mold (§2), where "eventually
 buy it all" is fine because none of it is exclusive combat power. But the brief also asks me to apply
-the guardrail "where possible," so the catalog's twelfth row is a genuine build-vs-build pick:
+the guardrail "where possible," so the catalog's thirteenth row is a genuine build-vs-build pick:
 
 ```js
 export const DAO_HEART_PATHS = {
   hunter:   { name: 'Path of the Hunter',   meritGainPct: 0.15 }, // +15% Merit from all sources in §1.3
   merchant: { name: 'Path of the Merchant', sellPct: 0.15 },      // +15% Auction House sell/list value, both currencies
-  ascetic:  { name: 'Path of the Ascetic',  qiCostPct: -0.10 },   // -10% Qi cost on active abilities (Progression's territory, see §7.2)
+  // -10% Qi cost on active-ability casts. Confirmed mechanism (Progression's
+  // final doc, §7.2): techniques.js's canCast/cast gain an optional
+  // costMultiplier param (default 1); game.js:castTechnique computes
+  // `1 + daoHeartBonuses(state.player).qiCostPct` and passes it through when
+  // it calls cast() — meritshop.js and techniques.js never import each other,
+  // game.js's existing wrapper is the meeting point (same pattern it already
+  // uses for applyPillBuffs).
+  ascetic:  { name: 'Path of the Ascetic',  qiCostPct: -0.10 },
 };
 const DAO_HEART_PICK_COST = 40;
 const DAO_HEART_SWITCH_COST = 60; // steep on purpose — a re-pick is a real commitment, not a toggle
@@ -393,7 +433,10 @@ Merit income (X Legendary kills + Y SE kills + Z boss clears per session) agains
 cumulative cost-to-max (`Σ meritUpgradeCost` per row) to confirm the shop takes meaningful session
 count to clear, not one lucky Titan kill — flagging this as a build-time gate, not resolving the
 exact numbers in this design pass (the specific constants above are starting points, tunable like
-every other `RARITIES`/`sellMult` constant already is).
+every other `RARITIES`/`sellMult` constant already is). **Tune `qiCap`/`qiRegenPct` prices against
+Progression's confirmed retuned baseline of `QI_REGEN_MS` → 75 Qi/hr, not today's prototype-fast
+~1200/hr** (Progression's §7.2 note) — pricing these rows against the current fast-regen constant
+would make them read as far cheaper than they'll actually feel once the retune lands.
 
 ### 3.6 Exact touch points for the capacity bonuses (blast-radius, addresses Critic4's concern)
 
@@ -475,6 +518,10 @@ currency: 'stones' | 'merit', // default 'stones' when absent (old saves, back-c
 ```
 
 ### 4.2 `marketValue` gains an optional currency param
+
+**Note:** `MARKET_PREMIUM` also needs two new keys (`superElite`, `titan`) once CombatWorld's new
+rarities land, or those listings silently fall back to a generic 2× premium — full fix and rationale
+in §7.3, called out there since it surfaced while reconciling with CombatWorld's doc, not here.
 
 ```js
 const MERIT_EXCHANGE_RATE = 40; // 1 Merit ~ 40 stones-equivalent of value, tunable
@@ -624,20 +671,31 @@ relevance) — every catalog row in §3 is already shaped to honor that stance t
 ### 7.1 Architect-Cull — which culled systems fold into the Hall of Merit (CONFIRMED, per their message)
 Architect-Cull's cull ledger (`10-cull-ia-feel.md`) routes the following into this shop; responses
 below, row-by-row:
-- **Respec** — built as `meridianRespec`/`techniqueRespec`, §3.2, cost scaling with invested points
-  (`baseCost + costScalesWithPointsSpent * pointsSpent`), matching the comparison-doc's ADOPT framing
-  ("costed respec"). Payment gatekeeping is mine; the actual point-refund fn is Progression's, §7.2.
+- **Respec** — built as three unconditional rows, `statRespec`/`meridianRespec`/`techniqueRespec`,
+  §3.2, cost scaling with invested points (`baseCost + costScalesWithPointsSpent * pointsSpent`),
+  matching the comparison-doc's ADOPT framing ("costed respec"). Payment gatekeeping is mine; the
+  actual point-refund fns (`respecStats()`/`resetMeridians()`/`resetTechniques()`) are Progression's
+  — final shape converged over three rounds with Critic4/Progression, full history in §7.2.
 - **Inventory-slot expansion** — `packSlots` row, §3.2/§3.6. `INVENTORY_SIZE` stays the base
   constant; `effectiveInventorySize(player)` is the new lever.
 - **Stamina/max-Qi upgrades, AND Alchemy's Qi-restore** (Alchemy.js is being CUT entirely per
   Architect-Cull) — three separate rows cover this: `qiCap` (permanent max-Qi capacity), `qiRegenPct`
   (permanent regen-speed, capped at -30% so the Qi gate survives), and `qiRestore` (the *instant*
-  one-shot refill, explicitly named as Alchemy's old role moving here, §3.2/§3.6). **Open question my
-  doc can't resolve alone:** Alchemy also had TIMED combat buffs (its `pillBuffs` mechanic, distinct
-  from the instant Qi-restore) — those are not absorbed into the Hall of Merit by this doc; if
-  Architect-Cull's cull removes them outright that's fine, but if they're meant to survive somewhere,
-  that's Progression's territory (active-ability buffs), not an Economy-shop row — flagging so it
-  doesn't fall through a gap between our two docs.
+  one-shot refill, explicitly named as Alchemy's old role moving here, §3.2/§3.6). Alchemy's TIMED
+  combat pill-buffs (distinct from the instant Qi-restore) were the other open thread — Progression
+  confirmed those cut outright (a verified strict subset of their 4 active abilities), resolving that
+  question without a shop row needed.
+- **Ruling on Alchemy's `xp_pill` ("Enlightenment Pill," instant flat `xpPerLevel: 80` grant) — no
+  successor row, by deliberate choice, not oversight.** Architect-Cull flagged this as the one
+  remaining unclaimed thread: my `xpBoost`/"Insight Charm" row is a *timed %* buff, not a match for
+  an *instant flat* XP grant, so it isn't an automatic successor. Agreeing with Architect-Cull's own
+  lean: **don't add an instant-XP row.** A direct "spend Merit, get levels" purchase reads as buying
+  power/progress directly, not convenience — sharper pay-to-win optics than a %-buff that still
+  requires playing to cash in, and it cuts against this doc's own §2 commitment to Eldevin's "paid
+  buys convenience/cosmetic, never power" stance (the same stance every other row in this catalog is
+  already shaped to honor). `xpBoost` already covers "spend Merit to level faster" within that
+  stance; the flat-grant shape simply doesn't get a replacement. This closes the last open thread
+  across all four proposal docs, per Architect-Cull's own read.
 - **Loadout slots** — confirmed: `loadoutSlots` row (§3.2/§3.6) raises `effectiveMaxLoadouts()`
   regardless of whether the Combat Sets panel lives under its own button or is folded into the
   Equipment tab per Architect-Cull's IA move — the data functions in `loadouts.js` are unchanged
@@ -658,47 +716,88 @@ below, row-by-row:
   in this storefront) — not proposed for folding into the Hall of Merit, and Architect-Cull's message
   didn't ask for it either; noting explicitly since Critic4 raised it as an open question.
 
-### 7.2 Author-Progression — Qi economy, respec, and the Ascetic path
-- `meridianRespec`/`techniqueRespec` (§3.2) only gatekeep **payment** in `meritshop.js` — the actual
-  point-refund logic (`resetMeridians(player)`/`resetTechniques(player)`) does not exist today
-  (verified: no respec function in `meridians.js` or `techniques.js`) and must be added by
-  Progression as new exports in their single-owner files. My `buyMeritUpgrade()` returns
-  `{ needsRespec: 'meridianRespec' }` for the caller (game.js) to then invoke Progression's function
-  — **naming/signature of that reset function is Progression's call, not mine; I need their
-  confirmation before this is fully build-ready.**
-- The Dao Heart's "Path of the Ascetic" (`qiCostPct: -0.10`, §3.4) needs to multiply whatever Qi cost
-  Progression's active abilities charge on cast — this only works once Progression specifies that
-  cost/cast function's shape (their `30-progression-skills.md` deliverable). I'm proposing the
-  *hook* (`daoHeartBonuses(player).qiCostPct`), not the ability-cast code itself.
-- `meritShopBonuses(player).qiCap` (§3.6) stacks alongside whatever Qi-cap sources Progression's
-  skill tree may add — confirm no naming collision on `maxQi()`'s aggregation before both land in
-  the same milestone (per CLAUDE.md's single-owner-file serialization rule, since `game.js`'s
-  `maxQi()`/`tickQi()` would otherwise get concurrent edits from both of us).
+### 7.2 Author-Progression — Qi economy, respec, and the Ascetic path (RESOLVED, three rounds)
 
-### 7.3 Author-CombatWorld — drop economy + Merit award hook
-- Proposing Merit awards keyed on a `monster.tier` tag (`'legendary' | 'superElite' | 'titan'`,
-  §1.3) — **this field doesn't exist yet; it's CombatWorld's spawn-data design to add** (their
-  `40-combat-world.md` deliverable). I need confirmation of the actual field name/values before my
-  `attack()` hook (game.js) can check it — flagging so neither doc silently assumes the other owns
-  this.
-- Titan Merit award (+20, one-time per Titan kill) fires once, after CombatWorld's ~10-hit
-  chase-sequence resolves — not per-hit. Exact call site is inside whatever world-state function
-  CombatWorld writes to track the Titan's hit-counter/movement (outside `combat.js`, per the pure-
-  resolver constraint) — I'm specifying the *award amount and one-time-ness*, not writing that
-  function myself.
-- Item values (`marketValue`, §4.2) already scale off `sellValue()`'s existing `RARITIES[rarity].
-  sellMult` — no change needed there regardless of what CombatWorld's rarity-ladder proposal (Set
-  rules, Titan-always-Qi-regen stat) does, since `sellValue`/`marketValue` key off `item.rarity`
-  generically. Worth CombatWorld confirming Titan/Legendary/SE items still carry a plain `rarity`
-  field under their proposed Set/non-Set rules so the AH pricing math keeps working unchanged.
+This took three passes to converge, worth recording so the build wave doesn't reopen it:
+1. My first draft invented `meridianRespec`/`techniqueRespec` rows costed via
+   `meridianPointsSpent(player)`/`techniquePointsSpent(player)` — the second function didn't exist
+   anywhere. Critic4 caught it.
+2. My fix over-corrected to Progression's *conditional* §4 pool-merge shape (`statRespec` +
+   conditional `skillTreeRespec` calling `respecSkillTree()`), which Progression then demoted to
+   deferred/non-blocking on their own initiative — they'd seen my shop was built assuming separate
+   pools and converged back to that instead of asking me to re-plumb around their merge.
+3. **Final, confirmed shape (`30-progression-skills.md` §1.2/§2.5/§3.4) — three independent,
+   unconditional respec rows, matching §3.2's catalog exactly:**
+
+   | Row | Calls | Costed via | Source file |
+   |---|---|---|---|
+   | `statRespec` | `respecStats(player)` | `statPointsSpent(player)` (new) | `js/progression.js` |
+   | `meridianRespec` | `resetMeridians(player)` (new) | `meridianPointsSpent(player)` (already existed) | `js/meridians.js` |
+   | `techniqueRespec` | `resetTechniques(player)` (new) | `techniquePointsSpent(player)` (new) | `js/techniques.js` |
+
+   All three refund fully and return `{ ok: true, refunded }`; `meritshop.js` imports all three cost
+   getters directly (§3.2's `RESPEC_COST_FNS` map) and, on purchase, returns `needsRespec: u.respecFn`
+   for the `game.js` wrapper to invoke the matching reset function after payment clears — payment/
+   gating stays entirely in my file, the point-refund mechanic stays entirely in Progression's three
+   files, per the brief's own hand-off note ("respec likely lives in the premium shop").
+- **The Dao Heart's "Path of the Ascetic" (`qiCostPct: -0.10`, §3.4) — confirmed mechanism:**
+  `techniques.js`'s `canCast`/`cast` gain an optional `costMultiplier` param (default 1, no behavior
+  change for existing callers); `game.js:castTechnique` (the existing wrapper) computes
+  `1 + daoHeartBonuses(state.player).qiCostPct` and passes it through when it calls `cast()`. Neither
+  `meritshop.js` nor `techniques.js` imports the other — `game.js` is the meeting point, same pattern
+  it already uses for `applyPillBuffs`.
+- **`maxQi()`/`tickQi()` — confirmed no collision.** Progression added no new Qi-cap or regen-rate
+  source (they explicitly deferred a Qi-regen meridian node in their §2.2 specifically to avoid
+  this); only my `meritShopBonuses().qiCap`/`qiRegenPct` and their `QI_REGEN_MS` constant retune
+  (prototype-fast ~1200/hr → tuned 75/hr) touch those two functions. Still serializing the `game.js`
+  edits per CLAUDE.md's single-owner-file rule — independent changes to the same file still need to
+  land one PR at a time, not concurrently.
+
+### 7.3 Author-CombatWorld — drop economy + Merit award hook (RESOLVED)
+
+- **`monster.tier` — confirmed, no rewrite needed.** Critic4's second pass flagged that CombatWorld's
+  final doc supposedly used only three boolean flags (`isLegendary`/`isSuperElite`/`isTitan`) with no
+  `monster.tier` string — I checked `40-combat-world.md` directly before changing anything: it in
+  fact defines **both**, explicitly "resolving the Author-Economy/Critic4 cross-doc flag" in its own
+  opening callout — every rare-spawn Actor gets the boolean flags (what CombatWorld's own `attack()`
+  branches on) AND `actor.tier = 'legendary' | 'superElite' | 'titan'` set alongside them in the same
+  `spawnCreature`/`spawnTitanActor` code, specifically so an external consumer like this Merit hook
+  can do one `monster.tier === 'superElite'` check instead of three boolean lookups. My original
+  §1.3 hook design was already correct; CombatWorld independently confirmed the same via direct
+  message. (Told Critic4 directly rather than silently "fixing" something that wasn't broken.)
+- Titan Merit award (+20, one-time per Titan kill) fires once, in `game.js attack()`'s shared win
+  branch (the `if (monster.isBoss) {...} else if (monster.isTitan) {...} else {...}` block, per
+  CombatWorld's confirmation) — that branch only executes on the encounter where the Titan's world-HP
+  pool actually depletes (`titans.js` itself never grants rewards), so "+20 Merit, one-time, after
+  the sequence resolves" falls out automatically from hooking there rather than inside `titans.js`.
+- **Item values — confirmed generic, EXCEPT one real gap I found on inspection.** `sellValue()`
+  (`items.js`) is a fully generic `RARITIES[item.rarity].sellMult` lookup — CombatWorld's new
+  `superElite`/`titan` `RARITIES` entries (their placeholder `sellMult: 130`/`140`) flow through with
+  zero changes needed. **But `market.js`'s `MARKET_PREMIUM` (§4.2 of this doc) is a hardcoded
+  object keyed by rarity name** (`common` through `mythic`) **with a `?? 2` fallback for anything
+  not listed** — `superElite`/`titan` listings would silently price at a generic 2× premium instead
+  of a rarity-appropriate one unless I add explicit entries. Fixing this myself (my file, my gap to
+  close, not CombatWorld's):
+  ```js
+  // js/market.js — MARKET_PREMIUM, add the two new rarities (placeholder multiples,
+  // bracketed between legendary/mythic like CombatWorld's own placeholder sellMults)
+  const MARKET_PREMIUM = {
+    common: 1.6, uncommon: 1.9, rare: 2.4, epic: 3.0,
+    legendary: 3.6, superElite: 3.8, titan: 3.5, mythic: 4.2,
+  };
+  ```
+  Titan sits slightly below Super Elite/Legendary since it's explicitly non-Set (per CombatWorld's
+  rules) even though it always carries a Qi-regen stat — a judgment call, tunable like every other
+  premium multiple here.
 
 ---
 
 ## 8. CUT vs KEEP vs MERGE vs ADD
 
 - **ADD:** Merit currency (`player.merit`, `js/merit.js`); the Hall of Merit shop (`js/meritshop.js`,
-  `css/meritshop.css`) with its twelve rows; dual-currency Auction House listings (`market.js`
-  extension, `MAX_PLAYER_LISTINGS`); the `xpProtection` row (a genuinely new upgrade — FS had it, we
+  `css/meritshop.css`) with its thirteen rows (twelve catalog rows + the Dao Heart); dual-currency
+  Auction House listings (`market.js` extension, `MAX_PLAYER_LISTINGS`, the two new `MARKET_PREMIUM`
+  keys for `superElite`/`titan`); the `xpProtection` row (a genuinely new upgrade — FS had it, we
   never did); the `qiRestore` instant row (new *as a shop purchase*, though see MERGE below for what
   it replaces); the `effectiveInventorySize`/`effectiveMaxLoadouts`/`effectiveQiRegenMs` helper
   functions.
@@ -710,10 +809,12 @@ below, row-by-row:
   themselves are not removed by Economy, only the specific mechanic named moves into a shop row):**
   the inventory-slot cap (`items.js` `INVENTORY_SIZE` → `packSlots` row), the loadout-slot cap
   (`loadouts.js` `MAX_LOADOUTS` → `loadoutSlots` row), Qi capacity/regen (`qiCap`/`qiRegenPct` rows),
-  costed respec (new `meridianRespec`/`techniqueRespec` rows — didn't exist as a feature before;
-  MERGE in the sense of absorbing the comparison-doc's ADOPT recommendation into this shop rather
-  than a standalone respec UI), and **Alchemy's instant Qi-restore effect** (→ `qiRestore` row;
-  Alchemy.js itself is CUT by Architect-Cull, not by this doc).
+  costed respec (three unconditional rows — `statRespec`/`meridianRespec`/`techniqueRespec` — calling
+  Progression's confirmed `respecStats()`/`resetMeridians()`/`resetTechniques()`, final shape after
+  three rounds of cross-doc correction, §7.2 — didn't exist as a feature before; MERGE in the sense of
+  absorbing the comparison-doc's ADOPT recommendation into this shop rather than a standalone respec
+  UI), and **Alchemy's instant Qi-restore effect** (→ `qiRestore` row; Alchemy.js itself is CUT by
+  Architect-Cull, not by this doc).
 - **CUT:** none directly by Economy — `js/alchemy.js` is CUT by Architect-Cull's ledger, not mine;
   my only stake is absorbing its Qi-restore effect (above) and flagging its separate timed
   combat-pill-buffs mechanic as an open gap between docs (§7.1) rather than silently dropping it.
@@ -727,11 +828,12 @@ below, row-by-row:
    too thin to earn "real choice" status.
 2. `js/merit.js`'s `MERIT_REWARDS` amounts and `js/meritshop.js`'s `MERIT_UPGRADES` costs are starting
    points, not final-tuned — needs a `tools/balance.mjs` "Merit economy" row-group at build time
-   (§3.5).
-3. Needs sign-off from Author-Progression (§7.2, respec function contract + Ascetic path's Qi-cost
-   hook) and Author-CombatWorld (§7.3, `monster.tier` field name/values) before this is fully
-   build-ready — both are flagged, neither is blocking this doc's completion, but the build wave
-   should sequence Progression's/CombatWorld's docs' relevant sections alongside this one.
-4. `js/game.js`'s `maxQi()`/`tickQi()` are touched by this doc AND potentially by Progression's skill
-   tree — per CLAUDE.md's single-owner-file rule, these edits must serialize (one PR at a time), not
-   land concurrently.
+   (§3.5), tuned against Progression's confirmed 75 Qi/hr baseline, not today's prototype-fast rate.
+3. **All cross-author coordination is resolved as of this revision** (§7.1 Architect-Cull, §7.2
+   Progression — three rounds to converge on the final three-row respec shape, §7.3 CombatWorld —
+   confirmed `monster.tier` + a real `MARKET_PREMIUM` gap I found and fixed myself). No blocking
+   sign-offs remain; the function names/signatures in §3.2/§3.4/§7.2/§7.3 are the frozen contract
+   this doc builds against.
+4. `js/game.js`'s `maxQi()`/`tickQi()` are touched by this doc AND by Progression's `QI_REGEN_MS`
+   retune — confirmed no naming/semantic collision (cap vs. rate are independent levers), but per
+   CLAUDE.md's single-owner-file rule these edits must still serialize (one PR at a time).

@@ -282,11 +282,27 @@ the exact wiki page can be independently checked. Anything not surfaced by searc
 ## 4. Gear & rarity
 
 ### 4.1 FallenSword mechanics
-- **Rarity ladder (ascending): Common → Rare → Unique → Legendary → Crystalline → Super-Elite**, with
-  **Epic** as a distinct, separately-described "rarest tier," obtained mainly from titans, epic quests,
-  or invention/crafting rather than normal drops — GDD §6.1 already summarizes this exact ladder and
-  sourcing rule, and search results corroborate the ladder and the "Epic mainly from titans/epic
-  quests/invention, not normal drops" framing.
+- **Rarity tier names confirmed to exist (sourced, each has its own wiki category page): Common, Rare,
+  Unique, Legendary, Crystalline, Super-Elite, and Epic.** [Category:Crystalline Items](https://wiki.fallensword.com/index.php/Category:Crystalline_Items),
+  [Category:Super Elite Items](https://wiki.fallensword.com/index.php/Category:Super_Elite_Items),
+  [Category:Legendary Items](https://wiki.fallensword.com/index.php/Category:Legendary_Items),
+  [Category:Unique Items](https://wiki.fallensword.com/index.php/Category:Unique_Items),
+  [Category:Epic Items](https://wiki.fallensword.com/index.php/Category:Epic_Items).
+  **[UNVERIFIED] the specific linear ordering "Common → Rare → Unique → Legendary → Crystalline →
+  Super-Elite, with Epic separately as the single rarest tier."** GDD §6.1 states this exact ordering,
+  and it was carried into this doc's first draft on that authority, but a second, independent
+  search pass (prompted by the Critic's challenge) could not find any single primary source that
+  states the ladder as an explicit ordered list — every search only turns up the individual tier
+  category pages plus AI-search-synthesis inferring an order from them, which is not a citable source.
+  It's also **internally in tension**: Crystalline/Super-Elite items are described elsewhere as
+  breaking down into their own named "Fragments" tier in the Composing/crafting system in a way that
+  reads as sitting *above* Legendary, which is hard to reconcile with Epic simultaneously being "the
+  rarest tier" if three more tiers (Legendary, Crystalline, Super-Elite) are listed above it in the
+  same breath. Treat the tier *names* as sourced, the *ordering and "Epic is rarest" framing* as
+  unverified — this directly affects §4.4 opportunity 2 below (a "Hell-Forge-style" system referencing
+  FS's rarity hierarchy), so don't cite a specific FS rarity order in the synthesis without a better
+  source. Epic's sourcing-rule claim ("mainly from titans/epic quests/invention, not normal drops") is
+  separately confirmed and NOT affected by this dispute.
   [Composing — Fallen Sword Wiki](https://wiki.fallensword.com/index.php/Composing),
   [Category:Epic Items — Fallen Sword Wiki](https://wiki.fallensword.com/index.php/Category:Epic_Items)
 - **Items degrade with damage and can be repaired**, EXCEPT the Crystalline tier: "Crystalline items do
@@ -419,8 +435,12 @@ the exact wiki page can be independently checked. Anything not surfaced by searc
   otherwise inaccessible buffs by paying a higher level player to cast buffs on them," via one-time
   gold/FSP payment, lifetime service deals, or buff-for-buff trades — explicitly untrusted/unenforced
   by the game itself ("no built-in mechanism to trade buffs... up to the players... to trust each
-  other"). [Find players who can buff — Fallen Empire Guild](http://fallen-empire.wzarlon.dk/find-buffers.asp),
-  general framing corroborated by [Skills Guide — Fallen Sword Wiki](https://wiki.fallensword.com/index.php/Skills_Guide)
+  other"). Primary claim (buffs are tradeable, cast on other players) is wiki-sourced:
+  [Skills Guide — Fallen Sword Wiki](https://wiki.fallensword.com/index.php/Skills_Guide) ("cast on
+  the caster himself or on any other player"); the payment-mechanics color (gold/FSP/lifetime-deal/
+  trust-based) additionally comes from a fan-run guild site, a lower-tier source than the wiki —
+  cited for color, not as the load-bearing claim: [Find players who can buff — Fallen Empire
+  Guild](http://fallen-empire.wzarlon.dk/find-buffers.asp).
 - **Veteran "don't over-buff" advice** is asserted directly in GDD §6.4 as an FS-community norm
   ("veteran advice being to avoid over-buffing yourself since re-casting constantly burns resources
   fast") — search did not turn up an independent primary-source quote for this exact framing beyond
@@ -521,7 +541,7 @@ the exact wiki page can be independently checked. Anything not surfaced by searc
 | Qi/stamina regen rate | Yes | **Weak — ~13-24x too fast**, acknowledged in-code | Retune before 1.0 |
 | Stat/skill point pools | Yes | Strong | No respec of either, unlike FS's (paid) options |
 | "Concentrate Atk/Dmg" meta | Yes | Directly countered via HP point-discount | Armor/Defense uncountered |
-| Rarity ladder + scarcity | Yes | Strong (reflavored names) | — |
+| Rarity ladder + scarcity | Tier names yes; **ordering [UNVERIFIED]** | Strong (reflavored names) | No sourced linear order for FS's own 7-tier ladder |
 | Gear degrade + broken=inert | Yes (shape) | Strong | No unrepairable/Crystalline-style tier |
 | Set bonuses | Yes | Strong | — |
 | Gem sockets | **No — likely original**, not FS's Hell Forge | N/A | Mislabeling risk in downstream docs |
@@ -531,4 +551,12 @@ the exact wiki page can be independently checked. Anything not surfaced by searc
 
 ---
 
-*Status: complete. Cross-talk sent to Researcher-Meta on stat-respec/spirit-stone-sink overlap (§3.4/§4.4) and lead notified on completion — see session messages.*
+*Status: complete, Critic-reviewed. Cross-talk sent to Researcher-Meta on stat-respec/spirit-stone-sink
+overlap (§3.4/§4.4), confirmed no collision (Researcher-Meta's only stone-sink proposal is Sect-capacity
+scaling, unrelated). Critic independently re-verified the 4 most load-bearing numeric claims (Qi regen
+50-90/hr, Hell Forge mechanics, "concentrate Atk/Dmg" meta, no-respec) — all held up. One Critic dispute
+resolved: §4.1's FS rarity-tier **ordering** (not the tier names, which are independently sourced) was
+downgraded to [UNVERIFIED] after a second search pass found no single source stating the linear
+hierarchy, and the claim was internally in tension with Crystalline/Super-Elite's fragment tier reading
+as sitting above Legendary. Minor citation-hygiene fix also applied (buff-market color source). Lead
+notified on completion — see session messages.*

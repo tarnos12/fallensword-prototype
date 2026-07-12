@@ -171,7 +171,13 @@ mobile gacha idles like Immortal Taoists) — no gacha currency observed in stor
   your first "Mortal tribulation" unlocks the ability to empower your Soul on reincarnation, and the
   amount of Soul Power earned scales with **how many tribulations you've cleared**, not just how far
   you leveled — tying prestige-currency size to the risk-events survived rather than raw progress.
-  Source: https://store.steampowered.com/app/3697240/Idle_Cultivation/
+  Source: https://store.steampowered.com/app/3697240/Idle_Cultivation/. **Concrete multiplier**
+  (independently cross-verified by Researcher-Idle via a separate WebSearch pass on their own idle-
+  mechanics lens, reported 2026-07-12): the soul-power multiplier steps **0 → 0.2 → 0.6 → 1.0 → 1.5**
+  as you clear successive tribulation tiers — i.e. a concrete, discrete step function, not a smooth
+  curve. See `20-idle-incremental.md`'s cross-cluster addendum for their independent verification
+  note; this doc stays the source of record for the tribulation/realm framing, theirs for the
+  accrual-math framing.
 - **Sect-as-crafting-network in community-driven design discussion**: player suggestions (not yet
   necessarily shipped — flagging **[UNVERIFIED shipped-vs-proposed]**) describe "Sect Arrays" as
   passive multi-hall bonuses (cultivation/garden/alchemy/talisman/forging arrays) and sect decay

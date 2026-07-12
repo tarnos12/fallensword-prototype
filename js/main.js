@@ -454,6 +454,10 @@ initDebugBar(state, {
   spawnSuperElite: debugSpawnSuperElite,
   spawnTitan: debugSpawnTitan,
 }, renderAll);
+// Dev-only inspection hook (?dev=1): exposes the live state + a few actions so
+// automated smoke tests can drive/inspect the integrated build. Never present
+// for a normal player.
+if (isDevMode()) window.__fi = { state, attack, currentTile, tryMove, renderAll };
 
 // Wall-clock Qi regen + passive spirit-stone income + technique-buff tick
 // (once per second).

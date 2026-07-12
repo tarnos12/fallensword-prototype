@@ -48,6 +48,7 @@ import {
   effectiveInventorySize,
 } from './items.js';
 import { meritShopBonuses } from './meritshop.js';
+import { sfx } from './audio.js'; // fire-and-forget SFX cues (Wave 3 Feel); no-op when muted/headless
 import * as Quests from './quests.js';
 import * as Techniques from './techniques.js';
 import { rollCardDrop, acquireCard, cardBonuses, CARDS } from './cards.js';
@@ -482,6 +483,7 @@ function grantXp(state, xp) {
   p.xp += xp;
   const stages = applyBreakthroughs(p);
   if (stages > 0) {
+    sfx('breakthrough');
     addLog(state, `Breakthrough! You reach ${stageName(p.level)} (+${3 * stages} stat points).`);
     Quests.onStage(state.quests, p.level);
   }
@@ -527,6 +529,7 @@ export function attack(state, monsterId) {
   const titanDepleted = monster.isTitan && monster.titanHp <= 0;
 
   if (result.outcome === 'win' || titanDepleted) {
+    sfx('kill'); // the foe (ordinary/rare/boss/depleted-Titan) is slain
     // Sect disciples buff battle rewards (GDD §4.3): XP and spirit-stone gain.
     const gb = guildBuffs(p);
     const force = isForceDropsOn(); // debug toggle (§4): forces Legendary/SE/normal drops to 100%
@@ -550,6 +553,7 @@ export function attack(state, monsterId) {
       drop = generateItem(state.worldRng() < 0.5 ? 'weapon' : 'robe', monster.dropLevel, 'titan', state.worldRng);
       cardId = null; // Titans are a world-hunt encounter, not a bestiary/card creature
       awardMerit(p, 20);
+      sfx('merit');
     } else {
       xp = Math.round(scaleXp(monster.xpReward, p.level, monster.level) * (1 + gb.xpPct));
       stones = Math.round(monster.stoneReward * (1 + gb.stonePct));
@@ -557,10 +561,12 @@ export function attack(state, monsterId) {
         drop = (force || state.worldRng() < SUPER_ELITE_DROP_CHANCE)
           ? generateItem(state.worldRng() < 0.5 ? 'weapon' : 'robe', monster.level, 'superElite', state.worldRng) : null;
         awardMerit(p, 6);
+        sfx('merit');
       } else if (monster.isLegendary) {
         drop = (force || state.worldRng() < LEGENDARY_DROP_CHANCE)
           ? generateItem(state.worldRng() < 0.5 ? 'weapon' : 'robe', monster.level, 'legendary', state.worldRng) : null;
         awardMerit(p, 2);
+        sfx('merit');
       } else {
         drop = rollDrop(monster.level, state.worldRng, { forceDrop: force });
       }
@@ -582,6 +588,7 @@ export function attack(state, monsterId) {
     st.stonesWon = (st.stonesWon || 0) + stones;
 
     if (drop) {
+      sfx(['legendary', 'superElite', 'titan', 'epic', 'mythic'].includes(drop.rarity) ? 'lootRare' : 'loot');
       if (p.inventory.length < effectiveInventorySize(p)) {
         p.inventory.push(drop);
         st.itemsLooted = (st.itemsLooted || 0) + 1;

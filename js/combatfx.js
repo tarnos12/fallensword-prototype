@@ -116,7 +116,7 @@ function strike(a, crit) {
   }
 }
 
-function applySwing(target, swing) {
+function applySwing(target, swing, isPlayer = false) {
   if (!swing) return;
   if (!swing.hit) {
     floatNum(target, 'MISS', 'miss');
@@ -125,7 +125,8 @@ function applySwing(target, swing) {
   }
   const crit = swing.dmg >= target.max * CRIT_FRACTION;
   floatNum(target, `-${swing.dmg}`, crit ? 'crit' : 'dmg');
-  sfx(crit ? 'crit' : 'hit');
+  // The player being struck gets a distinct 'hurt' cue; the foe uses hit/crit.
+  sfx(isPlayer ? 'hurt' : crit ? 'crit' : 'hit');
   strike(target, crit);
 }
 
@@ -145,7 +146,7 @@ export function turnFx(t) {
 
   const counter = () => {
     if (!arena) return;
-    applySwing(arena.you, t.defenderSwing);
+    applySwing(arena.you, t.defenderSwing, true);
     setBar(arena.you, t.attackerHpAfter);
     if (t.attackerHpAfter === 0) arena.you.card.classList.add('cfx-dead');
   };

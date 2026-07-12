@@ -16,7 +16,7 @@ breakthrough realms → repeat. Every multiplayer-shaped system (market, sect/gu
 rivals) is built behind a provider interface, NPC-backed today, with a designed path to a real
 networked 2.0 without re-architecting callers.
 
-**Design authority:** `GDD_Staged_Roadmap.md` is the source of truth for scope and the staged
+**Design authority:** `GDD.md` is the source of truth for scope and the staged
 roadmap — but it **predates** most of Stage 3 and the 1.0 polish batch; this file reflects **shipped
 reality**, distilled from the actual codebase and its commit history, not the other way around. Where
 the two disagree (e.g. the GDD's "stamina" is shipped as "Qi"), the GDD's *intent* still holds; its

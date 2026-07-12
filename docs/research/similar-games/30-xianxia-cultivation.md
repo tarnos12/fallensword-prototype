@@ -41,9 +41,16 @@ Wiki: https://immortal-taoists.fandom.com/wiki/Immortal_Taoists_Wiki
   not just "try again"). Sources: https://immortal-taoists.fandom.com/wiki/Tribulation,
   https://immortal-taoists.fandom.com/wiki/Breaking_Through
 - **Pity-style comeback:** failing a tribulation raises the *base* success rate for the next attempt
-  by a stated 5%, and specific pills add another +5% each, with companion bonuses stacking further —
-  so failure is punishing (CB loss) but self-correcting (rising odds), not a hard wall. Source:
-  https://immortal-taoists.fandom.com/wiki/Tribulation
+  by a stated 5%, and specific pills add another +5% each, with companion bonuses (and, later,
+  "Heaven Position" roles at +5%/+10% and a Soul-keeper challenge at +10%) stacking further — so
+  failure is punishing (CB loss) but self-correcting (rising odds), not a hard wall. Source:
+  https://immortal-taoists.fandom.com/wiki/Tribulation and https://immortal-taoists.fandom.com/wiki/Pills
+  — **the exact +5% (failure) and +5% (per pill) figures were re-verified via a second independent
+  WebSearch pass surfacing the same Fandom wiki content (2026-07-12) after the Critic flagged them as
+  load-bearing.** Caveat retained: this is a non-English mobile gacha title and both numbers come from
+  the same Fandom wiki family (not two independent sources), so a proposal quoting them as a *target*
+  should reconfirm against the live wiki. The *shape* (risky % breakthrough + self-correcting pity) is
+  robustly supported regardless of the exact percentages.
 - **Player-side guidance ("don't gamble under 100%") is community wisdom, not a hard rule** — the
   wiki/guides recommend only attempting near-guaranteed tribulations once the CB loss on failure
   starts to sting, which is exactly the "deliberately slows, pushes toward investment" curve GDD
@@ -173,11 +180,15 @@ mobile gacha idles like Immortal Taoists) — no gacha currency observed in stor
   you leveled — tying prestige-currency size to the risk-events survived rather than raw progress.
   Source: https://store.steampowered.com/app/3697240/Idle_Cultivation/. **Concrete multiplier**
   (independently cross-verified by Researcher-Idle via a separate WebSearch pass on their own idle-
-  mechanics lens, reported 2026-07-12): the soul-power multiplier steps **0 → 0.2 → 0.6 → 1.0 → 1.5**
-  as you clear successive tribulation tiers — i.e. a concrete, discrete step function, not a smooth
-  curve. See `20-idle-incremental.md`'s cross-cluster addendum for their independent verification
-  note; this doc stays the source of record for the tribulation/realm framing, theirs for the
-  accrual-math framing.
+  mechanics lens, reported 2026-07-12): the soul-power multiplier steps **0 (until the first/Mortal
+  tribulation is cleared) → 0.2 → 0.6 → 1.0 → 1.5** through the Earth/Heaven/Immortal tribulation
+  tiers — a concrete, discrete step function, not a smooth curve. Primary source for these specific
+  numbers is a Steam community discussion thread:
+  https://steamcommunity.com/app/3697240/discussions/0/517472842923799872/ (cited in
+  `20-idle-incremental.md`'s cross-cluster addendum, which is the source of record for the accrual-
+  math framing; this doc stays the source of record for the tribulation/realm framing). Note the
+  primary source is a community thread, not an official wiki — treat the exact step values as
+  community-reported, well-supported but not officially documented.
 - **Sect-as-crafting-network in community-driven design discussion**: player suggestions (not yet
   necessarily shipped — flagging **[UNVERIFIED shipped-vs-proposed]**) describe "Sect Arrays" as
   passive multi-hall bonuses (cultivation/garden/alchemy/talisman/forging arrays) and sect decay
@@ -258,7 +269,7 @@ are you" as a single defining choice).
 
 | Idea | Game(s) | Relevance | Our pillar/module | One-line why |
 |---|---|---|---|---|
-| Breakthrough as a distinct risky event (% success, real failure cost) instead of silent XP-threshold pass | Immortal Taoists, Tale of Immortal | **HIGH** | `progression.js` (realm breakthrough) | Directly targets the GDD §9.1 "deliberately slows" curve we don't currently implement — our realms auto-advance with no risk/tension at all. |
+| Breakthrough as a distinct risky event (% success, real failure cost) instead of silent XP-threshold pass | Immortal Taoists, Tale of Immortal | **HIGH** | `progression.js` (realm breakthrough) | Directly targets the GDD §9.1 "deliberately slows" curve we don't currently implement — our realms auto-advance with no risk/tension at all. **Pillar guardrail (for the proposal phase, not a proposal here):** introducing a %-success roll into progression is only compatible with our "Numbers you can read" pillar if the success % is *shown* to the player (transparent, displayed-hit-chance style), never a hidden roll — otherwise it becomes the "hidden-RNG theater" the pillar explicitly rejects. |
 | Failure raises next-attempt success rate (pity-style) so risk is punishing but self-correcting | Immortal Taoists | **HIGH** | `progression.js` | Cheap, additive, non-monetized way to avoid a breakthrough wall feeling unfair — no server/multiplayer needed. |
 | Decouple breakthrough *reward* (stat treasures) from breakthrough *odds* (materials/pills) as two separate inputs | Tale of Immortal | **MED** | `progression.js`, `alchemy.js` | Gives pills/alchemy a second use (odds-boosting) beyond flat buffs, without touching the pure `combat.js` core. |
 | Alchemy as a trainable skill: skill level adds flat %yield and %success to crafts | Amazing Cultivation Simulator | **MED** | `alchemy.js` | Our alchemy has no success/fail roll today; a skill-gated success% would add a real economy sink/investment loop. |

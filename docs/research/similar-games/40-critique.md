@@ -232,27 +232,30 @@ real `js/` code where a doc claimed to have. What held up:
 
 ## 3. Disputed / unverified claims
 
-### Dispute (neighbors) — "Fallen Sword II ... card-game-like combat system" is unsupported
-The sequel is real (§2), but the doc describes its combat as "turn-based with a **card-game-like
-combat system**." My independent search across the announcement + four coverage outlets found the
-combat consistently described as "fast-paced turn-based combat" with elemental attacks, summons, and
-abilities — **no source I found calls it card-based.** The "card-game-like" descriptor appears to be
-an embellishment. Everything else (Q3 2026, six classes, turn-based, Titans, cross-platform) is
-correct. **Sent to Researcher-Neighbors:** source the "card combat" claim to a specific Hunted Cow
-statement or drop the descriptor — the sequel being real doesn't license the specific mechanic.
-Load-bearing because it feeds the project's own "what is FallenSword becoming" framing.
+### Dispute (neighbors) — "Fallen Sword II ... card-game-like combat system" was unsupported — RESOLVED
+**Update: fixed by Researcher-Neighbors during this review.** Original dispute: the sequel is real (§2)
+but the doc described its combat as "card-game-like," which my independent search across the
+announcement + four coverage outlets did not support (all say "fast-paced turn-based combat" with
+elemental attacks/summons/abilities). **Resolution:** Researcher-Neighbors re-searched and traced
+"card game-like" to a **single outlet (MMORPG.com's coverage)** — it recurs in none of Hunted Cow's own
+announcement, Steam, TechPowerUp, MassivelyOP, RPGamer, or Bleeding Cool. They rewrote the FS2
+paragraph to lead with the consistently-sourced "fast-paced turn-based combat (elemental attacks/status
+effects/summons, Pathway skill trees)" description, added the Steam page as a source, and demoted
+"card-based" to an explicit `[UNVERIFIED]` parenthetical attributed to the one outlet rather than
+asserting it. Release nailed to Q3 2026 (PC + mobile), which all sources agree on. Correctly resolved —
+the real facts lead, the single-source claim is honestly labeled. Preserved for the record.
 
-### Dispute (xianxia + idle) — the Idle Cultivation "soul-power multiplier 0 → 0.2 → 0.6 → 1.0 → 1.5" cross-reference is DANGLING
-`30-xianxia-cultivation.md` §4 attributes this specific step-function to "Researcher-Idle... independently
-cross-verified via a separate WebSearch pass... reported 2026-07-12" and points the reader to
-"`20-idle-incremental.md`'s cross-cluster addendum for their independent verification note." **There is
-no such addendum in `20-idle-incremental.md`.** That doc covers 8 non-cultivation games and its closing
-note explicitly says it "did not end up needing to cover any idle-cultivation title directly," so it
-contains no Idle Cultivation verification. The specific `0→0.2→0.6→1.0→1.5` numbers therefore rest on a
-citation that points at nothing. **Sent to both Researcher-Xianxia and Researcher-Idle:** either
-Researcher-Idle records the actual source/search that produced those numbers (in their doc or to me
-directly), or Researcher-Xianxia tags the multiplier `[UNVERIFIED]`. Right now it's an oddly-specific
-number with a broken source chain — exactly the profile the brief warns about.
+### Dispute (xianxia + idle) — the Idle Cultivation "soul-power multiplier 0 → 0.2 → 0.6 → 1.0 → 1.5" cross-reference — RESOLVED
+**Update: fixed by both researchers during this review** (verified — I re-read `20-idle-incremental.md`).
+Original dispute: my first pass found `30-xianxia-cultivation.md` §4 attributing this step-function to a
+"cross-cluster addendum" in the idle doc that did not exist at the time I read it, leaving the specific
+`0→0.2→0.6→1.0→1.5` numbers resting on a citation pointing at nothing. **Now resolved:** Researcher-Idle
+added the "Cross-cluster addendum — cultivation-flavored idle titles" section (`20-idle-incremental.md`
+lines ~382-402), which cites a real primary source — a [Steam community discussion thread](https://steamcommunity.com/app/3697240/discussions/0/517472842923799872/) —
+for the multiplier, and Researcher-Xianxia strengthened §4 to point directly at that primary URL AND
+added an explicit caveat that the source is a community thread (not an official wiki), so the exact
+steps are labeled community-reported. Source chain is now real and honestly hedged. I read a stale
+version before the addendum landed — no outstanding issue. Preserved here for the record.
 
 ### Flag (xianxia) — Immortal Taoists tribulation pity figures (+5% per failure, +5% per pill) need re-check
 These are the load-bearing mechanic behind the doc's top HIGH idea ("failure raises next-attempt rate,
@@ -326,10 +329,17 @@ each of the four legs:
   Slayer is an example of the "just bigger" pattern the claim says to avoid.
 - **Verdict:** the claim is TRUE and worth carrying forward — but it's really ~1 strong leg (AD) + 2
   moderate (RG-Reincarnation, NGU) + 1 weak/counter (Idle Slayer), not "four independent games
-  converge." **Recommend Researcher-Idle recenter the claim on AD as the load-bearing case, fix the
-  RG-Ascension mischaracterization, and demote Idle Slayer to "and even a shallow example like Idle
-  Slayer adds a second tier, though a mostly-numeric one."** Notified the lead — this is the one thing
-  most likely to be over-read in the proposal phase.
+  converge."
+- **RESOLVED — fixed by Researcher-Idle during this review** (verified — I re-read the doc). They
+  independently confirmed RG's Ascension was implemented (v1.6.48) as a big-number-storage rescale,
+  recentered the whole argument on Antimatter Dimensions as the load-bearing case with NGU as secondary
+  support, demoted RG-Ascension to "structural-depth exemplar only," demoted Idle Slayer's Ultra
+  Ascension to "weaker leg / arguably an example of what the lesson cautions against," and rewrote the
+  summary-table row to name only AD+NGU with an explicit inline flag that the earlier draft over-counted
+  to "four games." The proposal phase now inherits an accurately-weighted claim, not an inflated one.
+  Also verified the other three idle fixes landed: IdleOn citation swapped to `idleon.wiki` (+ the
+  ~85%-AFK vs ~20%-offline reconcile), Idle Slayer corrected to "duration uncapped, rate capped 90%"
+  now citing the Fandom Stones-of-Time wiki, and the contradictory Melvor "18h" thread dropped.
 
 ### Pillar/constraint check on the HIGH-tagged ideas — all clean as written, two coordination notes
 I checked every **[HIGH]** idea across the three docs against the hard constraints; none actually

@@ -163,9 +163,13 @@ other. [wiki.torn.com](https://wiki.torn.com/wiki/FAQ)
 ## 3. Sryth
 
 **What it is:** A long-running (2000s-era), primarily **single-player** text/browser "game book" RPG
-with light multiplayer elements — closer to an interactive gamebook than an MMO. Still maintained by
-its solo developer, Matthew H. Yarrows.
-[sryth.com](http://www.sryth.com/ci.php?f_c=docs.inc); [TV Tropes](https://tvtropes.org/pmwiki/pmwiki.php/VideoGame/Sryth)
+with light multiplayer elements — closer to an interactive gamebook than an MMO. Still run by its
+solo developer, Matthew H. Yarrows, though effectively **content-stagnant**: per pbbg.com, "it has
+been several years since any substantial new content has been created," with the developer's focus
+shifted toward in-game stores / item sales rather than new gameplay — i.e. live-but-not-actively-
+developed, treat its design as a finished artifact rather than an evolving one.
+[sryth.com](http://www.sryth.com/ci.php?f_c=docs.inc); [TV Tropes](https://tvtropes.org/pmwiki/pmwiki.php/VideoGame/Sryth);
+[Sryth — pbbg.com](https://pbbg.com/games/sryth)
 
 **Mechanics that matter to us:**
 - **Stamina Points (SP)** double as both a session-gating resource *and* an HP-like health pool: they
@@ -454,14 +458,24 @@ hunting, questing, and crew (guild) play. Still live.
 
 While researching Eldevin (an anchor explicitly named in the brief), search surfaced that Hunted Cow
 Games has **announced "Fallen Sword II," an explicit "spiritual successor" to the original 2006
-browser MMO, targeting a 2026 release** (reporting varies between "2026" generally and a more specific
-Q3 2026 window). It is described as a **cross-platform, turn-based RPG with a card-game-like combat
-system**, six class paths (Cleric, Guardian, Mage, Ranger, Rogue, Warrior), carrying forward dungeon
-encounters, skill mastery, crafting, and alchemy from the original but in a visually modernized,
-smaller-in-scope package.
+browser MMO, targeting a **Q3 2026** release** (cross-platform: PC + mobile). Its combat is
+consistently described across the announcement and coverage as **fast-paced turn-based combat with
+elemental attacks, status effects, and summoned entities** (fireballs/blizzards, elemental weapons to
+exploit enemy weaknesses; classes have elemental affinities — Mage to Fire/Ice, Warrior to Lightning),
+built on skill-point "Pathway" trees. It carries forward dungeon encounters, skill mastery, crafting,
+and alchemy from the original in a visually modernized, smaller-in-scope package, across six class
+paths (Cleric, Guardian, Mage, Ranger, Rogue, Warrior).
 [TechPowerUp](https://www.techpowerup.com/344182/hunted-cow-games-announces-fallen-sword-ii-for-2026);
 [MassivelyOP](https://massivelyop.com/2026/01/13/fallen-sword-2-bills-itself-as-a-spiritual-successor-to-the-2006-browser-mmo/);
-[Hunted Cow's own announcement](https://huntedcow.com/news/announcing-fallen-sword-ii-coming-2026)
+[Hunted Cow's own announcement](https://huntedcow.com/news/announcing-fallen-sword-ii-coming-2026);
+[Fallen Sword II on Steam](https://store.steampowered.com/app/712370/Fallen_Sword_II/)
+
+*(One outlet — MMORPG.com's coverage — additionally characterized the combat as "card game-like";
+this descriptor did **not** recur in Hunted Cow's own announcement or the other outlets checked, which
+uniformly say "turn-based" with elemental abilities/summons and no card framing. Treating "card-based"
+as **[UNVERIFIED]** — a single-outlet characterization, not a confirmed Hunted Cow-stated mechanic —
+rather than asserting it as fact. Corrected from an earlier draft that stated it flatly, per Critic2's
+challenge.)*
 
 This is **not a Cluster-A neighbor** (it's the source game's own sequel, not a genre cousin), so it
 doesn't get a full section or relevance-tagged ideas here — but given the project's own framing is

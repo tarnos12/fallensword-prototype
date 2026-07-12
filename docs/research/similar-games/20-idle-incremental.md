@@ -58,10 +58,10 @@ Early Access as of this research. Steam page: released Nov 18, 2021, tagged Sing
   (up to the cap) and grants the XP/items/mastery-XP that would have accrued, as if you'd stayed
   online — this applies uniformly across skilling **and** combat **and** even the Golbin Raid /
   Ancient Relics roguelike-ish side modes. Past 24 hours, additional offline time is simply not
-  rewarded (a hard ceiling, not a diminishing return).
-  [Offline Progression — Melvor Idle Wiki](https://wiki.melvoridle.com/w/Offline_Progression),
-  confirmed via player discussion: [Offline Progress Maxed at 18 Hours — Steam
-  discussion](https://steamcommunity.com/app/1267910/discussions/0/4665175132461478006/)
+  rewarded (a hard ceiling, not a diminishing return). The 24h figure is stated on the wiki page
+  itself; a commonly-cited community claim of an "18-hour" cap is either outdated or reflects an
+  upgrade-unlocked default lower than the 24h maximum — treating the wiki's 24h as the sourced ceiling.
+  [Offline Progression — Melvor Idle Wiki](https://wiki.melvoridle.com/w/Offline_Progression)
 - **Combat math is fully transparent, formula-documented on the wiki** — `Accuracy Rating = floor(
   (Effective Skill Level + 9) × (Base Accuracy Bonus + 64) × (1 + Accuracy Modifier/100) )`, and Max
   Hit is derived from effective skill level the same way for melee/ranged/magic. This is a "numbers you
@@ -149,17 +149,20 @@ that exited into a full Steam release Nov 6, 2025.
 [Legends of IdleOn — Steam](https://store.steampowered.com/app/1476970/Legends_of_IdleOn__Idle_MMO/)
 
 **Mechanics that matter to us:**
-- **AFK Gains are a *simulated play* model, not a flat-rate accrual.** The wiki explicitly frames it as
+- **AFK Gains are a *simulated play* model, not a flat-rate accrual.** The IdleOn wiki frames it as
   "a simulation of what would happen if you played the game yourself" — it factors in the character's
   stats, skill level, monster spawn rate, and damage output, but explicitly does **not** optimize
-  positioning/targeting the way a live player would, so AFK gains are capped below live-play efficiency
-  (cited max AFK combat-gain rates around 85%). [Offline Gains — Idle Online Universe
-  Wiki](https://iourpg.fandom.com/wiki/Offline_Gains)
-- **A distinct "Survivability" stat matters only while AFK** — a combination of Defence/Foods/Health
-  that determines how fast your character "dies" while unattended, directly throttling offline gains if
-  neglected. This is a clever design: it makes gearing choices matter differently depending on whether
-  you're actively playing or leaving the game idle, without a separate resource. [Offline Gains — Idle
-  Online Universe Wiki](https://iourpg.fandom.com/wiki/Offline_Gains)
+  positioning/targeting the way a live player would, so AFK gains are below live-play efficiency.
+  [Game Mechanics AFK — IdleOn MMO Wiki](https://idleon.wiki/wiki/Game_Mechanics_AFK)
+  *(Reconcile note on the rate figures: the cited "~85%" is the app-open-but-AFK gain rate; the IdleOn
+  wiki separately gives roughly 20% of on-screen rates when the game is fully closed/offline. Two
+  different states — app-open-idling vs. fully-offline — with different multipliers; do not conflate.)*
+- **A distinct "Survivability" stat matters only while AFK** — a combination of Defence + Foods + Health
+  that determines how fast your character "dies" while unattended, directly throttling AFK gains if
+  neglected. This makes gearing choices matter differently depending on whether you're actively playing
+  or leaving the game idle, without a separate resource. [Game Mechanics AFK — IdleOn MMO
+  Wiki](https://idleon.wiki/wiki/Game_Mechanics_AFK) *(exact "Defence + Foods + Health / how fast you
+  die AFK" wording independently confirmed on this page by Critic2's review pass)*
 - **Monetization is real-money "packs" and account/character slot purchases layered onto a fully
   free-playable core** — not gated content, but genuine pay-for-convenience/speed.
   **[UNVERIFIED specific price points this pass]**, but broadly consistent with known "idle MMO" F2P
@@ -230,10 +233,17 @@ whole cluster:**
   Wiki](https://realm-grinder.fandom.com/wiki/Reincarnation)
 - **Ascension** is a rarer, milestone-gated *replacement* for reincarnation at specific reincarnation
   counts (R39, R99, R159, R219) — pressing it resets everything a normal reincarnation would, but does
-  **not** reset the reincarnation-count itself, and **unlocks an entirely new currency tier** (Diamond
-  Coins, then later Emerald Coins), retroactively making all prior-currency upgrades free. This is a
-  "prestige inside a prestige" — a rung on the reincarnation ladder that periodically converts the whole
-  currency economy up a level rather than just multiplying the existing one.
+  **not** reset the reincarnation-count itself, and switches the main currency to a new tier (Diamond
+  Coins, then later Emerald Coins), making prior-currency upgrades free.
+  [Ascension — Realm Grinder Wiki](https://realm-grinder.fandom.com/wiki/Ascension)
+  **Important caveat (per Critic2's review):** the RG wiki states Ascension was implemented (v1.6.48) to
+  **overcome a technical big-number-storage limit** — "all the values were shifted to a smaller range
+  to enable the game to progress further" — and Diamond/Emerald Coins are the *rescaled* currency that
+  results. So Ascension's design *purpose* is a numeric rescale to dodge floating-point limits, **not**
+  a deliberately-authored "new currency that changes what matters" lever. It has the *surface shape* of
+  a currency-swap prestige, but should NOT be cited as intentional evidence for the "second tier changes
+  what matters" pattern the way Antimatter Dimensions genuinely is. Treat RG's Ascension as a weak/
+  ambiguous leg of that argument, not a strong one.
   [Ascension — Realm Grinder Wiki](https://realm-grinder.fandom.com/wiki/Ascension)
 - **Prestige Factions**: a second dimension of prestige-adjacent choice — dual-alignment combination
   factions (e.g. Dwarf+Fairy = "Dwairy") purchased *in addition to* a base faction, layering a build-
@@ -242,13 +252,13 @@ whole cluster:**
   Wiki](https://realm-grinder.fandom.com/wiki/Factions)
 
 **What it does that FallenSword (and we) don't:**
-- **A genuinely three-deep prestige stack**, where each tier doesn't just multiply the same currency
-  but periodically obsoletes and replaces the entire currency the player has been optimizing around.
-  **[HIGH]** — the single most directly relevant idea in this whole cluster for anyone considering a
-  second tier above our Ascension: rather than "Ascension II" being a bigger flat scalar, Realm Grinder's
-  model suggests a structurally different lever (a rarer, milestone-gated reset that changes *what
-  currency matters* rather than just how much of it you have) as the way to keep a second prestige tier
-  from feeling redundant with the first.
+- **A genuinely three-deep prestige stack** (Abdication → Reincarnation → Ascension) — the clearest
+  demonstration in this cluster that a single idle game can carry multiple nested reset tiers with
+  different scopes and cadences. **[HIGH]** as a *structural* exemplar of multi-layer prestige depth.
+  *Caveat (see above): the currency-swap at Ascension is a technical big-number rescale by design, not
+  an intentional "changes what matters" lever — so cite RG for the **depth/nesting** of its reset stack,
+  and lean on Antimatter Dimensions (not RG) as the load-bearing evidence that a second tier is best
+  justified by adding a qualitatively new kind of progression.*
 - **Build-strategy choice layered onto the reset ladder** (faction combinations) rather than a single
   numeric "+X%" per tier. **[MED]** — suggests Ascension *could* eventually offer a choice-of-flavor
   (not just a flat scalar) without necessarily adding raw power, giving replay variety to repeat
@@ -414,21 +424,33 @@ math/pacing data point each contributes, independently re-verified via WebSearch
 taps for burst damage, Slayer Points (SP) drive an Ascension prestige loop.
 [Idle Slayer Wiki — Fandom](https://idleslayer.fandom.com/wiki/Idle_Slayer_Wiki)
 
-**One sharply relevant fact:** Idle Slayer has **no cap on offline earnings at all** — "if you're gone
-for 5 days, you return to five days worth of earnings."
-[Idle Slayer Offline Earnings Guide](https://tap-guides.com/2025/10/08/idle-slayer-offline-earnings/)
+**One sharply relevant fact (corrected per Critic2):** Idle Slayer's offline *duration* appears
+uncapped — a community guide states "if you're gone for 5 days, you return to five days worth of
+earnings" [Idle Slayer Offline Earnings
+Guide](https://tap-guides.com/2025/10/08/idle-slayer-offline-earnings/) (a single blog, treat as
+soft-sourced) — **but the offline *rate* is capped**: the Fandom wiki shows the "Stone of Idle"
+offline slay-speed bonus hard-caps at **90% at level 32**.
+[Stones of Time — Idle Slayer Wiki](https://idleslayer.fandom.com/wiki/Stones_of_Time) So the precise
+claim is "offline **duration** uncapped, offline **rate** capped at 90%," **not** "no cap on offline
+earnings at all" — that earlier phrasing was overstated.
 Its own Ascension mechanic scales CpS (coins-per-second) bonuses with lifetime Slayer Points, and has a
 **second, rarer prestige-inside-a-prestige tier** — **Ultra Ascension**, unlocked at 2,000,000 SP,
 resetting far more but granting Ultra Slayer Points spendable on stronger permanent bonuses.
 [Ultra Ascension — Idle Slayer Wiki](https://idleslayer.fandom.com/wiki/Ultra_Ascension)
 
-**Relevance:** **[HIGH]** as the sharpest possible *contrast* to our own hard-capped Qi (`MAX_QI`):
-Idle Slayer is the "fully uncapped offline accrual" end of the spectrum, Melvor Idle is "capped at a
-clean 24h," and we sit at "capped at a fixed pool size (`MAX_QI`), refilled at a wall-clock rate" — all
-three are valid, deliberately different design points on the same axis, worth naming explicitly rather
-than assuming one is "the genre standard." Idle Slayer's Ascension→Ultra Ascension stack is a second
-independent confirmation (after Realm Grinder, NGU, Antimatter Dimensions) of the "rare second prestige
-tier, milestone-gated, granting a qualitatively stronger currency" pattern.
+**Relevance:** **[MED–HIGH]** as a *contrast* to our own hard-capped Qi (`MAX_QI`): Idle Slayer sits
+near the "uncapped offline duration" end of the spectrum (though rate-throttled), Melvor Idle is
+"capped at a clean 24h," and we sit at "capped at a fixed pool size (`MAX_QI`), refilled at a
+wall-clock rate" — all valid, deliberately different design points on the same axis, worth naming
+explicitly rather than assuming one is "the genre standard." Note (per Critic2): Idle Slayer's
+Ascension→Ultra Ascension stack is really a **bigger-permanent-bonus** second tier (USP → stronger
+bonuses), so it reads closer to the "just a bigger multiplier" model than to the "changes what matters"
+model — i.e. it is a *weaker* leg for the second-prestige-tier lesson and arguably an example of the
+thing that lesson cautions against, not a confirmation of it. The load-bearing evidence for
+"second tier should add a qualitatively new kind of progression" is **Antimatter Dimensions**
+(new currency → new upgrade categories → new Glyph itemization system); NGU's difficulty-tier NGUs are
+a secondary supporting case; RG's Ascension and Idle Slayer's Ultra Ascension are *not* strong support
+for it (see the RG caveat above and this note).
 
 ---
 
@@ -436,10 +458,10 @@ tier, milestone-gated, granting a qualitatively stronger currency" pattern.
 
 | Idea | Game(s) | Relevance | Our pillar/module | One-line why |
 |---|---|---|---|---|
-| Second prestige tier should change *what currency/system matters*, not just multiply the existing scalar | Realm Grinder (Ascension), NGU Idle (Evil/SADISTIC), Antimatter Dimensions (Infinity→Eternity→Reality), Idle Slayer (Ultra Ascension) | **HIGH** | `ascension.js` (future 2nd tier) | Four independent games converge on the same lesson: a flat "Ascension II, bigger number" would feel redundant; a qualitatively different lever (new currency, new mechanic, choice-of-flavor) is what keeps repeat prestiges interesting |
+| Second prestige tier should add a *qualitatively new kind of progression*, not just multiply the existing scalar | **Antimatter Dimensions** (Infinity→Eternity→Reality/Glyphs — load-bearing case), NGU Idle (Evil/SADISTIC difficulty NGUs — secondary support) | **HIGH** | `ascension.js` (future 2nd tier) | AD is the strong evidence: each layer adds a new currency → new upgrade categories → new itemization system, so a flat "Ascension II, bigger number" would feel redundant. **Caveat per Critic2:** Realm Grinder's Ascension is a technical big-number rescale (not a designed "changes what matters" lever) and Idle Slayer's Ultra Ascension is really a bigger-bonus tier — do NOT count these as support for this lesson (earlier draft over-counted to "four games"; corrected) |
 | Built-in "one free respec per run/cycle," paid/scarce beyond that | Trimps (Portal respec) | **HIGH** | `progression.js` (stat respec — already flagged as a gap in Sprint 1 §3.4) | Directly matches our already-identified missing-respec gap; Trimps is a concrete, well-tested precedent for the "free once, costly after" shape |
 | A hard, uniform offline-progress cap (e.g. 24h) reused across every subsystem | Melvor Idle | **MED** | `game.js` (`tickQi`/`maxQi`) | We already cap implicitly via `MAX_QI`; Melvor validates "one cap constant, applied everywhere" as clean design, not a new mechanic to add |
-| Fully uncapped offline earnings (no ceiling at all) | Idle Slayer | **LOW/SKIP** | `game.js` Qi regen | Violates "sessions, not marathons" — removing the Qi ceiling would erase our core session-gating pillar entirely, not a fit |
+| Uncapped offline *duration* (rate still throttled) | Idle Slayer (duration uncapped, rate capped 90% via Stone of Idle) | **LOW/SKIP** | `game.js` Qi regen | Violates "sessions, not marathons" — removing the Qi ceiling would erase our core session-gating pillar entirely, not a fit. (Note: even Idle Slayer caps the *rate*, not just us — the "fully uncapped" framing was overstated, corrected per Critic2) |
 | A stat/resource that only matters during *unattended* play (e.g. Survivability), rewarding active engagement differently than idling | Legends of IdleOn, Idle Champions | **MED** | `meridians.js` / future Qi-adjacent passive | Interesting inverse-framing device — a passive that shapes offline Qi regen specifically vs. active-play regen could be a novel plug-in, but the underlying "reward active over idle" philosophy partly cuts against our current design intent, needs care |
 | Multiple parallel soft-reset currencies with different trigger conditions and different qualitative effects (not one currency → one flat buff) | Kittens Game (Karma/Paragon), Trimps (Helium + long keep-list), Realm Grinder (Prestige Factions) | **MED** | `ascension.js` | Three independent idle games avoid a single monolithic "keeps collections" bucket in favor of named, differently-purposed permanent resources — validates our existing granular keep-list design, and suggests room for a second, differently-purposed currency if a 2nd tier is ever built |
 | Passive prestige-currency accrual over long uninterrupted play, independent of choosing to reset | Kittens Game (Paragon's 1-per-1000-years trickle) | **LOW/MED** | `ascension.js` | Rewards patient non-resetting play without forcing a wipe; needs real design scrutiny — risks undercutting the incentive to actually Ascend, flag as a discussion point not a ready feature |

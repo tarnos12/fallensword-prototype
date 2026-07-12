@@ -6,7 +6,15 @@ yardstick before reading either doc, per the brief's cross-talk protocol. Sectio
 in as the researchers' docs land — this doc is being written progressively; treat an empty
 section below as "not yet reviewed," not "nothing found."
 
-**Status: baseline complete, actively polling researcher docs.**
+**Status: COMPLETE.** Both `10-core-mechanics.md` (Researcher-Core) and `20-meta-systems.md`
+(Researcher-Meta) reviewed in full: cross-checked against a fresh independent WebSearch pass on
+top of the baseline below, and against direct reads of the real `js/` code (`combat.js`,
+`progression.js`, `items.js`, `techniques.js`, `boss.js`, `market.js`, `guild.js`, `save.js`,
+`meridians.js`, `ascension.js`, `sockets.js`, `sets.js`, `cards.js`, `quests.js`, `bounties.js`,
+`trials.js`, `rivals.js`, `duel.js`, `sectmissions.js`, `salvage.js`, `alchemy.js`, `crafting.js`).
+Both researchers were messaged directly with pre-emptive flags and post-review disputes; both
+had already self-corrected on most of the pre-emptive flags and defended the rest with good
+primary sourcing — see their reply messages in-session.
 
 ---
 
@@ -136,47 +144,206 @@ as backup. No Wayback access available in this environment (`WebFetch` refused `
 
 ## 2. Confirmed-solid findings from each doc
 
-*(Filled in once each doc has content — currently only `00-brief.md` exists in `docs/research/`.
-Polling every pass.)*
+Both docs are unusually well-hedged and already self-flag most of their own weak spots
+([UNVERIFIED] tags, "treat as approximate" caveats). I independently re-ran WebSearch against the
+specific numeric/named claims below (not just re-reading the same snippets the researchers had)
+and every one held up.
+
+### 10-core-mechanics.md (Researcher-Core)
+- **Qi/stamina regen gap, the single biggest quantitative finding in either doc.** Independently
+  reconfirmed FS's 90/hr ceiling breaks down exactly as 50 base + 25 (upgrade) + 15 (guild
+  Endurance Shrine) = 90/hr. Cross-checked our own `js/game.js:58-59` directly:
+  `MAX_QI = 120`, `QI_REGEN_MS = 3_000` → 1200 Qi/hour, ~13-24x FS's 50-90/hr band. The code
+  comment at those lines already says this is placeholder ("1.0 tuning will slow this
+  dramatically"), so this is a confirmed, real, load-bearing, **already-acknowledged** gap — the
+  doc's framing of it as "not a surprise, but now precisely quantified" is accurate and useful.
+- **Hell Forge vs. our `sockets.js` — confirmed materially different systems.** Independently
+  verified: Hell Forge is a *permanent*, capped-at-exactly-5-uses, FSP+gold-gated, flat
+  +5-per-tier (scaling +1/50 item-levels) stat upgrade with **no removal/reallocation** — cost
+  example confirmed (7,500/15,000/30,000/60,000/90,000 gold for a sub-50 item, doubling per use).
+  Our `sockets.js` gems slot/unslot freely and gear drops loose gems independently. Core's
+  "don't call sockets.js an FS port" flag is correct and important — I'd elevate this from a nice-
+  to-have doc correction to something the lead's synthesis should state explicitly, since it
+  affects whether a future "Hell Forge" feature (Core's opportunity 4.4.2) gets built *alongside*
+  sockets rather than confused with it.
+- **"Concentrate Attack/Damage" veteran meta — confirmed via primary source.** Independently found
+  the exact quote on the Hunted Cow forums ("ALWAYS PUT STAT POINTS IN DAMAGE AND ATTACK... put
+  all your points in damage. All of them"). Cross-checked `progression.js:52-53` directly and
+  confirmed the code comment explicitly names this meta and counters it with `POINT_VALUE.hp = 4`
+  (a deliberate 4x HP-point discount). This is a genuinely well-caught, well-verified finding — the
+  team read FS's own community meta and pre-countered it in the design, and Core's doc is the
+  first place that connects those two facts explicitly with sourcing on both sides.
+- **No stat/technique respec anywhere in the codebase — independently reconfirmed by direct
+  read.** I grepped/read `progression.js` (`allocateStat`, lines 168-173: only ever increments)
+  and `techniques.js` (`learn`, lines 115-121: only ever spends/adds to `learnedTechniques`) myself
+  before seeing Core's claim; there is no unallocate/unlearn function anywhere. Confirmed correct.
+- **The two-parallel-buff-systems architecture note (§5.2/5.3)** — technique buffs feed
+  `effectiveStats` via `player.activeBuffs`; pill buffs (`alchemy.js`) patch the combat-actor
+  snapshot directly via `player.pillBuffs`, deliberately bypassing `effectiveStats` per that file's
+  own header comment. I'd independently flagged this exact same architectural nuance in my own
+  blind-spots section (written before reading Core's doc) — strong independent confirmation from
+  two directions that this is a real, non-obvious thing any future buff-adding opportunity needs
+  to respect.
+- All combat-formula claims (hit-chance direction, the FS "2% automatic hit chance" floor, the
+  Kill/Wound/Miss three-way branch, the 20/40/60 stamina attack tiers, XP level-gap curve
+  direction) independently re-verified against fresh search — all check out as accurately quoted.
+
+### 20-meta-systems.md (Researcher-Meta)
+- **Auction House mailbox "12 hours or lost forever"** — independently reconfirmed verbatim
+  ("You only have twelve hours to collect your item from your Mailbox or it will disappear
+  forever"). Correctly used as the basis for a real, well-scoped divergence claim (our mailbox
+  never expires) with a sensibly-hedged opportunity (48-72h grace window, not a literal 12h port).
+- **PvP Arena launch date (19 Jun 2008) and "Max Equip Level" gear-normalization rule** —
+  independently reconfirmed both the date and the core mechanic (item level capped per-tournament,
+  level-up points/relics/buffs/guild structures all ignored inside the arena).
+- **Titan Event first-instance names/date (Ogalith & Fuvayu, May 2009) and the guild-cooperative
+  shared-kill-pool mechanic** — independently reconfirmed. This was one of the specific factoids I
+  flagged as high hallucination-risk before reading the doc (oddly specific names/dates are a
+  classic LLM confabulation pattern) and it held up under a fresh, differently-worded search.
+- **"Find Item" skill: +0.1% drop rate per point** — independently reconfirmed verbatim, including
+  the worked example (Find Item 175 → +17.5% relative increase on a base drop rate).
+- **Allies/Enemies cap of 5 each, raisable via character upgrade, allies require mutual acceptance
+  while enemies don't** — independently reconfirmed all three parts, including the specific
+  asymmetry (allies need the other party's consent, enemies don't) that the doc uses to correct
+  GDD §6.5's own claim that FS's list is symmetric-in-asymmetry. This is a genuine GDD-inaccuracy
+  catch, correctly scoped as "fix the GDD's characterization of FS," not a code gap.
+- **Guild Conflicts RP mechanics (10 RP per conflict win) and Relic group-capture-combat model** —
+  independently reconfirmed.
+- **Medals' six-tier system (bronze/silver/gold/crystal/ruby/diamond)** — independently
+  reconfirmed.
+- **The Beast Codex module-location correction** (`js/ui.js`, not a standalone `bestiary.js`) —
+  I independently read `js/ui.js` and confirm the codex renderer (`codexEntry`/`codexCardSlot`/
+  `bossCodexEntry`) lives there, matching the doc's correction to the brief's open question.
+- Both docs' **"[UNVERIFIED]" tags are used honestly** — I spot-checked several (e.g. Core's exact
+  "10 skill points" dependency framing, Meta's "no FS Global-Quest zone-gating source found") and
+  in every case the underlying wiki page genuinely did not surface a clean number/confirmation in
+  my own independent search either. Neither researcher is padding their confidence.
 
 ## 3. Disputed/unverified claims
 
-*(Pending doc content.)*
+### Dispute — Core §4.1's FS rarity-ladder ORDERING is under-sourced and internally inconsistent — RESOLVED
+**Update: fixed by Researcher-Core during this review** (verified — `10-core-mechanics.md` §4.1 and
+the summary table now split the claim into sourced tier *names* (each has its own wiki category
+page, individually cited) vs. the specific linear *ordering* + "Epic is rarest" framing, which is
+now correctly tagged `[UNVERIFIED]` with the fragment-tier inconsistency I raised documented
+inline as the reason). Original dispute preserved below for the record.
+
+Core's doc states the ladder as "Common → Rare → Unique → Legendary → Crystalline → Super-Elite,"
+separately describing Epic as "a distinct, separately-described 'rarest tier.'" I independently
+confirmed Unique, Crystalline, and Super-Elite are all real FS wiki categories, and separately that
+Epic items are described on their own category page as "extremely rare (the most rare in the
+game)." But I could not find any single source that states the full linear ordering, and the
+two citations Core gives for the ladder claim (the Composing page, Category:Epic_Items) don't
+establish an ordering at all. It's also internally suspicious as written: Legendary, Crystalline,
+and Super-Elite items each yield their own named "Fragments" (a materials-tier naming pattern that
+reads as a *progression* above Legendary), which is hard to reconcile with Epic simultaneously
+being called "the rarest tier" if three more tiers sit above it in the same list. **Sent to
+Researcher-Core directly**, asking them to either find one source stating the actual order or
+downgrade the ordering claim (not the tier names, which are fine) to [UNVERIFIED]. This matters
+because Core's own opportunity 4.4.2 ("a genuinely FS-flavored Hell Forge system") and the
+lead's eventual synthesis may end up citing "the FS rarity ladder" as an anchor point — it should
+rest on a real citation, not a plausible-sounding reconstruction.
+
+### Minor — Core §5.1's buff-market citation leans on a low-tier fan site
+The claim that buff-trading is a real player-driven economy is independently wiki-sourced
+elsewhere in the same bullet (Skills Guide), but the specific "how buffers advertise" framing
+cites `fallen-empire.wzarlon.dk`, a third-party guild fansite rather than a wiki/forum primary
+source, which the brief asks researchers to deprioritize ("prefer primary/archived sources... over
+blog hearsay"). Not load-bearing (the core fact holds without that citation) — flagged to Core as
+a citation-hygiene nit, not a fact dispute.
+
+### Non-dispute, but worth the lead's attention — both docs agree Ascension/NG+ has no FS lineage
+Both researchers independently (Core didn't discuss it at all since it was out of their scope;
+Meta explicitly researched and reported no sourced FS prestige-loop equivalent) converged with my
+own baseline finding: FS's "Character Reset" is a stat-point respec, not a compounding
+power-prestige loop. All three of us agree `ascension.js` is a Fallen-Immortal-original xianxia
+NG+ invention. This isn't a dispute between researchers — it's a rare case of independent
+triangulation all landing in the same place — but Meta's doc correctly flags it as a framing
+question the lead should decide explicitly (market Ascension as "original" vs. "FS-inspired"),
+which I'd endorse as-is.
 
 ## 4. Constraint violations in recommendations
 
-*(Pending doc content.)*
+**None found that actually violate a hard constraint as currently written** — both docs show
+real constraint-awareness (Meta's doc even includes its own explicit "Constraint-violation check"
+section, which I independently re-verified rather than taking at face value). Specific checks:
+
+- **`combat.js` purity**: Core's opportunity 1.1 (parameterize `MAX_TURNS` for a 40/60-Qi
+  push-through tier) and opportunity 1.3 (a third combat branch) both keep `resolveCombat` a pure
+  function of its arguments — turning `MAX_TURNS` into a passed argument rather than a hardcoded
+  module constant is the *correct* way to add this, not a violation. Meta's opportunity 3.2
+  (gear-normalized Arena spar variant) explicitly computes the bracket-capped stat sheet *outside*
+  `combat.js`, in `duel.js`, and discards it after — confirmed this is how it's written, not just
+  claimed to be.
+- **Single `effectiveStats` pipeline**: Meta's opportunity 2.1 (a small combat-stat Sect buff)
+  explicitly proposes plugging into `effectiveStats` as a new flat source at the same insertion
+  point cards/meridians/sockets/sets already use, and explicitly flags "coordinate with
+  Researcher-Core" before doing it (correct — `progression.js` is the single-owner file per
+  PROJECT.md). Core's opportunity 3.1 (stat respec) and 5.2 (unifying buff lists) both explicitly
+  flag `progression.js`/the buff lists as needing lead sign-off before a single-owner-file touch,
+  rather than just doing it. No opportunity in either doc proposes a second aggregation pipeline
+  or an in-place stat mutation.
+- **Provider interfaces for multiplayer-shaped systems**: neither doc proposes guild-vs-guild,
+  real bidding, or anything else requiring a second live participant. Meta explicitly rules out
+  Titan-style GvG and FS-style Global Quest leaderboards as "not recommended to fake single-player"
+  — correct per the provider-interface/2.0-network-provider constraint, since faking a second
+  player's competitive presence isn't the same shape of problem a `NetworkXProvider` solves later.
+  Meta's opportunity 6.3 explicitly asks to keep `recentlyActive()`'s output shape stable *for* a
+  future provider-backed PvP-scouting caller, which is the right instinct.
+- **Additive save schema**: no opportunity in either doc proposes a `save.js` VERSION bump; every
+  new-field proposal (Meta's `bound` field on items, a `kind: 'favored'|'marked'` tag on rivals;
+  Core's respec functions operating on existing fields) is additive-only, consistent with the
+  hard constraint's "new fields are additive, no VERSION bump" rule.
+- **Self-contained feature-module rule**: neither doc proposes editing `index.html` or `ui.js`
+  outside of a shared-renderer touch already named in PROJECT.md (Meta's Beast Codex correction
+  notes it's *already* inside `ui.js` for a defensible reason — shared-renderer bucket — not a
+  violation to fix).
+
+One thing to watch, not a violation yet: Core's opportunity 4.4.2 (a distinct Hell-Forge-style
+permanent item-upgrade system) and Meta's opportunity 1.1 (a `bound` item field) both touch
+`items.js` — not a conflict since neither is a single-owner file in the same sense as
+`progression.js`/`save.js`, but if both get greenlit in the same milestone the lead should
+sequence them (or land them in one PR) rather than risk two teammates editing `items.js`
+simultaneously, per CLAUDE.md's "don't let two agents share/overwrite a file" rule.
 
 ## 5. Blind spots — what BOTH researchers missed
 
-*(Preliminary, will finalize once docs land.)*
-- **FSP / premium currency is a deliberate, correct omission** — neither doc should recommend
-  adding a real-money-analog currency; that's out of scope for an offline-first prototype. Watch
-  for a recommendation that smuggles this in as "a second currency for whales."
-- **Titans are guild-cooperative, not solo** — our whole calamity/boss system is a solo
-  reinterpretation. Any opportunity that says "add FS-style Titans" needs to grapple with the fact
-  we have no other-players layer yet (NPC-backed provider only); it's a 2.0-scale idea at best.
-- **FS's Character Reset is a respec, not a power-prestige loop** — our `ascension.js` (+8%
-  compounding) is our own invention layered on top of the xianxia "ascension" trope, not a FS port.
-  Neither doc should claim ascension is "how FallenSword does prestige."
-- **There are already TWO buff pathways, not one, and both researchers need to know this before
-  recommending a "new buff type."** `techniques.js` `activeBuffs` are percentage modifiers folded
-  into `progression.js effectiveStats` (the documented single pipeline). But `alchemy.js` pill
-  buffs are a SEPARATE `player.pillBuffs` list applied directly to the combat-actor snapshot at
-  fight time (`applyPillBuffs`, called from `game.js`, never touching `effectiveStats`) —
-  explicitly to avoid `ui.js`'s technique-only buff renderer (see `alchemy.js` header comment,
-  lines 4-12). This is a real, shipped, deliberate exception to the "one aggregation pipeline"
-  framing in `PROJECT.md`, and it is easy to miss by reading `progression.js` alone. Any
-  opportunity proposing a new timed-buff source must pick ONE of these two existing patterns
-  explicitly (feed `effectiveStats` like techniques, or snapshot-patch like pills) — inventing a
-  third pathway would be a real constraint violation. Watch for either doc's recommendations
-  silently assuming buffs only ever go through `effectiveStats`.
-- **Boss cards intentionally out-scale zone cards, and duplicate-card design already has a
-  stone-payout sink** (`cards.js` `DUPLICATE_STONE_PAYOUT`) — if either doc proposes an "expand
-  the collection game" opportunity, it should build on this existing longevity lever rather than
-  treat cards as undertuned.
-- **Sect Dispatch (`sectmissions.js`) already covers "send NPCs on timed missions for offline
-  income,"** and `bounties.js` already covers "hunt-board with rotating targets." A common
-  FS-inspired recommendation pattern ("add idle income," "add a bounty board") may already be
-  shipped under different terminology — researchers comparing GDD section numbers to FS features
-  should double check `js/` before flagging something as missing.
+Most of my pre-emptive flags (sent to both researchers before either doc existed) turned out to
+already be handled correctly by the time each doc landed — noted below as "caught" vs. genuinely
+missed by both.
+
+- **FSP / premium currency** — **caught by both.** Meta explicitly lists it as "not recommended"
+  with zero code change; Core doesn't propose one either. No action needed.
+- **Titans are guild-cooperative, not solo** — **caught by Meta** (added the ≥50%-contribution/
+  shared-kill-pool detail and explicitly frames our `boss.js` as the "Legendary Creature" stub, not
+  a Titan port, recommending any Titan-flavored feature stay single-player-flavor-only until a real
+  guild layer exists). Core doesn't touch bosses (out of scope). No action needed.
+- **FS's Character Reset is a respec, not a prestige loop** — **caught by Meta**, independently
+  triangulated by all three of us (see §3 above). No action needed.
+- **Two parallel buff pathways (`activeBuffs` vs `pillBuffs`)** — **caught by Core** (§5.2/5.3,
+  independently of my own note on the same nuance) and explicitly flagged as something a third
+  buff-adding opportunity must respect. Genuinely well-covered; no action needed.
+- **Boss cards out-scaling zone cards + the duplicate-stone-payout sink already existing** — neither
+  doc discusses this directly since neither proposes a new card-tuning opportunity, so this
+  remains a live blind spot for whoever picks up a future "expand collection" idea, even though it
+  wasn't wrong in either doc as written. Worth carrying into `40-next-steps.md` as a standing note:
+  if a card/collection opportunity ever gets scoped, it should build on `DUPLICATE_STONE_PAYOUT`
+  rather than re-invent a longevity lever from scratch.
+- **Sect Dispatch / Bounty Board terminology collision** — **partially caught by Meta**: their §3
+  correctly notes `bounties.js` is architecturally closer to a mini Global Quest than to FS's
+  actual player-posted Bounty Board, and flags the naming collision as a documentation fix. What
+  neither doc explicitly says in one place: a lead or future contributor skimming PROJECT.md's
+  module list next to FS terminology could still reasonably assume "we're missing a bounty board"
+  or "we're missing idle income" when both already ship (`bounties.js`, `sectmissions.js`). Worth
+  a one-line glossary note in `40-next-steps.md` mapping FS-genre terms to our shipped modules so
+  this doesn't get re-proposed as new work later.
+- **Genuinely missed by both: the rarity-ladder ordering issue (§3 above)** is the one real gap
+  that fell through — Core asserted a specific linear FS rarity ordering that doesn't hold up to
+  a fresh check, and nothing in Meta's doc (which also discusses rarity tangentially via Epic
+  Quests/items) caught the inconsistency. Now flagged directly to Core.
+- **Genuinely missed by both: neither doc explicitly cross-references the `js/zones/` /
+  `registry.js` per-zone architecture** (PROJECT.md's "to add a zone: create one `js/zones/<id>.js`
+  and add it to `ZONE_MODULES`") when discussing world content (Meta §3) or quest chains (Meta
+  §5). Any opportunity proposing new world content (e.g. Meta's "fourth/rotating Titan-flavored
+  boss tier," opportunity 3.1) will need a zone or an existing zone's boss slot — worth the lead
+  confirming which zone/slot before greenlighting, since neither doc names one.

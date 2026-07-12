@@ -9,7 +9,6 @@ import { meridianBonuses } from './meridians.js'; // per-source char-sheet stat 
 import { sellValue, RARITIES, INVENTORY_SIZE, DROP_CHANCE, effectiveInventorySize } from './items.js';
 import { currentQuest, progressText, QUESTS } from './quests.js';
 import { CREATURE_TYPES, creatureStatBlock } from './actors.js';
-import { CARDS, cardForCreature, cardBonuses, cardBonusText, ownedCardCount } from './cards.js';
 import { marketValue } from './market.js';
 import { personaById, personaLabel } from './personas.js';
 import { SECT_CAPACITY } from './guild.js';
@@ -323,12 +322,11 @@ export function renderCharSheet(state, onAllocate) {
   box.innerHTML = '';
 
   // True per-source stat breakdown mirroring progression.js effectiveStats
-  // exactly: base + trained + gear + cards + meridians + gems + set (flat),
-  // then technique/pill percentage buffs, then the global ascension scalar. Each
-  // flat source is summed the same way (and honours the same broken-gear rule) as
+  // exactly: base + trained + gear + meridians + gems + set (flat), then
+  // technique/pill percentage buffs, then the global ascension scalar. Each flat
+  // source is summed the same way (and honours the same broken-gear rule) as
   // effectiveStats, so the displayed parts recombine to the effective total.
   const now = Date.now();
-  const cardStat = cardBonuses(p).stat;
   const merStat = meridianBonuses(p);
   const socketStat = socketBonuses(p);
   const setStat = setBonuses(p);
@@ -346,18 +344,17 @@ export function renderCharSheet(state, onAllocate) {
   for (const stat of ALLOC_STATS) {
     const effKey = stat === 'hp' ? 'maxHp' : stat;
     // Flat parts. `stat` is already the bonus-map key ('hp' for Max HP), matching
-    // gearSum/cardStat/merStat/socketStat/setStat which all key HP as 'hp'.
+    // gearSum/merStat/socketStat/setStat which all key HP as 'hp'.
     const base = p.base[effKey];
     const trained = p.allocated[stat] * POINT_VALUE[stat];
     const gearPart = gearSum[stat] ?? 0;
-    const cardPart = cardStat[stat] ?? 0;
     const merPart = merStat[stat] ?? 0;
     const gemPart = socketStat[stat] ?? 0;
     const setPart = setStat[stat] ?? 0;
 
     // Flat subtotal, then the percentage buffs and ascension scalar applied with
     // the SAME rounding as effectiveStats (per-buff round; final ascension round).
-    let val = base + trained + gearPart + cardPart + merPart + gemPart + setPart;
+    let val = base + trained + gearPart + merPart + gemPart + setPart;
     const flatSubtotal = val;
     for (const buff of buffs) {
       const pct = buff.effect[stat];
@@ -370,11 +367,10 @@ export function renderCharSheet(state, onAllocate) {
     // legacy tooltip for a bonus-free player); the newer flat sources are shown
     // only when non-zero to keep it compact.
     const flatBits = [`${base} base`, `${trained} trained`, `${gearPart} gear`];
-    if (cardPart) flatBits.push(`${cardPart} cards`);
     if (merPart) flatBits.push(`${merPart} meridians`);
     if (gemPart) flatBits.push(`${gemPart} gems`);
     if (setPart) flatBits.push(`${setPart} set`);
-    const hasFlatExtra = cardPart || merPart || gemPart || setPart;
+    const hasFlatExtra = merPart || gemPart || setPart;
     // Show the running subtotal only when there's more math to follow (buffs or
     // ascension) so the reader can trace flat → buffed → final.
     const showSubtotal = (buffedVal !== flatSubtotal) || asc > 0;
@@ -753,7 +749,6 @@ function outcomeBanner(result) {
     } else {
       banner = `<div class="banner win">VICTORY — +${r.xp} XP, +${r.stones} spirit stones${drop} <span class="dim">(${result.staminaSpent} Qi spent)</span></div>`;
     }
-    if (result.cardDrop) banner += cardDropBanner(result.cardDrop);
     return banner;
   }
   if (result.outcome === 'loss') {
@@ -765,47 +760,13 @@ function outcomeBanner(result) {
     + titanProgressBanner(result.titanProgress);
 }
 
-function cardDropBanner(cd) {
-  const c = cd.card;
-  if (cd.kind === 'new') {
-    return `<div class="banner card-drop">✦ SPIRIT CARD — ${c.creatureName} obtained! <span class="dim">${cardBonusText(c, 1)}</span></div>`;
-  }
-  if (cd.kind === 'upgrade') {
-    return `<div class="banner card-drop">✦ SPIRIT CARD refined — ${c.creatureName} → Lv ${cd.level} <span class="dim">${cardBonusText(c, cd.level)}</span></div>`;
-  }
-  if (cd.kind === 'duplicate') {
-    return `<div class="banner card-drop">✦ Duplicate ${c.creatureName} card dissolves into +${cd.stones} spirit stones</div>`;
-  }
-  return '';
-}
-
-// --- Beast Codex (GDD §7.1) + Spirit Card collection (GDD §7.2). A modal over
-// the bestiary kill data with progressive disclosure by kill count; each entry
-// doubles as the card-collection slot (silhouette until owned). ---
+// --- Beast Codex (GDD §7.1). A modal over the bestiary kill data with
+// progressive disclosure by kill count. (Spirit Cards were removed in the
+// redesign — the codex is now purely the bestiary; no card slot.) ---
 
 const CODEX_STATS_AT = 10; // kills to reveal full combat stats
 const CODEX_DROPS_AT = 50; // kills to reveal the drop table
-const CODEX_CARD_AT = 100; // kills to reveal the Spirit Card drop chance + mastery
-
-function cardBonusSummary(player) {
-  const { stat, meta } = cardBonuses(player);
-  const parts = [];
-  for (const [k, v] of Object.entries(stat)) if (v) parts.push(`+${v} ${STAT_LABELS[k]}`);
-  if (meta.qiCap) parts.push(`+${meta.qiCap} max Qi`);
-  if (meta.stones) parts.push(`+${meta.stones} spirit stones/hr`);
-  return parts;
-}
-
-function codexCardSlot(card, level) {
-  const owned = level > 0;
-  if (!owned) {
-    return `<div class="card-slot locked" title="Spirit Card — undiscovered">
-      <span class="card-mark">✦</span></div>`;
-  }
-  return `<div class="card-slot owned" title="${card.creatureName} Spirit Card">
-    <span class="card-mark">✦</span>
-    <span class="card-lvl">${level}/${card.maxLevel}</span></div>`;
-}
+const CODEX_MASTERY_AT = 100; // kills to earn the mastery mark
 
 function codexEntry(state, typeId) {
   const p = state.player;
@@ -813,9 +774,7 @@ function codexEntry(state, typeId) {
   const entry = p.bestiary[typeId];
   const discovered = !!entry;
   const kills = entry?.kills ?? 0;
-  const card = cardForCreature(typeId);
-  const cardLevel = p.cards[card.id] ?? 0;
-  const mastered = kills >= CODEX_CARD_AT;
+  const mastered = kills >= CODEX_MASTERY_AT;
 
   const el = document.createElement('div');
   el.className = 'codex-entry';
@@ -826,7 +785,6 @@ function codexEntry(state, typeId) {
     el.innerHTML = `
       <div class="codex-head">
         <div class="codex-title">??? <span class="dim">— undiscovered</span></div>
-        ${codexCardSlot(card, 0)}
       </div>
       <p class="empty-note">Encounter this beast — inspect or fight it — to begin its codex entry.</p>`;
     return el;
@@ -835,7 +793,7 @@ function codexEntry(state, typeId) {
   const bandLabel = t.levels[0] === t.levels[t.levels.length - 1] ? `Lv ${t.levels[0]}` : `Lv ${t.levels[0]}–${t.levels[t.levels.length - 1]}`;
 
   let body = `<p class="codex-flavor">${t.flavor}</p>
-    <p class="codex-kills" title="${mastered ? 'Mastered — you have slain this beast at least 100 times.' : `Slay ${CODEX_CARD_AT - kills} more for the mastery mark.`}">Kills: <b>${kills}</b>${mastered ? ' <span class="mastery">✦ mastered</span>' : ''}</p>`;
+    <p class="codex-kills" title="${mastered ? 'Mastered — you have slain this beast at least 100 times.' : `Slay ${CODEX_MASTERY_AT - kills} more for the mastery mark.`}">Kills: <b>${kills}</b>${mastered ? ' <span class="mastery">✦ mastered</span>' : ''}</p>`;
 
   // 10 kills: full combat stats (GDD §7.1 disclosure thresholds).
   if (kills >= CODEX_STATS_AT) {
@@ -853,21 +811,11 @@ function codexEntry(state, typeId) {
     body += `<p class="codex-line locked-line" title="Slay ${CODEX_DROPS_AT - kills} more of this beast to reveal its drop table.">Drop table revealed at ${CODEX_DROPS_AT} kills.</p>`;
   }
 
-  // 100 kills: Spirit Card drop chance + mastery mark.
-  const cardChanceLine = kills >= CODEX_CARD_AT
-    ? `<p class="codex-line">Spirit Card: <b>${(card.dropChance * 100).toFixed(1)}%</b> per kill · ${cardBonusText(card, 1)}/level</p>`
-    : `<p class="codex-line locked-line" title="Slay ${CODEX_CARD_AT - kills} more of this beast to reveal its Spirit Card drop chance.">Spirit Card drop chance revealed at ${CODEX_CARD_AT} kills.</p>`;
-
-  const cardStatusLine = cardLevel > 0
-    ? `<p class="codex-line card-owned">Card held: Lv ${cardLevel}/${card.maxLevel} — <b>${cardBonusText(card, cardLevel)}</b></p>`
-    : `<p class="codex-line dim">Spirit Card not yet obtained.</p>`;
-
   el.innerHTML = `
     <div class="codex-head">
       <div class="codex-title">${t.name} <span class="dim">${bandLabel}</span></div>
-      ${codexCardSlot(card, cardLevel)}
     </div>
-    ${body}${cardChanceLine}${cardStatusLine}`;
+    ${body}`;
   return el;
 }
 
@@ -890,12 +838,10 @@ function bossDropLine(boss) {
 
 // A calamity's codex entry (GDD §9.1) — hand-authored, separate from the
 // random-spawn beast roster. Full lore + stats once discovered (inspected or
-// fought); a teasing locked entry beforehand. Doubles as the boss card slot.
+// fought); a teasing locked entry beforehand.
 function bossCodexEntry(state, boss) {
   const p = state.player;
   const discovered = !!p.bestiary[boss.typeId];
-  const card = cardForCreature(boss.typeId);
-  const cardLevel = p.cards[card.id] ?? 0;
   const defeats = p.boss?.[boss.id]?.defeats ?? 0;
 
   const el = document.createElement('div');
@@ -906,44 +852,33 @@ function bossCodexEntry(state, boss) {
     el.innerHTML = `
       <div class="codex-head">
         <div class="codex-title">☠ ??? <span class="dim">— a calamity said to sleep beneath the Gorge</span></div>
-        ${codexCardSlot(card, 0)}
       </div>
       <p class="empty-note">Reach ${stageName(boss.minStage)} and seek ${boss.lairHint}. Something ancient waits there.</p>`;
     return el;
   }
 
   const s = boss.stats;
-  const cardStatusLine = cardLevel > 0
-    ? `<p class="codex-line card-owned">Card held: Lv ${cardLevel}/${card.maxLevel} — <b>${cardBonusText(card, cardLevel)}</b></p>`
-    : `<p class="codex-line dim">Spirit Card not yet obtained — the calamity guards it well.</p>`;
-
   el.innerHTML = `
     <div class="codex-head">
       <div class="codex-title">☠ ${boss.name} <span class="dim">Lv ${boss.level} · ${boss.title}</span></div>
-      ${codexCardSlot(card, cardLevel)}
     </div>
     <p class="codex-flavor">${boss.flavor}</p>
     <p class="codex-kills">Vanquished: <b>${defeats}</b>${defeats ? ' <span class="mastery">☠ calamity-breaker</span>' : ''}</p>
     <p class="codex-line">ATK ${s.attack} · DEF ${s.defense} · DMG ${s.damage} · ARM ${s.armor} · HP ${boss.maxHp}</p>
-    <p class="codex-line">Drops: ${bossDropLine(boss)} · <b>${Math.round(boss.cardDropChance * 100)}%</b> Spirit Card</p>
-    ${cardStatusLine}`;
+    <p class="codex-line">Drops: ${bossDropLine(boss)}</p>`;
   return el;
 }
 
 export function renderCodex(state) {
   const p = state.player;
-  const total = Object.keys(CARDS).length; // includes the boss cards
   const beastTotal = Object.keys(CREATURE_TYPES).length + BOSS_LIST.length; // + the calamities
   const discoveredCount =
     Object.keys(CREATURE_TYPES).filter((id) => p.bestiary[id]).length +
     BOSS_LIST.filter((b) => p.bestiary[b.typeId]).length;
-  $('codex-count').textContent = `— ${discoveredCount}/${beastTotal} beasts · ${ownedCardCount(p)}/${total} cards`;
+  $('codex-count').textContent = `— ${discoveredCount}/${beastTotal} beasts`;
 
   const summaryBox = $('codex-summary');
-  const bonuses = cardBonusSummary(p);
-  summaryBox.innerHTML = bonuses.length
-    ? `<span class="codex-summary-label">Active card bonuses:</span> ${bonuses.map((b) => `<span class="card-bonus-chip">${b}</span>`).join(' ')}`
-    : `<span class="empty-note">No Spirit Cards collected yet. Slain beasts have a small chance to yield their card — always-on bonuses, no equipping.</span>`;
+  summaryBox.innerHTML = `<span class="empty-note">Slay and inspect beasts to complete their codex entries — combat stats at ${CODEX_STATS_AT} kills, drop tables at ${CODEX_DROPS_AT}, mastery at ${CODEX_MASTERY_AT}.</span>`;
 
   const body = $('codex-body');
   body.innerHTML = '';

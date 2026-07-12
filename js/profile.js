@@ -16,7 +16,6 @@
 
 import { PERSONAS, personaById, personaLabel } from './personas.js';
 import { activeBuffs, get as getTech } from './techniques.js';
-import { cardBonuses, ownedCardCount } from './cards.js';
 import { guildBuffs } from './guild.js';
 import { effectiveStats } from './progression.js';
 import { stageName, realmFor } from './progression.js';
@@ -77,17 +76,6 @@ function techniqueBuffViews(player, now) {
   });
 }
 
-function cardBuffViews(player) {
-  const { stat, meta } = cardBonuses(player);
-  const views = [];
-  for (const [s, v] of Object.entries(stat)) {
-    if (v) views.push({ source: 'Spirit Card', name: `${STAT_LABELS[s] ?? s} attunement`, detail: `+${v} ${STAT_LABELS[s] ?? s}`, remainingMs: null });
-  }
-  if (meta.qiCap) views.push({ source: 'Spirit Card', name: 'Qi reservoir', detail: `+${meta.qiCap} max Qi`, remainingMs: null });
-  if (meta.stones) views.push({ source: 'Spirit Card', name: 'Stone gathering', detail: `+${meta.stones} spirit stones / hour`, remainingMs: null });
-  return views;
-}
-
 function sectBuffViews(player) {
   const b = guildBuffs(player);
   const views = [];
@@ -99,7 +87,7 @@ function sectBuffViews(player) {
 }
 
 function allBuffViews(player, now) {
-  return [...techniqueBuffViews(player, now), ...cardBuffViews(player), ...sectBuffViews(player)];
+  return [...techniqueBuffViews(player, now), ...sectBuffViews(player)];
 }
 
 // --- "Recently Active" feed. A rotating, deterministic slice of the persona
@@ -191,7 +179,6 @@ export function createProfileProvider(state) {
         stage: stageName(p.level),
         level: p.level,
         spiritStones: p.spiritStones,
-        cards: ownedCardCount(p),
         disciples: p.guild?.members?.length ?? 0,
         rivals: rivalIds(p).length,
         stats: eff,
@@ -234,7 +221,7 @@ function el(tag, cls, html) {
 
 function renderSummary(s) {
   const box = $('profile-summary');
-  box.title = 'Your cultivation summary — effective combat stats after gear, cards, meridians, sect buffs and techniques.';
+  box.title = 'Your cultivation summary — effective combat stats after gear, meridians, sect buffs and techniques.';
   const stat = (k, label) => `<span class="prof-stat"><span class="prof-stat-label">${label}</span> ${s.stats[k]}</span>`;
   box.innerHTML = `
     <div class="prof-identity">
@@ -248,7 +235,7 @@ function renderSummary(s) {
       <span class="prof-stat"><span class="prof-stat-label">Stones</span> ${s.spiritStones} ◆</span>
     </div>
     <div class="prof-meta dim">
-      Spirit Cards: ${s.cards} · Disciples: ${s.disciples} · Rivals: ${s.rivals}
+      Disciples: ${s.disciples} · Rivals: ${s.rivals}
     </div>`;
 }
 
@@ -256,7 +243,7 @@ function renderBuffs(buffs, now) {
   const box = $('profile-buffs');
   box.innerHTML = '';
   if (buffs.length === 0) {
-    box.appendChild(el('p', 'empty-note', 'No active buffs. Channel a technique, own Spirit Cards, or recruit disciples to see them here.'));
+    box.appendChild(el('p', 'empty-note', 'No active buffs. Channel a technique or recruit disciples to see them here.'));
     return;
   }
   for (const b of buffs) {

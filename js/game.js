@@ -51,7 +51,6 @@ import { meritShopBonuses } from './meritshop.js';
 import { sfx } from './audio.js'; // fire-and-forget SFX cues (Wave 3 Feel); no-op when muted/headless
 import * as Quests from './quests.js';
 import * as Techniques from './techniques.js';
-import { rollCardDrop, acquireCard, cardBonuses, CARDS } from './cards.js';
 import { createMarketProvider, emptyMarket } from './market.js';
 import { createGuildProvider, guildBuffs } from './guild.js';
 import { createBountyProvider } from './bounties.js';
@@ -72,12 +71,12 @@ import { saveGame, loadGame, clearSave } from './save.js';
 // depends on. MAX_QI stays 120 (a full-from-empty tank now takes ~96 min).
 export const MAX_QI = 120;
 export const QI_REGEN_MS = 48_000; // 1 Qi per 48s, wall-clock (~75/hr)
-const STONE_ACCRUAL_MS = 3_600_000; // spirit-stones/hour cards accrue per real hour
+const STONE_ACCRUAL_MS = 3_600_000; // spirit-stones/hour accrued per real hour (sect disciples)
 
-// Effective Qi cap: base cap + Qi-cap bonuses from Spirit Cards (GDD §7.2) and
-// sect disciples (GDD §4.3). Always derived so the cap tracks owned sources.
+// Effective Qi cap: base cap + Qi-cap bonuses from sect disciples (GDD §4.3) and
+// the Hall of Merit's Qi Reservoir. Always derived so the cap tracks owned sources.
 export function maxQi(player) {
-  return MAX_QI + cardBonuses(player).meta.qiCap + guildBuffs(player).qiCap + meritShopBonuses(player).qiCap;
+  return MAX_QI + guildBuffs(player).qiCap + meritShopBonuses(player).qiCap;
 }
 
 // Death penalty (GDD §8.3 starting values). XP loss is progress toward the
@@ -118,7 +117,6 @@ export function createGame() {
   // Fields added after a save was first written default to empty.
   if (!state.player.learnedTechniques) state.player.learnedTechniques = [];
   if (!state.player.activeBuffs) state.player.activeBuffs = [];
-  if (!state.player.cards) state.player.cards = {};
   if (!state.player.guild) state.player.guild = { members: [] };
   if (!state.player.loadouts) state.player.loadouts = [];
   // Hall of Merit state (Wave 3 Economy): premium-shop purchases + timed Merit buffs.
@@ -153,7 +151,7 @@ export function createGame() {
     const before = state.qi;
     tickQi(state); // apply offline wall-clock regen accrued while away
     state.offlineQi = state.qi - before;
-    state.offlineStones = tickStones(state); // passive spirit-stone income (cards)
+    state.offlineStones = tickStones(state); // passive spirit-stone income (sect disciples)
   } else {
     addLog(state, 'You step out from the sect gate. The wilds await.');
   }
@@ -400,12 +398,12 @@ export function tickQi(state, now = Date.now()) {
   }
 }
 
-// Wall-clock passive income from spirit-stones/hour Spirit Cards (GDD §7.4:
+// Wall-clock passive income from spirit-stones/hour sect disciples (GDD §4.3:
 // the same last-seen-timestamp machinery as Qi regen). Accrues whole stones and
 // advances the timestamp only by the consumed portion, so fractions aren't lost.
 // Returns the number of stones granted this tick.
 export function tickStones(state, now = Date.now()) {
-  const perHour = cardBonuses(state.player).meta.stones + guildBuffs(state.player).stonesPerHour;
+  const perHour = guildBuffs(state.player).stonesPerHour;
   if (perHour <= 0) {
     state.lastStoneTick = now;
     return 0;
@@ -460,22 +458,6 @@ export function markSeen(state, typeId) {
 
 function trackKill(state, monster) {
   ensureSeen(state, monster.typeId).kills += 1;
-}
-
-// Award a dropped Spirit Card: new card, duplicate upgrade, or (beyond max) a
-// spirit-stone payout (GDD §7.2). Returns the acquire result for the banner.
-function grantCard(state, cardId) {
-  const res = acquireCard(state.player, cardId);
-  const c = CARDS[cardId];
-  if (res.kind === 'new') {
-    addLog(state, `Spirit Card obtained: ${c.creatureName} (Lv 1)!`);
-  } else if (res.kind === 'upgrade') {
-    addLog(state, `Spirit Card refined: ${c.creatureName} → Lv ${res.level}.`);
-  } else if (res.kind === 'duplicate') {
-    state.player.spiritStones += res.stones;
-    addLog(state, `Duplicate ${c.creatureName} card dissolves into ${res.stones} spirit stones.`);
-  }
-  return res;
 }
 
 function grantXp(state, xp) {
@@ -533,16 +515,15 @@ export function attack(state, monsterId) {
     // Sect disciples buff battle rewards (GDD §4.3): XP and spirit-stone gain.
     const gb = guildBuffs(p);
     const force = isForceDropsOn(); // debug toggle (§4): forces Legendary/SE/normal drops to 100%
-    let xp, stones, drop, cardId;
+    let xp, stones, drop;
     if (monster.isBoss) {
       // The Ancient Terror (GDD §9.1): hand-authored calamity rewards plus the
-      // game's first Epic/Legendary drop and the boss Spirit Card, all resolved
-      // (and the wall-clock cooldown armed) in boss.js.
+      // game's first Epic/Legendary drop, resolved (and the wall-clock cooldown
+      // armed) in boss.js.
       const br = onBossDefeated(state, monster, state.worldRng);
       xp = Math.round(br.xp * (1 + gb.xpPct));
       stones = Math.round(br.stones * (1 + gb.stonePct));
       drop = br.drop;
-      cardId = br.cardId;
     } else if (monster.isTitan) {
       // Titan depleted after the ~10-encounter chase: fixed authored reward paid
       // ONCE, a guaranteed (100%) Titan-item drop, and +20 Merit (fires exactly
@@ -551,7 +532,6 @@ export function attack(state, monsterId) {
       xp = Math.round(monster.xpReward * (1 + gb.xpPct));
       stones = Math.round(monster.stoneReward * (1 + gb.stonePct));
       drop = generateItem(state.worldRng() < 0.5 ? 'weapon' : 'robe', monster.dropLevel, 'titan', state.worldRng);
-      cardId = null; // Titans are a world-hunt encounter, not a bestiary/card creature
       awardMerit(p, 20);
       sfx('merit');
     } else {
@@ -570,9 +550,6 @@ export function attack(state, monsterId) {
       } else {
         drop = rollDrop(monster.level, state.worldRng, { forceDrop: force });
       }
-      // Spirit Card roll is independent of the loot roll (GDD §7.2) — a card
-      // never replaces an item drop.
-      cardId = rollCardDrop(monster.typeId, state.worldRng);
     }
     // World event (task R): the active calendar event's global reward multipliers.
     const ev = eventReward();
@@ -597,7 +574,6 @@ export function attack(state, monsterId) {
         addLog(state, `A ${drop.name} dropped, but your pack is full — it is lost.`);
       }
     }
-    if (cardId) result.cardDrop = grantCard(state, cardId);
 
     result.rewards = { xp, stones, itemDrop: drop };
     result.bossKill = monster.isBoss || undefined;

@@ -11,13 +11,11 @@
 
 import { stageName, realmFor, MAX_STAGE, ASCENSION_STAT_PER_TIER } from './progression.js';
 import { CREATURE_TYPES } from './actors.js';
-import { CARDS, ownedCardCount } from './cards.js';
 import { achievementProgress } from './achievements.js';
 import { setBonuses } from './sets.js';
 import { MERIDIAN_LIST } from './meridians.js';
 
 const TOTAL_CREATURES = Object.keys(CREATURE_TYPES).length;
-const TOTAL_CARDS = Object.keys(CARDS).length;
 
 // --- Derivations (read-only over the player) ---
 
@@ -120,7 +118,6 @@ export function statsSummary(state) {
       title: 'Collection',
       rows: [
         ['Beast Codex', `${speciesFaced(p)} / ${TOTAL_CREATURES} (${pct(speciesFaced(p), TOTAL_CREATURES)}%)`, 'Creature species logged in your Beast Codex.'],
-        ['Spirit Cards', `${ownedCardCount(p)} / ${TOTAL_CARDS} (${pct(ownedCardCount(p), TOTAL_CARDS)}%)`, 'Unique Spirit Cards you own, out of the full set.'],
         ['Achievements', `${ach.earned} / ${ach.total} (${pct(ach.earned, ach.total)}%)`, 'Milestones unlocked out of the full 🏆 Achievements list.'],
       ],
     },
@@ -168,7 +165,7 @@ export function initStats(state) {
     btn.type = 'button';
     btn.className = 'stats-btn';
     btn.title = 'Chronicle of Deeds — your lifetime statistics';
-    btn.textContent = '📊 Chronicle of Deeds';
+    btn.innerHTML = '<span class="gi gi-scroll" aria-hidden="true"></span> Chronicle of Deeds';
     btn.addEventListener('click', () => openStats(state));
     nav.appendChild(btn);
   }

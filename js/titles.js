@@ -10,7 +10,6 @@
 
 import { MAX_STAGE, REALMS } from './progression.js';
 import { CREATURE_TYPES } from './actors.js';
-import { CARDS, ownedCardCount } from './cards.js';
 import { achievementProgress } from './achievements.js';
 import { setBonuses } from './sets.js';
 import { MERIDIAN_NODES } from './meridians.js';
@@ -109,7 +108,6 @@ export function checkNewTitles(state) {
 }
 
 const TOTAL_CREATURES = Object.keys(CREATURE_TYPES).length;
-const TOTAL_CARDS = Object.keys(CARDS).length;
 // Derived stage thresholds so the ladder tracks the realm ladder as data, not
 // hard-coded numbers (QC=1..9, FE begins at 10, CF begins at 19 given 9/realm).
 const FOUNDATION_STAGE = REALMS[0].stages + 1; // first stage of realm #2
@@ -216,13 +214,6 @@ export const TITLES = [
     test: (p) => creaturesSeen(p) >= TOTAL_CREATURES,
   },
   {
-    id: 'card_sovereign',
-    name: 'Spirit Card Sovereign',
-    flavor: 'The full pantheon of Spirit Cards answers to you — a menagerie of bound souls.',
-    hint: 'Collect one of every Spirit Card.',
-    test: (p) => ownedCardCount(p) >= TOTAL_CARDS,
-  },
-  {
     id: 'meridian_paragon',
     name: 'Meridian Paragon',
     flavor: 'One of your eight extraordinary channels runs open to its very floor — power flows unhindered.',
@@ -321,7 +312,7 @@ export function initTitles(state) {
     btn.type = 'button';
     btn.className = 'titles-btn';
     btn.title = 'Cultivator Titles — honorifics earned along your path';
-    btn.textContent = '🏵 Titles';
+    btn.innerHTML = '<span class="gi gi-lotus" aria-hidden="true"></span> Titles';
     btn.addEventListener('click', () => openTitles(state));
     nav.appendChild(btn);
   }
@@ -346,7 +337,7 @@ function injectChip(state) {
 
   const icon = document.createElement('span');
   icon.className = 'title-chip-icon';
-  icon.textContent = '🏵';
+  icon.innerHTML = '<span class="gi gi-lotus" aria-hidden="true"></span>';
   const name = document.createElement('span');
   name.className = 'title-chip-name';
   chip.append(icon, name);

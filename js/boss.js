@@ -1,6 +1,7 @@
 // Legendary bosses — hand-authored "calamity beasts" (GDD §3 world-events stub,
-// §5, §9.1). Each is a NAMED encounter, a source of Epic/Legendary artifact
-// drops, and the drop-source of a boss Spirit Card.
+// §5, §9.1). Each is a NAMED encounter and a source of Epic/Legendary artifact
+// drops. (Spirit Cards were removed in the redesign — bosses no longer drop a
+// card.)
 //
 // Ordinary creatures are random tile spawns rolled from actors.js CREATURE_TYPES
 // against a zone's weighted spawn table. A calamity is deliberately NOT one of
@@ -29,18 +30,16 @@ export const BOSSES = {
   // Boss #1 — the endgame's first calamity, gated at Foundation Establishment 1.
   ancientTerror: {
     id: 'ancientTerror',
-    typeId: 'ancientTerror', // its own bestiary/card key; never in a zone spawn table
-    cardId: 'card_ancientTerror',
+    typeId: 'ancientTerror', // its own bestiary key; never in a zone spawn table
     name: 'Xuanming, the Ancient Terror',
     title: 'Calamity Beast',
     flavor:
       'Before the sects raised their gates, before the first mortal drew a breath of Qi, it slept beneath the Gorge. Those who woke it named it calamity. It has never learned to name them anything at all.',
     level: 15,
-    stats: { attack: 39, defense: 33, damage: 25, armor: 16 },
-    maxHp: 332,
+    stats: { attack: 37, defense: 31, damage: 24, armor: 15 },
+    maxHp: 315,
     reward: { xp: 2500, stones: 900 },
     drop: { level: 12, legendaryChance: 0.18 },
-    cardDropChance: 0.5,
     lair: { zoneId: 'cindervein', x: 9, y: 9 }, // deepest tile of the endgame zone
     lairHint: 'the deepest reach of the Gorge',
     minStage: 10, // Foundation Establishment 1 — you must cross the realm barrier
@@ -51,17 +50,15 @@ export const BOSSES = {
   emberCalamity: {
     id: 'emberCalamity',
     typeId: 'emberCalamity',
-    cardId: 'card_emberCalamity',
     name: 'Zhulong, the Ember Calamity',
     title: 'Calamity Beast',
     flavor:
       'A torch-dragon that drank the first fire and never slept again. It coils in the coal-dark heart of the Gorge, and where it breathes, even ash learns to burn. The Ashen Revenants are only what it leaves behind.',
     level: 18,
-    stats: { attack: 53, defense: 45, damage: 35, armor: 23 },
-    maxHp: 508,
+    stats: { attack: 53, defense: 42, damage: 35, armor: 21 },
+    maxHp: 450,
     reward: { xp: 5200, stones: 1800 },
     drop: { level: 15, legendaryChance: 0.3 },
-    cardDropChance: 0.5,
     lair: { zoneId: 'cindervein', x: 0, y: 9 }, // opposite band-3 corner from the Terror
     lairHint: 'the coal-dark far corner of the Gorge',
     minStage: 14, // Foundation Establishment 5
@@ -77,17 +74,15 @@ export const BOSSES = {
   tribulationSovereign: {
     id: 'tribulationSovereign',
     typeId: 'tribulationSovereign',
-    cardId: 'card_tribulationSovereign',
     name: 'Jiuxiao, the Tribulation Sovereign',
     title: 'Calamity Beast',
     flavor:
       'When a cultivator dares to form their golden core, heaven answers with lightning. Ten thousand tribulations have shattered upon this summit, and their thunder never dispersed — it pooled in the thin air, took the shape of a crowned serpent of white fire, and learned to hunger. It is the calamity that guards the last step before immortality.',
     level: 25,
-    stats: { attack: 101, defense: 57, damage: 66, armor: 29 },
-    maxHp: 780,
+    stats: { attack: 98, defense: 55, damage: 64, armor: 27 },
+    maxHp: 750,
     reward: { xp: 12000, stones: 3600 },
     drop: { level: 24, baseRarity: 'legendary', upgradeRarity: 'mythic', upgradeChance: 0.3 },
-    cardDropChance: 0.5,
     lair: { zoneId: 'thunderpeak', x: 9, y: 9 }, // storm-wracked summit, opposite the (0,0) Cloudgate portal
     lairHint: 'the storm-wracked summit of the Peak',
     minStage: 23, // Core Formation 5 — the golden-core barrier's own guardian
@@ -218,10 +213,10 @@ export function bossHints(state) {
 }
 
 // Resolve a boss kill: arm that boss's cooldown, tally the defeat, and roll its
-// hand-authored loot (a guaranteed Epic, sometimes Legendary) + its Spirit Card.
-// Returns the reward parcel (or null if the monster isn't a known boss); game.js
-// applies XP/stones/drop/card through its existing helpers so sect buffs,
-// pack-full handling, and the card banner all behave exactly as for a normal kill.
+// hand-authored loot (a guaranteed Epic, sometimes Legendary). Returns the reward
+// parcel (or null if the monster isn't a known boss); game.js applies
+// XP/stones/drop through its existing helpers so sect buffs and pack-full
+// handling behave exactly as for a normal kill.
 export function onBossDefeated(state, monster, rng, now = Date.now()) {
   const boss = BOSSES[monster.typeId];
   if (!boss) return null;
@@ -241,9 +236,7 @@ export function onBossDefeated(state, monster, rng, now = Date.now()) {
   const rarity = rng() < upgradeChance ? upgradeRarity : baseRarity;
   const drop = generateItem(slot, boss.drop.level, rarity, rng);
 
-  const cardId = rng() < boss.cardDropChance ? boss.cardId : null;
-
-  return { xp: boss.reward.xp, stones: boss.reward.stones, drop, cardId };
+  return { xp: boss.reward.xp, stones: boss.reward.stones, drop };
 }
 
 // A compact status object for the UI (map marker + tile-panel note) for the boss

@@ -20,10 +20,15 @@ import { createActor } from './actors.js';
 // gate level, per tools/balance.mjs) chips off ~1/10th — empirically ~10
 // encounters, not a hardcoded counter. Tune worldMaxHp here.
 export const TITANS = {
-  azuremist:   { zoneId: 'azuremist',   name: 'Ashen Colossus',     level: 6,  stats: { attack: 18,  defense: 22, damage: 10, armor: 14 }, worldMaxHp: 900,   dropLevel: 6,  reward: { xp: 350,   stones: 220 } },
-  cindervein:  { zoneId: 'cindervein',  name: 'Cinderforge Titan',  level: 16, stats: { attack: 55,  defense: 60, damage: 34, armor: 40 }, worldMaxHp: 5200,  dropLevel: 16, reward: { xp: 3800,  stones: 2200 } },
-  thunderpeak: { zoneId: 'thunderpeak', name: 'Stormwrought Titan', level: 26, stats: { attack: 100, defense: 95, damage: 62, armor: 58 }, worldMaxHp: 14000, dropLevel: 26, reward: { xp: 13000, stones: 5800 } },
+  azuremist:   { zoneId: 'azuremist',   name: 'Ashen Colossus',     level: 6,  stats: { attack: 18,  defense: 22, damage: 10, armor: 14 }, worldMaxHp: 1700, dropLevel: 6,  reward: { xp: 350,   stones: 220 } },
+  cindervein:  { zoneId: 'cindervein',  name: 'Cinderforge Titan',  level: 16, stats: { attack: 55,  defense: 60, damage: 34, armor: 40 }, worldMaxHp: 1800, dropLevel: 16, reward: { xp: 3800,  stones: 2200 } },
+  thunderpeak: { zoneId: 'thunderpeak', name: 'Stormwrought Titan', level: 26, stats: { attack: 100, defense: 95, damage: 62, armor: 58 }, worldMaxHp: 1900, dropLevel: 26, reward: { xp: 13000, stones: 5800 } },
 };
+// worldMaxHp is a "how many encounters" pool, NOT a power stat — the Titan's
+// danger lives in its fixed combat stats above. All three are authored so a
+// properly-geared player at the zone's gate (azuremist ~QC7 Rare L6; cindervein
+// ~FE9 Rare L18; thunderpeak ~CF9 Rare L27, each +meridians) deals ~1/10th per
+// encounter → ~10 encounters to deplete, verified via tools/balance sims.
 
 // Zone-wide predicate: is a Titan already alive anywhere on the grid?
 export function anyTitanAlive(tiles) {

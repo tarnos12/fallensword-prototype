@@ -56,7 +56,7 @@ const STEPS = [
   {
     title: 'Deeper systems',
     target: 'btn-codex',
-    body: `Three collections reward the grind: <b>📖 Beast Codex</b> tracks kills and drops Spirit Cards (always-on passive bonuses); <b>🏛 Treasure Pavilion</b> is an auction house to buy and sell gear; <b>⛩ Sect</b> lets you recruit disciples for permanent buffs. Explore them as you grow.`,
+    body: `A few systems reward the grind: <b>📖 Beast Codex</b> tracks every beast you slay and reveals their drops; <b>🏛 Treasure Pavilion</b> is an auction house to buy and sell gear; <b>⛩ Sect</b> lets you recruit disciples for permanent buffs. Explore them as you grow.`,
   },
   {
     title: 'The path is yours',

@@ -49,7 +49,7 @@ export function getCreatureCounter() {
 
 // opts (Wave 2, additive — 3-arg callers are unchanged): a stat multiplier +
 // rare-spawn flags for Legendary / Super-Elite variants. A Legendary/SE monster
-// is the SAME native creature (same typeId → cards/codex/quests untouched), just
+// is the SAME native creature (same typeId → codex/quests untouched), just
 // stat-multiplied and flagged. Each rare-spawn carries BOTH a boolean flag
 // (game.js attack() branches on it) AND a plain `tier` string (external
 // consumers like Economy's Merit hook check monster.tier), set together here.
@@ -94,7 +94,6 @@ export function createPlayer() {
     equipment: { weapon: null, robe: null },
     inventory: [],
     bestiary: {}, // { typeId: { kills, firstSeenAt } } — GDD §7.5 Stage 1 foundations
-    cards: {}, // { cardId: level } — Spirit Card collection (GDD §7.4)
     guild: { members: [] }, // hired sect disciples (persona ids) — GDD §4.3 stub
     meridians: { nodes: {} }, // opened meridian ranks (GDD §5): { nodeId: rank }; points derive from level
     loadouts: [], // saved equipment sets (GDD §6.2): [{ name, weapon, robe }]

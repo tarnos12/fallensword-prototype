@@ -23,9 +23,10 @@
 // Player-power model, validated against the independently-verified zone-3 tuning
 // (band1 ~99% on CF1 arrival with FE-endgame Rare gear; band2 ~10% arrival / ~95%
 // farmed; band3 ~24% mid / ~100% maxed): a "bruiser" stat-point spread, Rare gear
-// at an on-curve level, and — for maxed kits only — full meridians + a maxed
-// combat Spirit-Card collection. Reproducing those numbers is what tells us the
-// pipeline (not a hand-rolled formula) is driving the sim.
+// at an on-curve level, and — for maxed kits only — full meridians + a channelled
+// technique buff. (Spirit Cards were removed in the redesign; the maxed ceiling no
+// longer includes a card collection.) Reproducing those numbers is what tells us
+// the pipeline (not a hand-rolled formula) is driving the sim.
 //
 // Output is a report, never a gate: it always exits 0. PASS/WARN per row is
 // measured against the tolerance bands declared at the top of this file.
@@ -49,7 +50,6 @@ import {
 } from '../js/progression.js';
 import { resolveCombat } from '../js/combat.js';
 import { mulberry32, randomSeed } from '../js/rng.js';
-import { CARDS } from '../js/cards.js';
 import { allocateMeridian, meridianPointsFree } from '../js/meridians.js';
 import { BOSSES } from '../js/boss.js';
 import { marketValue, LISTING_TTL_MS } from '../js/market.js';
@@ -131,24 +131,6 @@ function allocatePoints(player, total, spreadName) {
   for (const r of raw) player.allocated[r.k] = r.n;
 }
 
-// The two boss Spirit Cards. A first-time boss challenger CANNOT own the card
-// that boss drops, so an "at-gate" kit must exclude these (owning them is
-// circular — you'd already have farmed the boss). Only a truly-maxed endgame
-// player who has beaten every boss holds them.
-const BOSS_CARD_IDS = new Set(Object.values(BOSSES).map((b) => b.cardId));
-
-// Max out combat-stat Spirit Cards (attack/defense/damage/armor/hp) — the power
-// of a collection. `includeBoss` chooses whether the two boss cards are counted:
-// zone-farming / boss-at-gate kits use zone cards only; the endgame maxed kit
-// uses everything.
-function grantCombatCards(player, { includeBoss = false } = {}) {
-  for (const c of Object.values(CARDS)) {
-    if (!['attack', 'defense', 'damage', 'armor', 'hp'].includes(c.bonusType)) continue;
-    if (!includeBoss && BOSS_CARD_IDS.has(c.id)) continue;
-    player.cards[c.id] = c.maxLevel;
-  }
-}
-
 // Spend every earned meridian point on combat nodes (offense-forward priority).
 function grantFullMeridians(player) {
   const order = ['governing', 'thrusting', 'conception', 'yangLinking', 'girdle'];
@@ -176,7 +158,6 @@ function grantBuff(player) {
  * @param {string} rarity    gear rarity key (common..mythic)
  * @param {object} opts      cumulative power sources:
  *   spread     — stat-point spread name (default 'bruiser')
- *   cards      — false | 'zone' (zone cards) | 'all' (incl. boss cards)
  *   meridians  — allocate all earned meridian points into combat nodes
  *   buff       — apply a representative channelled technique buff
  *
@@ -185,21 +166,20 @@ function grantBuff(player) {
  * independently-verified zone-3 tuning was measured against, and adding the
  * always-on passives there would make already-verified content look churnable
  * (band-2 arrival 4%→56%, band-3 mid 14%→74%). FARMED/MAXED and BOSS kits do
- * add meridians/cards/buff, because that content was tuned against a player who
- * has those (a boss is a prepared set-piece fought with the full kit; the game
+ * add meridians/buff, because that content was tuned against a player who has
+ * those (a boss is a prepared set-piece fought with the full kit; the game
  * itself applies technique + pill buffs to boss combat). So the harness encodes
- * each matchup against the same kit its content was verified with.
+ * each matchup against the same kit its content was verified with. (Spirit Cards
+ * were removed in the redesign — no card term is added to any kit.)
  */
 function playerAt(level, gearLevel, rarity, opts = {}) {
-  const { spread = 'bruiser', cards = false, meridians = false, buff = false } = opts;
+  const { spread = 'bruiser', meridians = false, buff = false } = opts;
   const p = createPlayer();
   p.level = level;
   allocatePoints(p, Math.max(0, (level - 1) * STAT_POINTS_PER_STAGE), spread);
   const rng = mulberry32(randomSeed());
   p.equipment.weapon = generateItem('weapon', gearLevel, rarity, rng);
   p.equipment.robe = generateItem('robe', gearLevel, rarity, rng);
-  if (cards === 'all') grantCombatCards(p, { includeBoss: true });
-  else if (cards) grantCombatCards(p, { includeBoss: false });
   if (meridians) grantFullMeridians(p);
   if (buff) grantBuff(p);
   return p;
@@ -307,7 +287,7 @@ const ZONE_MATCHUPS = [
     kits: [
       { name: 'arrival  (QC5 · Uncommon L6)', make: () => playerAt(5, 6, 'uncommon') },
       { name: 'mid      (FE1 · Rare L10)', make: () => playerAt(10, 10, 'rare') },
-      { name: 'farmed   (FE3 · Rare L12 +cards+mer)', make: () => playerAt(12, 12, 'rare', { cards: 'zone', meridians: true }) },
+      { name: 'farmed   (FE3 · Rare L12 +mer)', make: () => playerAt(12, 12, 'rare', { meridians: true }) },
     ],
     expect: [
       ['farmable', 'farmable', 'gamble'], // under-levelled arrival: Ashen Revenant is a real gamble
@@ -321,7 +301,7 @@ const ZONE_MATCHUPS = [
     kits: [
       { name: 'arrival  (CF1 · Rare L13)', make: () => playerAt(19, 13, 'rare') },
       { name: 'mid      (CF4 · Rare L20)', make: () => playerAt(22, 20, 'rare') },
-      { name: 'farmed   (CF9 · Rare L27 +cards+mer)', make: () => playerAt(27, 27, 'rare', { cards: 'zone', meridians: true }) },
+      { name: 'farmed   (CF9 · Rare L27 +mer)', make: () => playerAt(27, 27, 'rare', { meridians: true }) },
     ],
     expect: [
       ['farmable', 'wall', 'wall'], // arrival farms band 1, walled by band 2/3
@@ -366,26 +346,25 @@ function sectionZoneMatchups() {
 
 // Each boss vs an under-geared / at-gate / maxed cultivator. A calamity is a
 // prepared set-piece: the at-gate player fights it with their always-on kit
-// (meridians — auto-earned per breakthrough — plus their ZONE Spirit-Card
-// collection; NOT the boss's own card, which they can't own before beating it).
-// The maxed kit adds every card (an endgame player has cleared the bosses) and a
-// channelled technique buff. Levels/kits reproduce the boss.js / CLAUDE.md design
-// intent — validated below, no retune (see the harness header).
+// (meridians — auto-earned per breakthrough). The maxed kit adds a channelled
+// technique buff (an endgame player prepares fully). Spirit Cards were removed in
+// the redesign, so the boss stat blocks in boss.js were re-tuned against this
+// now-lower card-less ceiling to restore the crushed / gamble / reliable curve.
 const BOSS_SCENARIOS = {
   ancientTerror: [
     { name: 'under-geared (FE1 · Uncommon L9 +mer)', expect: 'crushed', make: () => playerAt(10, 9, 'uncommon', { meridians: true }) },
     { name: 'at-gate      (FE3 · Rare L12 +mer)', expect: 'gamble', make: () => playerAt(12, 12, 'rare', { meridians: true }) },
-    { name: 'maxed+buffed (FE9 · Rare L18 +allcards+mer+buff)', expect: 'reliable', make: () => playerAt(18, 18, 'rare', { cards: 'all', meridians: true, buff: true }) },
+    { name: 'maxed+buffed (FE9 · Rare L18 +mer+buff)', expect: 'reliable', make: () => playerAt(18, 18, 'rare', { meridians: true, buff: true }) },
   ],
   emberCalamity: [
     { name: 'under-geared (FE5 · Rare L14 +mer)', expect: 'crushed', make: () => playerAt(14, 14, 'rare', { meridians: true }) },
-    { name: 'at-gate      (FE7 · Rare L16 +mer+zcards)', expect: 'gamble', make: () => playerAt(16, 16, 'rare', { cards: 'zone', meridians: true }) },
-    { name: 'maxed+buffed (FE9 · Rare L18 +allcards+mer+buff)', expect: 'reliable', make: () => playerAt(18, 18, 'rare', { cards: 'all', meridians: true, buff: true }) },
+    { name: 'at-gate      (FE7 · Rare L16 +mer)', expect: 'gamble', make: () => playerAt(16, 16, 'rare', { meridians: true }) },
+    { name: 'maxed+buffed (FE9 · Rare L18 +mer+buff)', expect: 'reliable', make: () => playerAt(18, 18, 'rare', { meridians: true, buff: true }) },
   ],
   tribulationSovereign: [
     { name: 'under-geared (CF5 arrival · Rare L23 +mer)', expect: 'crushed', make: () => playerAt(23, 23, 'rare', { meridians: true }) },
-    { name: 'at-gate      (CF7 · Rare L25 +mer+zcards)', expect: 'gamble', make: () => playerAt(25, 25, 'rare', { cards: 'zone', meridians: true }) },
-    { name: 'maxed+buffed (CF9 · Rare L27 +allcards+mer+buff)', expect: 'reliable', make: () => playerAt(27, 27, 'rare', { cards: 'all', meridians: true, buff: true }) },
+    { name: 'at-gate      (CF7 · Rare L25 +mer)', expect: 'gamble', make: () => playerAt(25, 25, 'rare', { meridians: true }) },
+    { name: 'maxed+buffed (CF9 · Rare L27 +mer+buff)', expect: 'reliable', make: () => playerAt(27, 27, 'rare', { meridians: true, buff: true }) },
   ],
 };
 

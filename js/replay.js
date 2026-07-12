@@ -26,7 +26,6 @@ function snapshot(result) {
     },
     rewards: result.rewards ?? null,
     penalty: result.penalty ?? null,
-    cardDrop: result.cardDrop ?? null,
     bossKill: result.bossKill ?? false,
     at: Date.now(),
   };

@@ -94,7 +94,7 @@ if (state.loadedFromSave) {
       : 'Welcome back.'
   );
   if (state.offlineStones > 0) {
-    addLog(state, `Your Spirit Cards gathered ${state.offlineStones} spirit stones while you were away.`);
+    addLog(state, `Your sect disciples gathered ${state.offlineStones} spirit stones while you were away.`);
   }
   const om = state.offlineMarket;
   if (om && (om.sales.length || om.returns.length)) {
@@ -218,12 +218,6 @@ function onAttack(monsterId) {
     // (Only the fresh fight toasts — a replay passes no onDone, so no re-toast.)
     const drop = result.rewards?.itemDrop;
     if (drop) toast(`Loot: ${drop.name} (Lv ${drop.level})`, 'success');
-    const card = result.cardDrop;
-    if (card && (card.kind === 'new' || card.kind === 'upgrade')) {
-      toast(`Spirit Card ${card.kind === 'new' ? 'obtained' : 'refined'}: ${card.card.creatureName} (L${card.level})`, 'success');
-    } else if (card && card.kind === 'duplicate') {
-      toast(`Duplicate card → +${card.stones} spirit stones`, 'info');
-    }
     if (state.player.level > levelBefore) {
       toast(`Breakthrough! ${stageName(state.player.level)}`, 'success');
     }
@@ -465,7 +459,7 @@ setInterval(() => {
   tickPlaytime(state); // accrue active playtime for the Chronicle (task S3)
   const qiBefore = state.qi;
   tickQi(state);
-  const stonesGained = tickStones(state); // spirit-stones/hour Spirit Cards
+  const stonesGained = tickStones(state); // spirit-stones/hour (sect disciples)
   const market = tickMarket(state); // rotate Pavilion listings + resolve sales
   const buffExpired = tickBuffs(state);
   const qiChanged = state.qi !== qiBefore;

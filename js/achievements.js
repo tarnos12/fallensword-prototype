@@ -12,13 +12,11 @@
 // the other feature modules own their own surface.
 
 import { CREATURE_TYPES } from './actors.js';
-import { CARDS, ownedCardCount } from './cards.js';
 import { REALMS } from './progression.js';
 import { setBonuses } from './sets.js';
 
 const RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
 const TOTAL_CREATURES = Object.keys(CREATURE_TYPES).length;
-const TOTAL_CARDS = Object.keys(CARDS).length;
 // Global stage index at which the second realm (Foundation Establishment) begins.
 const FOUNDATION_STAGE = REALMS[0].stages + 1;
 // ...and the third realm (Core Formation) — derived from the realm ladder so it
@@ -47,11 +45,6 @@ function bestRarityIndex(player) {
     if (idx > best) best = idx;
   }
   return best;
-}
-
-function hasMaxedCard(player) {
-  const cards = player.cards ?? {};
-  return Object.entries(cards).some(([id, lv]) => CARDS[id] && lv >= CARDS[id].maxLevel);
 }
 
 // A gem is slotted into a socket of an equipped artifact (sockets.js fills an
@@ -99,10 +92,6 @@ export const ACHIEVEMENTS = [
     desc: 'Hold 1,000 spirit stones at once.', check: (p) => (p.spiritStones ?? 0) >= 1000 },
   { id: 'first_disciple', icon: '⛩', name: 'Sect Founder', tier: 'bronze',
     desc: 'Recruit your first sect disciple.', check: (p) => (p.guild?.members ?? []).length >= 1 },
-  { id: 'card_collector', icon: '🃏', name: 'Spirit Cardist', tier: 'silver',
-    desc: 'Collect one of every Spirit Card.', check: (p) => ownedCardCount(p) >= TOTAL_CARDS },
-  { id: 'card_master', icon: '✨', name: 'Card Refined', tier: 'gold',
-    desc: 'Refine any Spirit Card to its maximum level.', check: hasMaxedCard },
   { id: 'codex_scholar', icon: '📖', name: 'Codex Scholar', tier: 'gold',
     desc: 'Encounter every creature in the bestiary.', check: (p) => creaturesSeen(p) >= TOTAL_CREATURES },
   // --- Stage 3 milestones (crafting/sockets/sets/alchemy/meridians/realms/ascension) ---

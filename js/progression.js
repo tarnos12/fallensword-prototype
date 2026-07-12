@@ -62,12 +62,11 @@ export const ASCENSION_STAT_PER_TIER = 0.08;
 
 // --- Stat-modifier aggregation pipeline (GDD §7.3). Effective stats are
 // always derived, never mutated in place:
-//   base + allocated points + gear + Spirit Cards + active technique buffs.
-// Gear and cards are flat additions; technique buffs are percentage modifiers
+//   base + allocated points + gear + meridians + sockets + sets + buffs.
+// Gear/meridians/sockets/sets are flat additions; technique buffs are % modifiers
 // applied to that flat subtotal. Every future passive source plugs in here.
 
 import { activeBuffs } from './techniques.js';
-import { cardBonuses } from './cards.js';
 import { meridianBonuses } from './meridians.js';
 import { socketBonuses } from './sockets.js';
 import { setBonuses } from './sets.js';
@@ -88,15 +87,10 @@ export function effectiveStats(player, now = Date.now()) {
       else eff[stat] += val;
     }
   }
-  // Spirit Cards are the third flat source (GDD §7.3): always-on, no equipping.
-  const cardStat = cardBonuses(player).stat;
-  for (const [stat, val] of Object.entries(cardStat)) {
-    if (!val) continue;
-    if (stat === 'hp') eff.maxHp += val;
-    else eff[stat] += val;
-  }
-  // Meridian talent tree — the fourth flat source (GDD §5): permanent passives
-  // opened one point per breakthrough.
+  // Meridian talent tree — a flat passive source (GDD §5): permanent passives
+  // opened one point per breakthrough. (Spirit Cards, formerly the third flat
+  // source, were removed in the redesign — this pipeline is now
+  // base+allocated → gear → meridians → sockets → sets → %buffs → ascension.)
   const merStat = meridianBonuses(player);
   for (const [stat, val] of Object.entries(merStat)) {
     if (!val) continue;

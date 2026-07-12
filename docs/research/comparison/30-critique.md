@@ -380,22 +380,37 @@ gaps under the surface of "we agree." My independent read of each of the 8 tensi
 - **Tension 8 (positioning vs. FS2)** — both land on "differentiate, don't chase," for compatible
   reasons. Never a real fight.
 
-### Converged, but with an open scoping detail the lead must resolve (not fully settled)
-- **Tension 3 (breakthrough tribulation)** — both ADOPT/ADAPT with the transparent-RNG guardrail as a
-  hard requirement, which is real and load-bearing agreement. But the one open question — does the
-  tribulation *replace* the current silent auto-advance, or sit *on top of it* as an opt-in early-
-  attempt (Genre's proposal, which Lineage's doc doesn't explicitly confirm or deny) — is not cosmetic.
-  If it *replaces* the safe default, every player is forced through a risk event to progress at all,
-  which is a materially different (and higher-identity-risk) design than an opt-in overlay that leaves
-  the zero-risk path fully intact. Genre's doc flags this as open and awaiting Lineage's reply; as of
-  this writing Lineage's doc file hasn't been updated to answer it. **This is the one item I'd tell the
-  lead not to record as "resolved" in `40-comparison.md` without an explicit answer from Lineage** —
-  everything else in tension 3 is genuinely settled, but this detail changes the tension's actual shape.
-- **Tension 2 (prestige currency depth)** — converged on "small curated menu, flat scalar stays
-  baseline, no 3rd tier at 1.0," which is real agreement on scope. But see §3c/§3d above: the menu's own
-  example contents (a raw stat bump) sit in tension with the legibility argument that just killed C7a,
-  and the proposed currency-scaling formula presupposes tension 3 lands in a specific shape. Record the
-  headline convergence, but Phase 3 needs both loose threads tied off, not just the top-line verdict.
+### Update — both open items below were resolved by the analysts directly, post-stress-test (verified against the current doc files, not just their say-so)
+Both analysts revised their docs in place after §5.0a/§5.0b landed; I re-read both updated files to
+confirm the resolution is real, not just a status-line claim:
+- **Tension 3 replace-vs-opt-in — RESOLVED, confirmed in both files.** `10-lineage-view.md` now has an
+  explicit "Confirming to Critic3 explicitly: yes, this is the settled answer — additive/opt-in, not a
+  replacement" line. `20-genre-view.md` mirrors it. Both independently added the EV-tuning requirement
+  from §5.0b as an explicit ADOPT condition, in near-identical language. Genre also corrected an
+  ambiguity in my own §5.0b asymmetry note: I'd read the capstone-saga exemption as "these two
+  breakthroughs get no tribulation flavor at all"; Genre's revision clarifies the actual scope is
+  narrower and better than that — the optional attempt is still *offered* on saga-gating breakthroughs,
+  the exemption is only that *failure can never permanently block* saga access. So tension 3 delivers
+  more felt-tension coverage than my original asymmetry note gave it credit for — a fair correction to
+  my critique, not a dodge of it. Genuinely settled now, no residual gap.
+- **Tension 2's under-specified menu — RESOLVED, confirmed in both files.** Both analysts independently
+  dropped the flat "perma-stat-bump" menu option, restricted the menu to carrying over *existing
+  pipeline slots* (a specific Meridian node's rank, a specific learned technique, or a spend that raises
+  the existing `ASCENSION_STAT_PER_TIER` scalar itself — never a new flat line), and corrected
+  "3-cluster" to "2-cluster" (KoL + Trimps). Genre went further than I'd asked and added the actual
+  scarcity mechanic that was missing: the currency should buy an **exclusive pick per ascension cycle**
+  (not an accumulate-everything queue) — that's the concrete fix that turns "a menu" into real
+  build-vs-build opportunity cost, stronger than what I'd specified. Both now carry the verdict as
+  explicitly conditional (ADOPT/ADAPT contingent on Phase 3 building it to this shape), not a flat one.
+  Genuinely settled, not papered over — I checked the replacement mechanic itself, not just the
+  correction language.
+
+**Net effect: there is no unresolved item left for the lead to adjudicate from this pair.** Both open
+threads raised in §5.0a/§5.0b were real gaps, both got substantive fixes from the analysts themselves
+(one of which — the exclusive-pick mechanic — improves on my own suggested fix), and I independently
+re-verified the fixes against the actual doc text rather than taking "resolved" at face value. The
+lead's `40-comparison.md` can record tensions 2 and 3 as converged-with-named-conditions, not
+"unresolved, pick one."
 
 ### No genuinely irreconcilable tension found
 Unlike the brief's framing suggested going in, I did not find a tension where the two lenses produce
@@ -409,28 +424,22 @@ two-lens structure was unnecessary.
 
 ---
 
-*Status: COMPLETE. Pre-emptive flags sent directly to Analyst-Lineage and Analyst-Genre by name before
-either doc existed (see session messages) — both independently confirmed alignment with all points
-raised. Both analysts' docs reviewed in full including Genre's post-cross-talk revision. Convergence
-itself was adversarially stress-tested per the lead's and Analyst-Genre's explicit requests (§5.0a/5.0b),
-not just fact-checked. Load-bearing findings for the lead (message sent):
-(1) **tension 2's "small curated menu" is currently UNDER-SPECIFIED to the point of being unearned** —
-as scoped (perma-Meridian-node / perma-technique / "a small perma-stat bump"), it risks being Idle
-Slayer's explicitly-named counter-pattern (a bigger-multiplier tier in a costume) rather than the
-Antimatter-Dimensions-style real depth both analysts cite as the standard; it only clears that bar if
-the menu creates genuine build-vs-build opportunity cost, not a queue of "more permanent stats" everyone
-eventually buys — record the verdict as conditional, not settled;
-(2) **tension 3's "opt-in, doesn't replace the safe default" framing only preserves both the safety-net
-philosophy AND delivers the felt-tension goal if the risky path's expected value is deliberately tuned
-positive** — neither analyst named this as the actual design lever; state it explicitly as a Phase-3
-requirement rather than treating "opt-in" alone as sufficient;
-(3) the tension-3 replace-vs-opt-in mechanical detail is NOT yet resolved between the analysts and
-shouldn't be recorded as settled; relatedly, the mechanism as scoped explicitly exempts the two capstone
-sagas, so it only delivers pacing tension for generic breakthroughs, not the two most narratively-weighted
-ones;
-(4) tension 2 and tension 3 share a currency-scaling dependency (Genre's proposed currency formula
-presupposes tension 3's tribulations exist) and both touch `progression.js`/`ascension.js` concurrently
-— sequence them, don't parallelize;
-(5) the "3-cluster convergence" on prestige-currency-buys-**chosen**-unlocks is really 2-cluster
-(KoL + Trimps) — Idle Cultivation supports a different, adjacent claim (risk-gated magnitude, relevant
-to tension 3, not tension 2's shopping-list idea) — cite it precisely in `40-comparison.md`.*
+*Status: COMPLETE, all findings resolved. Pre-emptive flags sent directly to Analyst-Lineage and
+Analyst-Genre by name before either doc existed — both confirmed alignment. Both analysts' docs
+reviewed in full including post-cross-talk revisions. Convergence itself was adversarially
+stress-tested per the lead's and Analyst-Genre's explicit requests (§5.0a/§5.0b), not just
+fact-checked — this surfaced two real gaps (tension 2's menu was under-specified enough to risk being
+Idle Slayer's counter-pattern rather than real depth; tension 3's "opt-in" needed an explicit EV-tuning
+target to actually deliver its stated goal). **Both analysts fixed both gaps directly in their docs,
+and I re-verified the fixes against the actual file text** (not just their say-so) — see the "Update"
+note above §5's tension-by-tension inventory. Net state for `40-comparison.md`: no unresolved item
+remains from this pair. Record: tension 3 = ADOPT/ADAPT, additive/opt-in (confirmed, not a replacement),
+transparent-% guardrail mandatory, EV must be tuned positive as an explicit Phase-3 requirement, capstone
+sagas still offer the attempt but can never be permanently blocked by failure. Tension 2 = conditional
+ADAPT, small currency layer on top of the existing flat scalar, menu restricted to existing-pipeline
+carry-overs (no new flat stat lines), exclusive-pick-per-cycle scarcity required for it to be real
+choice rather than a queue, currency-size formula keyed off ascension-count/stages-cleared today (not
+presupposing tension 3), sequence tension 3 before tension 2 since both touch
+`progression.js`/`ascension.js` concurrently. The "3-cluster convergence" on chosen-unlocks is corrected
+to 2-cluster (KoL + Trimps) in both docs; Idle Cultivation's Soul Power is cited to tension 3 instead,
+where it actually belongs.*

@@ -183,7 +183,7 @@ export function initSalvage(state, actions) {
   btn.type = 'button';
   btn.className = 'salvage-nav-btn';
   btn.title = 'Salvage — break gear into spirit essence & mend with it';
-  btn.textContent = '♻ Salvage';
+  btn.innerHTML = '<span class="gi gi-shard" aria-hidden="true"></span> Salvage';
   // IA restructure (Wave 1): Salvage lives on the Equipment tab.
   ($('equipment-menu') ?? document.getElementById('equip-panel'))?.appendChild(btn);
 

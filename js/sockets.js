@@ -285,7 +285,7 @@ export function initSockets(state, actions) {
   btn.type = 'button';
   btn.className = 'sockets-nav-btn';
   btn.title = 'Jewelcraft — slot gems into your gear for passive bonuses';
-  btn.textContent = '💎 Jewelcraft';
+  btn.innerHTML = '<span class="gi gi-gem" aria-hidden="true"></span> Jewelcraft';
   // IA restructure (Wave 1): Jewelcraft/sockets live on the Equipment tab.
   ($('equipment-menu') ?? document.getElementById('equip-panel'))?.appendChild(btn);
 

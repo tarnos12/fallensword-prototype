@@ -160,7 +160,7 @@ export function initForge(state, actions) {
   btn.type = 'button';
   btn.className = 'forge-nav-btn';
   btn.title = 'The Forge — reforge, temper & repair your artifacts';
-  btn.textContent = '⚒ Forge';
+  btn.innerHTML = '<span class="gi gi-hammer" aria-hidden="true"></span> Forge';
   // IA restructure (Wave 1): Forge lives on the Equipment tab.
   ($('equipment-menu') ?? document.getElementById('equip-panel'))?.appendChild(btn);
 

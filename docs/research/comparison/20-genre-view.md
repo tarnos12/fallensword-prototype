@@ -83,13 +83,16 @@ residual disagreement.
 Confirmed by direct read of `js/ascension.js`: `performAscension` wipes level/stats/gear/techniques/
 meridians, keeps collections, and grants `player.ascension += 1` feeding a flat `ASCENSION_STAT_PER_TIER`
 scalar (`ascensionBonusPct`) — no other output. There is no currency, no choice, no "what did that
-ascension *buy* me" beyond a bigger number on the same axis every stat already scales on. This is the
-single most load-bearing finding across *both* research sprints: three independent genre clusters
-converge on "prestige currency buys permanent, chosen, cross-run unlocks" — Kingdom of Loathing's Karma
-(best-sourced: "perm" a skill for 100 Karma, permanently unlocked across all future runs), Idle
-Cultivation's tribulation-tier-scaled Soul Power, and Trimps' Helium→Perks. None of these three games
-know about each other's design, and none of them know about FallenSword. That's real convergent
-evidence, not a single studio's idiosyncrasy.
+ascension *buy* me" beyond a bigger number on the same axis every stat already scales on. This is a
+load-bearing finding across *both* research sprints: **two** independent genre clusters converge on
+"prestige currency buys permanent, *chosen*, cross-run unlocks" — Kingdom of Loathing's Karma
+(best-sourced: "perm" a skill for 100 Karma, permanently unlocked across all future runs) and Trimps'
+Helium→Perks (a named list of selectable permanent unlocks). **Correction per Critic3's review:** I
+initially cited Idle Cultivation's Soul Power as a third leg of this same convergence; on Critic3's
+challenge I re-checked `30-xianxia-cultivation.md` §4 and they're right — Soul Power scales
+*magnitude* by tribulations cleared, with no described *choice* of what to spend it on. That's better
+evidence for **tension 3** (risk-gated payout size), not this one. Dropping it from this citation;
+KoL + Trimps alone is sufficient sourcing for the "choice" claim, but it's two clusters, not three.
 
 **Why this specifically matters for an offline solo game and not just "more numbers":** FallenSword's
 prestige-adjacent depth (to the extent Sprint 1 found any — it found *none*, Ascension has no confirmed
@@ -99,27 +102,45 @@ we have or should fake. Our Ascension is currently the *only* long-tail systemic
 Formation 9, and today it's "the same run, but the number is 8% bigger." A currency-and-choice layer
 gives repeat-Ascension players an actual decision instead of a rubber stamp.
 
-**Concrete proposal shape (evaluative, not build-spec per the brief's Phase-2 scope):** on each
-ascension, in addition to the flat scalar, grant a small amount of a new prestige currency (e.g. "Karmic
-Insight" or similar flavor) scaled to *how far/how well* the run went (echoing Idle Cultivation's
-"tribulations survived," not just "did you hit the level cap") — spendable in the same Ascension modal
-on a short, curated list of permanent, chosen unlocks: perma-unlock a Meridian node without re-earning
-it every run, perma-learn one technique across resets, or a small perma-stat bump. This slots into the
-exact same "keeps collections" precedent `ascension.js`'s header comment already establishes — it's not
-a new category of thing, it's a new *kind* of kept thing.
+**Concrete proposal shape (evaluative, not build-spec per the brief's Phase-2 scope), REVISED after
+Critic3's stress-test (see below):** on each ascension, grant a small amount of a new prestige currency
+(e.g. "Karmic Insight") scaled to *how far/how well* the run went (echoing Idle Cultivation's
+"tribulations survived" — see the correction above; this is where that idea actually belongs) —
+spendable in the same Ascension modal. **Critic3 caught a real problem with my first-draft menu
+contents, and I'm correcting it here rather than leaving it for Phase 3 to trip over:** my original
+example list included "a small perma-stat bump" alongside "perma-unlock a Meridian node" and
+"perma-learn one technique." Critic3 is right that a raw stat bump is structurally the *same category*
+of thing the converged C7a verdict just DEFERred (a new, ascension-gated, accumulating flat addition to
+the character sheet) — and that if the menu is small enough that a patient player eventually affords
+everything on it, it's not a real choice, it's a queue, which is materially Idle Slayer's Ultra-Ascension
+"bigger-bonus-in-a-costume" counter-pattern, not the Antimatter-Dimensions-style depth I cited as the
+standard. **Corrected shape:** drop the flat-stat-bump option entirely. Keep the menu to *protecting/
+carrying over something already in the existing pipeline* (a specific Meridian node's rank, a specific
+learned technique) rather than adding new discrete flat lines, AND make the choices genuinely exclusive
+per ascension cycle (e.g., the currency earned in one run buys exactly one keep-slot, forcing "which one
+build-defining thing do I protect this cycle" rather than a slow accumulate-everything queue) — that's
+what turns it into build-vs-build opportunity cost instead of three flavors of "more permanent stuff."
+A currency-spend that raises the existing `ASCENSION_STAT_PER_TIER` scalar *itself* (rather than adding
+a parallel stat line) is a legitimate alternative shape that stays inside the existing single mental-model
+line too, if the lead wants a numeric option on the menu at all.
 
 **Effort M-L** — touches `ascension.js` and `progression.js` (both single-owner; needs lead sign-off
-per PROJECT.md), needs a `tools/balance.mjs` pass since it changes long-run power growth, and the exact
-"what's on the shopping list" content is more a Phase-3 design question than something to spec here.
+per PROJECT.md), needs a `tools/balance.mjs` pass since it changes long-run power growth. The exact menu
+contents are still a Phase-3 design question, but the *shape constraint* above (exclusive picks from
+existing-pipeline slots, no new flat lines) is not optional — it's what makes this ADOPT-able rather
+than Idle-Slayer-shaped.
 **Guardrail I volunteer myself, unprompted:** Antimatter Dimensions' lesson (a second prestige *tier*
 should change *what the player optimizes*, not just add a bigger multiplier) argues against ever adding
 a *third* stacked reset tier on top of Ascension for its own sake — that's a DEFER-2.0-shaped idea at
 best, low priority, not something I'm pushing. The currency-and-choice layer is a depth add to the
 **existing single tier**, not a new tier — an important distinction Phase 3 should keep clean.
 **UPDATE post cross-talk:** Lineage's independent ADAPT verdict landed on almost exactly this shape
-(small/curated, flat scalar stays baseline, no third tier at 1.0) — see the cross-talk summary at the
-end of this doc for the one remaining open detail (how the currency's amount scales) I've sent them
-directly.
+(small/curated, flat scalar stays baseline, no third tier at 1.0), and Lineage has since confirmed the
+run-quality-scaled currency amount directly. **UPDATE post Critic3's stress-test (`30-critique.md`
+§5.0a):** Critic3 correctly flagged the verdict as *unearned as originally scoped* — see the correction
+above. I'm revising my verdict from a flat ADOPT to **ADOPT, conditional on the exclusive-pick/
+existing-pipeline-only shape constraint** — this is now what I'm sending back to Lineage and the lead,
+not the original unconstrained menu.
 
 ### 3. Progression tension: silent XP-threshold breakthroughs (zero risk, no alchemy roll) vs. cultivation tribulations (risky %-breakthrough + pity) and decoupled reward-vs-odds
 
@@ -164,17 +185,38 @@ correctly values for a solo game with no market/guild safety net to bail out an 
 **optional early-breakthrough attempt** on top: once some threshold below full XP is reached, the player
 may *choose* to attempt an early, transparent-%, reduced-cost breakthrough for a small bonus (a Tale-of-
 Immortal-style extra Treasure) at the risk of losing some banked progress on failure (Immortal-Taoists-
-style pity: each failure raises the next attempt's shown %). This is opt-in risk for opt-in reward, not a
-mandatory RNG wall blocking a story-critical capstone quest — it should not gate anything the two named
-sagas (Heaven-Severing Blade, Stormcrown Mythic) depend on. **Effort M-L**, touches `progression.js`
-(single-owner, needs lead sign-off) and possibly `alchemy.js` (an odds-boosting pill use-case, deliberately
-choosing the `effectiveStats`-adjacent pathway, not the `pillBuffs` fight-time-only one, so the effect
-persists through the breakthrough-attempt UI rather than needing an active fight). Needs a
-`tools/balance.mjs` pass for the XP-economy rows.
+style pity: each failure raises the next attempt's shown %). This is opt-in risk for opt-in reward — the
+guaranteed safe path must never be the *only* way to clear a breakthrough that gates the two named sagas
+(Heaven-Severing Blade, Stormcrown Mythic), i.e. failure can never permanently block capstone-quest
+access. **Clarifying a spot I stated ambiguously in my first draft (Critic3 read it as a full exemption
+— see below): the optional tribulation attempt should still be *offered* on the breakthroughs that gate
+those sagas, since it's opt-in and only ever an accelerant/bonus, never a blocker** — the exemption is
+"failure can't permanently lock you out," not "these breakthroughs don't get tribulation flavor at all."
+**Effort M-L**, touches `progression.js` (single-owner, needs lead sign-off) and possibly `alchemy.js`
+(an odds-boosting pill use-case, deliberately choosing the `effectiveStats`-adjacent pathway, not the
+`pillBuffs` fight-time-only one, so the effect persists through the breakthrough-attempt UI rather than
+needing an active fight). Needs a `tools/balance.mjs` pass for the XP-economy rows.
 
-**Cross-talk status:** sent to Lineage directly — see the update at the top of this section and the
-cross-talk summary at the end of this doc; the only open piece is whether they intend tribulation as
-additive/opt-in (my proposal) or a full replacement of the auto-advance.
+**UPDATE — Lineage confirmed the additive/opt-in shape directly** (silent auto-advance stays the safe
+default; tribulation is an optional early-attempt layer with transparent %, reduced XP requirement, small
+success bonus, gentle failure cost, pity on retry; never the only path to a capstone-gating breakthrough)
+— this detail is now fully resolved between us, not just proposed.
+
+**UPDATE — Critic3's stress-test (`30-critique.md` §5.0b) found the one thing neither of us had actually
+specified, and they're right that it matters:** "opt-in" only delivers the stated goal (breakthroughs
+feel felt) if the risky path's **expected value is deliberately tuned positive** — if the bonus isn't
+worth the risk, a rational player never takes it and the whole mechanic ships as unused decoration; if
+it *is* worth it, engaged players take it essentially every time, which is fine and is actually the
+intended bite (functionally the same shape as our own "punch up for better XP" scaling — nobody's forced,
+but anyone optimizing does it), but it means my "doesn't replace the safe default" framing was doing more
+rhetorical work than it should have — the safe default stays *available* (a real hedge for a risk-averse
+player), it doesn't stay *equally attractive* to an optimizing one, and I was underselling that up until
+now. **Recording the explicit design target Critic3 named, since it wasn't stated anywhere before:**
+tribulation's expected value must be tuned high enough that an engaged player rationally chooses it over
+the safe wait (this is what actually delivers GDD §9.1's "felt" goal), while the failure cost stays gentle
+enough that early bad luck doesn't read as a trap — that's a `tools/balance.mjs`-checkable target, not a
+vibe, and it needs to be stated as a Phase-3 requirement, not left implicit in "opt-in" the way both
+analyst docs originally left it.
 
 ### 4. Respec: absent in ours; present in FS (paid) and Trimps (per-cycle)
 
@@ -322,9 +364,10 @@ their doc, we converge far more than either of us predicted going in. Resolved/c
    converged verdict: **ADAPT — add a small curated permanent-unlock currency layer on top of the
    existing flat scalar, reject a third qualitatively-different tier pre-2.0.**
 5. **Tension 3 (breakthrough tribulation)** — surprise convergence on ADOPT-with-mandatory-transparency-
-   guardrail from both lenses (see the tension-3 update above). One open detail sent to Lineage directly:
-   does tribulation *replace* the safe auto-advance, or sit on top of it as my proposed opt-in early-
-   attempt? Awaiting their answer.
+   guardrail from both lenses (see the tension-3 update above). **RESOLVED:** Lineage confirmed directly
+   that additive/opt-in (my proposal) is exactly what they had in mind — silent auto-advance stays the
+   safe default, tribulation is an optional early-attempt layer on top, never the *only* path to a
+   capstone-gating breakthrough.
 6. **Tension 4 (respec)** — converged: cost-gated from first use (not Trimps' free-per-cycle), gated by
    cultivation level, scaling with points invested — I revised my doc to match Lineage's framing exactly.
 7. **Tension 7 / C2 (mailbox expiry)** — full agreement: generous 48-72h window, not FS's 12h.
@@ -332,13 +375,39 @@ their doc, we converge far more than either of us predicted going in. Resolved/c
    above) — their pipeline-legibility argument is sound and consistent with a pillar I hold too.
 9. **C7b (Sect capacity scaling)** — full agreement: ADOPT, no stat-pipeline touch.
 
-**Genuine residual disagreement to flag to the lead (only one left, and it's narrow):** none of the
-"big" tensions actually stayed split — the closest thing to a live disagreement is the tension-3
-mechanical detail (replace-vs-additive-opt-in for tribulation), which is a scoping question we're
-actively resolving directly, not a lens conflict. I'll update this section again once Lineage replies;
-if it resolves (likely), **this analyst pair may hand the lead a fully converged set of verdicts**,
-which is itself worth flagging as a finding — the "opposite priors" framing in the brief predicted more
-friction than the evidence actually supports once both lenses are applied honestly.
+### Critic3's adversarial stress-test of the convergence itself (requested by me, not routine)
 
-Replying to Lineage and Critic3 now; will message the lead once the last open detail (tension 3's
-replace-vs-additive question) resolves.
+I explicitly asked Critic3 to pressure-test tensions 2 and 3 rather than wave the fast convergence
+through, since a two-analyst pair talking itself into agreement isn't the same as the agreement being
+*correct*. It wasn't wasted effort — Critic3 (`30-critique.md` §5.0a/§5.0b) found two real, load-bearing
+gaps that I've now folded into the tension write-ups above, not just noted here:
+
+- **Tension 2's original menu example was unearned.** My first draft's "small perma-stat bump" example
+  was structurally the same category of thing the converged C7a DEFER just rejected (a new permanent
+  flat addition), and a small menu everyone eventually affords in full isn't a real choice — it's Idle
+  Slayer's Ultra-Ascension "bigger-bonus-in-a-costume" pattern, not the Antimatter-Dimensions depth I
+  cited as the standard. **Fixed:** dropped the stat-bump option; the menu must be exclusive-per-cycle
+  picks from things already in the existing pipeline (specific Meridian ranks, specific learned
+  techniques), or a spend that raises the existing scalar itself — never a new flat line. My verdict on
+  tension 2 is now **ADOPT, conditional on that shape constraint**, not an unconditional ADOPT.
+- **Tension 3's opt-in framing didn't specify the one parameter that determines whether it works.**
+  Whether the mechanic delivers real "felt" tension depends entirely on the risky path's expected value
+  — too weak and it's unused decoration, strong enough to be worth it and engaged players take it nearly
+  every time (which is fine, and is the actual intended bite, but means "doesn't replace the safe
+  default" was doing more rhetorical work than I'd realized). **Fixed:** the tension-3 write-up above now
+  states this explicitly as a Phase-3 design requirement, not an implicit assumption. Critic3 also caught
+  that my capstone-saga exemption was ambiguously worded — clarified above that it means "failure can't
+  permanently block capstone access," not "these breakthroughs get no tribulation flavor at all."
+- Also corrected (smaller, but real): my "three independent genre clusters converge" citation for
+  tension 2's *chosen*-unlocks pattern was really two (KoL + Trimps) — Idle Cultivation's Soul Power is
+  risk-gated *magnitude*, better evidence for tension 3, and I've moved that citation accordingly.
+
+**No genuinely irreconcilable disagreement remains between the two analyst lenses** — the brief's
+"opposite priors" framing predicted more friction than the evidence actually supported once both lenses
+engaged honestly (Critic3 independently reached the same conclusion reviewing both docs). The two open
+items that *did* survive scrutiny (tension 2's shape constraint, tension 3's EV-tuning requirement) are
+both design-specification gaps for Phase 3 to close, not lens conflicts for the lead to adjudicate
+between Lineage and me — I'd frame them to the lead as "build it this way, not that way," not "these two
+verdicts are in tension."
+
+Replied to both Lineage and Critic3 confirming these fixes; messaging the lead now with the final state.

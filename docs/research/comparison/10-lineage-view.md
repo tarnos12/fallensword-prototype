@@ -75,6 +75,39 @@ don't need and it's the kind of complexity-for-its-own-sake the genre's *worst* 
 guilty of. Effort: M. Touches `ascension.js`/`progression.js` (single-owner — lead sign-off).
 **Expect disagreement** with Analyst-Genre here on how big the Karma layer should be.
 
+**Amending per Critic3's §5.0a stress-test — my own "small curated menu" verdict was under-specified.**
+Critic3 pressure-tested the converged tension-2 position and found a real gap I hadn't checked: the
+example menu contents both Analyst-Genre and I reached for ("perma-unlock a Meridian node," "perma-learn
+a technique," "a small perma-stat bump") don't actually introduce a new *axis* of choice — they're all
+things ordinary play already grants unlimited amounts of, just protected from Ascension's wipe. If the
+currency is ever sufficient to eventually buy every item on the menu, there's no real decision, just a
+queue — which is structurally **Idle Slayer's Ultra Ascension** (Sprint 2's own named counter-example:
+"a bigger-multiplier tier in a costume," not real depth), even though both Analyst-Genre and I cited
+Antimatter Dimensions as the standard we were aiming for. I accept this critique and am revising my
+verdict from a flat ADAPT to a **conditional ADAPT**: this only earns the verdict if the menu creates
+genuine build-vs-build opportunity cost — e.g., permanently keeping a specific Meridian *lineage* vs. a
+specific technique *lineage* where which one pays off depends on how you intend to play the *next* run,
+not a flat power comparison — and scarcity is real (the currency shouldn't eventually buy everything).
+If Phase 3 can't design that opportunity cost cleanly, the honest verdict is closer to REJECT-as-not-yet-
+earned than ADAPT, and a flat currency-funded stat bump specifically should be dropped from the menu
+entirely — it's the same category of thing C7a was just rejected for adding once, applied to Ascension's
+modal instead of the live-run stat sheet, so accepting it here would be inconsistent with the legibility
+argument I used to kill C7a. I'm also correcting my own citation here: I described this as a "3-cluster
+convergence" (KoL/Idle Cultivation/Trimps) in the transferable-ideas table below — Critic3 is right that
+Idle Cultivation's tribulation-tier-scaled Soul Power is risk-gated *magnitude*, not a *choice* of what to
+buy, so it's actually better evidence for tension 3 (tribulation-scaled reward) than for this
+choice-shaped claim. The real convergence on "prestige currency buys **chosen** permanent unlocks" is
+**2 clusters (KoL + Trimps)**, not 3 — correcting the table below accordingly. Last: Critic3 flagged that
+Analyst-Genre's proposed currency-scaling formula ("how well the run went, echoing Idle Cultivation's
+tribulations-survived") presupposes tension 3's tribulation mechanic exists — if Phase 3 descopes or
+reshapes tension 3, that formula has nothing to hook into. Agreed; the safer scoping is to key the
+currency's amount off something that doesn't presuppose tension 3 (ascension count itself, or total
+stages cleared that run — both already-available numbers today), and treat "scale by tribulations
+survived" as an enhancement to layer on *after* tension 3 ships, not a day-one requirement. This also
+means **tension 2 and tension 3 should sequence, not run concurrently** — both single-owner-file work
+(`progression.js`/`ascension.js`), and Phase 3 should serialize them per CLAUDE.md's shared-file
+discipline rather than have two teammates in those files at once.
+
 ### 3. Progression tension — silent XP-threshold breakthroughs + no-alchemy-roll vs. tribulation risky %-breakthrough + pity, decoupled reward/odds
 **ADOPT — with the guardrail as a hard requirement, not a suggestion.** I want to be honest that this
 is a case where my "protect the lineage" lens says *yes, take the genre idea*, because it doesn't cost
@@ -102,7 +135,28 @@ attempt layered on top: transparent %, a reduced XP requirement to attempt it ea
 success, a gentle failure cost (consumed progress/materials, never a level regression) with pity-raised
 odds on retry, and — non-negotiable — it never gates either of the two capstone sagas (Heaven-Severing
 Blade, Stormcrown Mythic) behind a roll. This preserves the safe path for players who don't want to
-gamble while giving the xianxia flavor real teeth for players who do.
+gamble while giving the xianxia flavor real teeth for players who do. **Confirming to Critic3
+explicitly: yes, this is the settled answer — additive/opt-in, not a replacement.**
+
+**Amending per Critic3's §5.0b stress-test — the one parameter neither of us named.** Critic3 is right
+that "opt-in" alone doesn't guarantee the mechanic delivers the felt-tension goal: if the early
+attempt's expected value is weak, no rational player takes it and it ships as unused decoration; if it's
+strong enough that engaged players always take it, it becomes the *de facto* default in practice even
+though the safe path technically still exists — at which point the "additive, doesn't replace the safe
+default" framing is doing less work than it sounds like it is. I accept this as a real gap in my verdict,
+not a nitpick. Adding the explicit design target Critic3 names, as a condition of the ADOPT rather than a
+footnote: **tribulation's expected value must be tuned positive enough that an engaged player rationally
+chooses it over the silent wait (or the mechanic is dead UI nobody uses and the xianxia-authenticity
+argument I made above is unearned), while the failure cost stays gentle enough that unlucky early
+attempts don't feel like a trap (preserving "never send someone back a full level").** This is a
+balance-harness-checkable target (Phase 3 can simulate EV across a range of early-attempt odds/bonus
+sizes before committing to specific numbers), not an unresolvable tension — but it needs to be stated as
+a requirement, not left implicit in "opt-in." I'm also noting Critic3's separate, correct observation
+that because the two capstone sagas are (rightly) exempted from the roll, this mechanic makes the ~24
+generic stage-ups feel more eventful while leaving the two moments the narrative already weighted most
+heavily mechanically untouched — that's an acceptable scope limit, not a flaw, but Phase 3 should know
+"does tribulation deliver GDD §9.1's pacing goal" has different answers for generic vs. capstone
+breakthroughs.
 
 Decoupling breakthrough *reward* from breakthrough *odds* (Tale of Immortal) — **ADAPT**: gives pills a
 second job (odds-boosting) beyond flat buffs, but mind the landmine Sprint 2 flagged: `pillBuffs`
@@ -193,7 +247,7 @@ Effort: N/A — a framing decision for the lead/author, zero code.
 | **C4** Split Rivals into Favored/Marked | **ADOPT** | Cosmetic-only, makes GDD's ally/enemy framing literally true at zero mechanical cost | S | `profile.js` |
 | **C5** Per-zone Codex completion reward | **ADOPT** | Reinforces existing retention loop, no new system | S | `ui.js` codex section |
 | **C6** Longevity-flavored achievements | **ADOPT** | Harmless, single-player-safe analog to leaderboard medals | S | `achievements.js` |
-| **C7a** Small capped Sect combat-stat specialty | **REJECT (for now)** | Our stat pipeline already has six flat sources (base→trained→gear→cards→meridians→gems→sets) before ascension's %/scalar layer. A seventh, even small, is the kind of gradual pipeline bloat that erodes "you can read every number" — each addition makes the char-sheet tooltip breakdown one line longer and one line harder to hold in your head. Sect's current economy-only scope (per Sprint 1's own gap analysis, "arguably correct restraint") is a deliberate, already-good choice, not an oversight. Revisit only if real playtest data says Sect specifically feels irrelevant, not on genre-parity grounds alone. | — | `guild.js`/`progression.js` |
+| **C7a** Small capped Sect combat-stat specialty | **REJECT (for now)** | Our stat pipeline already has seven flat sources (base→trained→gear→cards→meridians→gems→sets — corrected per Critic3, I'd undercounted to six) before ascension's %/scalar layer. An eighth, even small, is the kind of gradual pipeline bloat that erodes "you can read every number" — each addition makes the char-sheet tooltip breakdown one line longer and one line harder to hold in your head. Sect's current economy-only scope (per Sprint 1's own gap analysis, "arguably correct restraint") is a deliberate, already-good choice, not an oversight. Revisit only if real playtest data says Sect specifically feels irrelevant, not on genre-parity grounds alone. | — | `guild.js`/`progression.js` |
 | **C7b** Sect capacity scaling with ascension/achievements | **ADOPT** | Contained entirely to `guild.js`, gives a long-term Sect goal without touching the stat pipeline | M | `guild.js` |
 
 ---
@@ -202,7 +256,7 @@ Effort: N/A — a framing decision for the lead/author, zero code.
 
 | Idea | Source | Verdict | Reasoning | Effort |
 |---|---|---|---|---|
-| Prestige currency → permanent chosen unlocks | KoL / Idle Cultivation / Trimps (3-cluster convergence) | **ADAPT** | Covered at tension 2 — yes, but small/curated, not an open tree; keep the flat scalar as baseline | M |
+| Prestige currency → permanent **chosen** unlocks | KoL / Trimps (**2-cluster convergence — corrected per Critic3's §3a**; Idle Cultivation is risk-gated *magnitude*, not a choice of what to buy, and is better evidence for tension 3) | **ADAPT, conditional** | Covered at tension 2 — see the amended reasoning there: only earns ADOPT/ADAPT if the menu creates genuine build-vs-build opportunity cost, not a queue of "more permanent stats" (Critic3's §5.0a) | M |
 | 2nd prestige tier changes *what matters* | Antimatter Dimensions | **REJECT for 1.0** | Covered at tension 2 — right lesson, wrong scope for a pre-2.0 offline game; revisit only alongside real network-provider work | — |
 | Risky %-breakthrough + pity | Immortal Taoists | **ADOPT (guardrail mandatory)** | Covered at tension 3 | M |
 | Decouple breakthrough reward from odds | Tale of Immortal | **ADAPT** | Covered at tension 3 | M |
@@ -239,31 +293,46 @@ adjudicate:
    independently updated from a softer ADAPT to full ADOPT once framed as "making our own pillar real,"
    not FS-fidelity for its own sake. ADAPT: cap passive stone accrual only (48-72h), leave Qi alone
    (already capped via `maxQi()`). Zero residual disagreement.
-2. **Ascension/Karma depth (tension 2).** Converged: ADAPT — a short curated unlock list (3-5 items,
-   spendable in the existing Ascension modal), flat `+8%/tier` scalar stays the baseline, REJECT a
-   third qualitatively-different prestige tier (Antimatter Dimensions' lesson) as right-idea-wrong-scope
-   for 1.0. Analyst-Genre's refinement, which I accept: scale the unlock-currency's *amount* by how well
-   the run went (echoing Idle Cultivation's tribulation-tier-scaled payout) rather than a flat grant per
-   ascension — gives "how you played" a second dimension without a second currency. One shared verdict,
-   no split.
+2. **Ascension/Karma depth (tension 2).** Converged on scope: ADAPT — a short curated unlock list,
+   flat `+8%/tier` scalar stays the baseline, REJECT a third qualitatively-different prestige tier
+   (Antimatter Dimensions' lesson) as right-idea-wrong-scope for 1.0. **Updated after Critic3's §5.0a
+   stress-test (see the amended tension-2 section above):** the convergence on *scope* holds, but the
+   convergence on *content* did not survive scrutiny as originally stated — the example menu items both
+   Analyst-Genre and I reached for don't clear the "real depth" bar we were both citing Antimatter
+   Dimensions for for. Verdict revised to **conditional ADAPT**: earns the verdict only if the menu
+   creates genuine build-vs-build opportunity cost (not a queue of permanent stats everyone eventually
+   buys), and the currency-scaling formula should key off something available today (ascension count,
+   stages cleared) rather than presupposing tension 3's tribulations, with "scale by tribulations
+   survived" layered on after tension 3 ships. Also corrected the "3-cluster convergence" citation to
+   2 clusters (KoL + Trimps) per Critic3's §3a.
 3. **Sect combat-stat (C7a) + mailbox (C2).** Mailbox: full agreement, 48-72h generous window, not FS's
-   harsh 12h. Sect combat-stat: Analyst-Genre conceded to my pipeline-legibility argument (six flat
-   sources already; a seventh needs a stated playtest problem, not genre-parity alone) and moved from
-   ADOPT to DEFER. C7b (Sect capacity scaling, no stat-pipeline touch) stays ADOPT on both sides.
+   harsh 12h. Sect combat-stat: Analyst-Genre conceded to my pipeline-legibility argument (seven flat
+   sources already, corrected count per Critic3's §3b; an eighth needs a stated playtest problem, not
+   genre-parity alone) and moved from ADOPT to DEFER. C7b (Sect capacity scaling, no stat-pipeline touch)
+   stays ADOPT on both sides.
 4. **Tension 3 (tribulation), raised by Analyst-Genre as the one open mechanism question.** Confirmed:
    tribulation is additive/opt-in on top of the existing silent auto-advance, not a replacement — see the
-   "Shape, confirmed with Analyst-Genre" note above. Converged.
+   "Shape, confirmed with Analyst-Genre" note above. **Amended after Critic3's §5.0b stress-test:** added
+   the explicit EV-tuning requirement (the optional path's expected value must be tuned positive enough
+   that engaged players actually take it, or the felt-tension goal goes unmet regardless of how gentle
+   the failure cost is) as a condition of the ADOPT, not an implicit assumption behind "opt-in."
 
-**Net finding for the lead:** the two opposite-prior lenses converged on every tension in this brief,
-including the ones both of us expected to be the sharpest fights (the Qi gate, Ascension depth). The
-residual "disagreement" that existed was mostly imprecision in how big/small each side's initial ADAPT
-scope was, not an actual pillar-vs-genre conflict — once we pinned down concrete mechanisms (regen rate
-vs. gate removal; curated list vs. open tree; capped mailbox window vs. FS's literal 12h), there was
-nothing left to split on. This is itself a signal worth weighing in `40-comparison.md`: it suggests the
-brief's 8 tensions are less "identity vs. genre" fault lines than "how much/how gently" calibration
-questions, which both lenses land on similarly once specifics are named.
+**Net finding for the lead:** the two opposite-prior lenses converged on scope for every tension in this
+brief, including the ones both of us expected to be the sharpest fights (the Qi gate, Ascension depth).
+Critic3's adversarial stress-test of that convergence (§5.0a/§5.0b of `30-critique.md`) found that two of
+the convergences were sound on scope but under-specified on mechanism — tension 2's menu needed a
+real-choice test, tension 3's opt-in framing needed an explicit EV-tuning target — and I've amended both
+verdicts above to incorporate that rather than record the original, softer convergence as final. That's
+the adversarial process working as intended, not a retreat: the *headline* verdicts (ADAPT on tension 2's
+scope, ADOPT on tension 3 with the transparency guardrail) hold; what changed is that both now carry a
+named, checkable condition instead of an implicit one. This is itself a signal worth weighing in
+`40-comparison.md`: the brief's 8 tensions turned out to be "how much/how gently, and exactly what
+mechanism" calibration questions rather than identity-vs-genre fault lines — but calibration questions
+still need their parameters named explicitly, not left as "we agree" without the specifics that make the
+agreement actually work.
 
 ---
 
-*Status: complete. Converged with Analyst-Genre on all flagged items (see above); Critic3 confirmed no
-accuracy/overclaim issues. Lead notified.*
+*Status: complete. Converged with Analyst-Genre on all flagged items; both tension-2 and tension-3
+verdicts subsequently amended per Critic3's adversarial stress-test (`30-critique.md` §5.0a/§5.0b/§3a/
+§3b/§3d) — see the inline amendments above. Lead notified of the final state.*

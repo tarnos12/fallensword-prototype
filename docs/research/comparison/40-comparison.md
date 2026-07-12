@@ -41,13 +41,20 @@ run quality (echoing Idle Cultivation).
 - **Phase 3 must therefore design the menu contents as the deliverable**, not hand-wave "3–5 curated
   unlocks." If it can't produce a menu with real trade-offs, the honest call is REJECT-for-1.0, not a
   costumed scalar.
+- **Concrete shape proposed by the analysts (a starting point, not a mandate):** make the unlocks
+  **exclusive-per-cycle picks** — e.g. this ascension you may permanently secure *one* specific
+  Meridian rank OR *one* specific technique from content **already in the existing pipeline**, or spend
+  on the existing `+8%` scalar itself — **never a new flat stat line** (a new flat line is exactly the
+  C7a bloat this sprint just DEFERred). Exclusivity per cycle is what manufactures the opportunity cost.
 - **Reject at 1.0 scope:** a *third*, qualitatively-different prestige tier (AD's full lesson) —
   right idea, wrong scope pre-2.0. Both lenses agree.
 
 **T3 · Breakthrough tribulation (risky %-advance with pity) — ADOPT-CONDITIONAL.**
 Resolved shape (both analysts, final): **additive/opt-in on top of** the existing silent XP-threshold
-auto-advance — never replacing it, never gating the two capstone sagas (Heaven-Severing Blade,
-Stormcrown Mythic). Mandatory guardrail (non-negotiable, both lenses independently insisted):
+auto-advance — never replacing it. The optional tribulation is available on *any* breakthrough
+including the two capstone sagas (Heaven-Severing Blade, Stormcrown Mythic), but a failed roll can
+never **permanently block** capstone access — the safe auto-advance path always remains as the floor.
+Mandatory guardrail (non-negotiable, both lenses independently insisted):
 **the success % is always shown** — transparent RNG, like our displayed hit-chance, never a hidden
 roll. Does not touch `combat.js`.
 - **The test it must pass (Critic3):** an opt-in risk only creates the GDD §9.1 "breakthroughs feel

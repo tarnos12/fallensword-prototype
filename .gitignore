@@ -3,6 +3,10 @@
 # never commit them. (The tracked .claude/launch.json is unaffected.)
 .claude/worktrees/
 
+# Transient in-repo scratch dir for session test scripts, screenshots and the
+# bundled artifact build — never committed.
+scratchpad/
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db

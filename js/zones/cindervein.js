@@ -49,12 +49,12 @@ export const CREATURES = [
 export const ZONE = {
   id: 'cindervein',
   name: 'Cindervein Gorge',
-  size: 11, // odd so the maze grid tiles cleanly (cells on even coords)
+  size: 31, // a larger, deeper gorge than the vale
   realm: 'Foundation Establishment',
   start: { x: 0, y: 0 },
   startLabel: 'Gorge Outpost',
-  braid: 0.4, // a tighter, more winding maze than the starter vale
-  keepOpen: [{ x: 10, y: 10 }, { x: 0, y: 10 }], // the two calamity lairs stay reachable through the maze
+  roomMax: 7,
+  keepOpen: [{ x: 28, y: 28 }, { x: 2, y: 28 }], // the two calamity lairs each anchor a room
   // Flat roster across the whole gorge: hound common, golem frequent, revenant a
   // hard armoured wall.
   spawns: [
@@ -63,10 +63,10 @@ export const ZONE = {
     { type: 'ashenRevenant', weight: 2 },
   ],
   portals: [
-    // Road home to Azuremist — arrive ON its outbound portal (10,8). Always open.
-    { x: 0, y: 6, to: 'azuremist', entryX: 10, entryY: 8, minStage: 0 },
+    // Road home to Azuremist — arrive ON its outbound portal (18,18). Always open.
+    { x: 0, y: 18, to: 'azuremist', entryX: 18, entryY: 18, minStage: 0 },
     // Ascend to Stormcrown Peak (Core Formation tier). Gated at CF1 (level 19).
-    // Arrival lands ON the Peak's return portal (0,6).
-    { x: 10, y: 2, to: 'thunderpeak', entryX: 0, entryY: 6, minStage: 19 },
+    // Arrival lands ON the Peak's return portal (0,26).
+    { x: 28, y: 4, to: 'thunderpeak', entryX: 0, entryY: 26, minStage: 19 },
   ],
 };

@@ -69,13 +69,26 @@ export function renderPlayerBar(state) {
   barWidth('bar-qi', pct(qi, qiMax));
 }
 
+// The map is a CAMERA onto a large zone: we render only a fixed VIEW×VIEW window
+// of tiles centred on the player (clamped to the map edges), so the gameplay
+// area stays one size no matter how big the zone is, and the world scrolls under
+// the player as they walk. Odd so the player sits dead-centre.
+const MAP_VIEW = 11;
+
 export function renderMap(state, onTileClick) {
   const grid = $('map-grid');
   const size = state.map.size;
+  const view = Math.min(size, MAP_VIEW);
+  const half = Math.floor(view / 2);
+  // Top-left of the window: keep the player centred, clamped so we never scroll
+  // past the map edge.
+  const camX = Math.max(0, Math.min(state.pos.x - half, size - view));
+  const camY = Math.max(0, Math.min(state.pos.y - half, size - view));
   grid.innerHTML = '';
-  grid.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
+  grid.style.gridTemplateColumns = `repeat(${view}, 1fr)`;
+  for (let vy = 0; vy < view; vy++) {
+    for (let vx = 0; vx < view; vx++) {
+      const x = camX + vx, y = camY + vy;
       const tile = state.map.at(x, y);
       const el = document.createElement('button');
       el.type = 'button';

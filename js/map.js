@@ -27,26 +27,22 @@ export function moveCost(from, to) {
   return dx + dy === 2 ? 2 : 1;
 }
 
-// --- Dungeon layout (a real maze) -------------------------------------------
-// No danger scaling any more: each zone spawns its OWN fixed roster everywhere
-// (js/zones/<id>.js `spawns` is one flat weighted table). What makes a zone
-// interesting is its LAYOUT — a proper maze, carved with a randomized
-// depth-first "recursive backtracker" over a cell grid (passages 1 tile wide,
-// walls 1 tile wide between them), then BRAIDED (dead-ends reopened) so it reads
-// as winding corridors with loops instead of a filled square. The haven,
-// portals and boss lairs are guaranteed open and reachable.
-//
-// Cells sit on EVEN coordinates; the odd tiles between them are the walls the
-// carver knocks through. Zone `size` should be ODD (e.g. 11) so the far edge
-// lands on a cell, not a wasted wall strip.
+// --- Dungeon layout (rooms & corridors) -------------------------------------
+// No danger scaling: each zone spawns its OWN fixed roster everywhere (js/zones/
+// <id>.js `spawns` is one flat weighted table). What varies a zone is its
+// LAYOUT and SIZE — a classic roguelike dungeon of open ROOMS joined by
+// corridors, carved out of solid rock. Zones are large (see each zone's `size`,
+// from ~15 up toward 100); the player only ever sees a fixed camera window
+// (ui.js renderMap), so a big zone reads as a world to explore. The haven,
+// every portal and every boss lair sits in its own room and is guaranteed
+// reachable from the start.
 
 const DIRS4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-const CELL_STEPS = [[2, 0], [-2, 0], [0, 2], [0, -2]]; // neighbour cells (2 apart)
 const cellKey = (x, y) => `${x},${y}`;
 const inBounds = (x, y, size) => x >= 0 && y >= 0 && x < size && y < size;
 
-// Tiles that must never be a wall: the haven, every portal, and any zone
-// landmark (boss lairs, declared per-zone in `keepOpen`).
+// Tiles that must anchor a room (never sealed): the haven, every portal, and any
+// zone landmark (boss lairs, declared per-zone in `keepOpen`).
 function forcedOpenSet(zone) {
   const s = new Set([cellKey(zone.start.x, zone.start.y)]);
   for (const p of zone.portals || []) s.add(cellKey(p.x, p.y));
@@ -54,73 +50,94 @@ function forcedOpenSet(zone) {
   return s;
 }
 
-// Carve an L-shaped corridor from (x,y) toward the haven, clearing walls — so a
-// forced-open landmark (a boss lair on an odd coord, say) always connects to
-// the maze without leaving it stranded.
+// Carve an L-shaped corridor from (x,y) toward the haven, clearing walls — a
+// safety tether so a forced landmark can never end up stranded.
 function carveToStart(wall, x, y, start, size) {
   let cx = x, cy = y;
   while (cx !== start.x) { cx += cx < start.x ? 1 : -1; wall[cy * size + cx] = false; }
   while (cy !== start.y) { cy += cy < start.y ? 1 : -1; wall[cy * size + cx] = false; }
 }
 
-function shuffle(arr, rng) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
+function carveRect(wall, size, x0, y0, w, h) {
+  for (let y = y0; y < y0 + h; y++) {
+    for (let x = x0; x < x0 + w; x++) {
+      if (inBounds(x, y, size)) wall[y * size + x] = false;
+    }
   }
-  return arr;
+}
+
+// Carve an L-shaped (optionally 2-wide) corridor between two room centres.
+function carveCorridor(wall, size, ax, ay, bx, by, rng, wide) {
+  const open = (x, y) => {
+    if (inBounds(x, y, size)) wall[y * size + x] = false;
+    if (wide && inBounds(x + 1, y, size)) wall[y * size + (x + 1)] = false;
+  };
+  let x = ax, y = ay;
+  if (rng() < 0.5) {
+    while (x !== bx) { x += x < bx ? 1 : -1; open(x, y); }
+    while (y !== by) { y += y < by ? 1 : -1; open(x, y); }
+  } else {
+    while (y !== by) { y += y < by ? 1 : -1; open(x, y); }
+    while (x !== bx) { x += x < bx ? 1 : -1; open(x, y); }
+  }
+}
+
+function makeRoom(size, cx, cy, minR, maxR, rng) {
+  const w = minR + Math.floor(rng() * (maxR - minR + 1));
+  const h = minR + Math.floor(rng() * (maxR - minR + 1));
+  const x0 = Math.max(0, Math.min(cx - (w >> 1), size - w));
+  const y0 = Math.max(0, Math.min(cy - (h >> 1), size - h));
+  return { x0, y0, w, h, cx: x0 + (w >> 1), cy: y0 + (h >> 1) };
+}
+
+function overlaps(a, b) {
+  return a.x0 < b.x0 + b.w + 1 && a.x0 + a.w + 1 > b.x0 && a.y0 < b.y0 + b.h + 1 && a.y0 + a.h + 1 > b.y0;
 }
 
 function generateLayout(zone, rng) {
   const size = zone.size;
-  const braid = zone.braid ?? 0.45; // fraction of dead-ends reopened into loops
+  const minR = zone.roomMin ?? 3;
+  const maxR = zone.roomMax ?? 6;
   const idx = (x, y) => y * size + x;
-  const wall = new Array(size * size).fill(true); // start solid; carve passages
+  const wall = new Array(size * size).fill(true); // solid rock; carve rooms + halls
+  const rooms = [];
 
-  // 1) Recursive backtracker from the (even) haven cell.
-  const ox = zone.start.x - (zone.start.x % 2);
-  const oy = zone.start.y - (zone.start.y % 2);
-  wall[idx(ox, oy)] = false;
-  const visited = new Set([cellKey(ox, oy)]);
-  const stack = [[ox, oy]];
-  while (stack.length) {
-    const [cx, cy] = stack[stack.length - 1];
-    let advanced = false;
-    for (const [dx, dy] of shuffle(CELL_STEPS.slice(), rng)) {
-      const nx = cx + dx, ny = cy + dy;
-      if (!inBounds(nx, ny, size) || visited.has(cellKey(nx, ny))) continue;
-      wall[idx(cx + dx / 2, cy + dy / 2)] = false; // knock the wall between
-      wall[idx(nx, ny)] = false;
-      visited.add(cellKey(nx, ny));
-      stack.push([nx, ny]);
-      advanced = true;
-      break;
-    }
-    if (!advanced) stack.pop();
-  }
-
-  // 2) Braid: reopen a fraction of dead-end cells so the maze has loops and
-  //    alternate routes (less claustrophobic than a perfect maze).
-  for (let y = 0; y < size; y += 2) {
-    for (let x = 0; x < size; x += 2) {
-      if (wall[idx(x, y)]) continue;
-      const openN = CELL_STEPS.filter(([dx, dy]) => inBounds(x + dx, y + dy, size) && !wall[idx(x + dx / 2, y + dy / 2)]);
-      if (openN.length <= 1 && rng() < braid) {
-        const walled = CELL_STEPS.filter(([dx, dy]) => inBounds(x + dx, y + dy, size) && wall[idx(x + dx / 2, y + dy / 2)]);
-        if (walled.length) {
-          const [dx, dy] = walled[Math.floor(rng() * walled.length)];
-          wall[idx(x + dx / 2, y + dy / 2)] = false;
-          wall[idx(x + dx, y + dy)] = false;
-        }
-      }
-    }
-  }
-
-  // 3) Force landmarks open and connect any stranded one back to the haven.
-  const forced = forcedOpenSet(zone);
-  for (const fk of forced) {
+  // 1) Anchor a room on every forced landmark first, chained together so they
+  //    always connect, and pin the exact landmark tile open.
+  for (const fk of forcedOpenSet(zone)) {
     const [fx, fy] = fk.split(',').map(Number);
+    const room = makeRoom(size, fx, fy, minR, maxR, rng);
+    carveRect(wall, size, room.x0, room.y0, room.w, room.h);
     wall[idx(fx, fy)] = false;
+    if (rooms.length) carveCorridor(wall, size, room.cx, room.cy, rooms[rooms.length - 1].cx, rooms[rooms.length - 1].cy, rng, true);
+    rooms.push(room);
+  }
+
+  // 2) Scatter random rooms, each joined by a corridor to the nearest existing
+  //    room (so the dungeon stays one connected whole as it grows).
+  const target = Math.max(rooms.length + 4, Math.round((size * size) / (zone.roomSpacing ?? 22)));
+  let attempts = 0;
+  while (rooms.length < target && attempts < target * 10) {
+    attempts++;
+    const w = minR + Math.floor(rng() * (maxR - minR + 1));
+    const h = minR + Math.floor(rng() * (maxR - minR + 1));
+    const x0 = Math.floor(rng() * (size - w));
+    const y0 = Math.floor(rng() * (size - h));
+    const room = { x0, y0, w, h, cx: x0 + (w >> 1), cy: y0 + (h >> 1) };
+    if (rooms.some((r) => overlaps(room, r))) continue;
+    carveRect(wall, size, x0, y0, w, h);
+    let nearest = rooms[0], nd = Infinity;
+    for (const r of rooms) {
+      const d = Math.abs(r.cx - room.cx) + Math.abs(r.cy - room.cy);
+      if (d < nd) { nd = d; nearest = r; }
+    }
+    carveCorridor(wall, size, room.cx, room.cy, nearest.cx, nearest.cy, rng, rng() < 0.35);
+    rooms.push(room);
+  }
+
+  // 3) Tether every forced landmark straight to the haven as a hard guarantee.
+  for (const fk of forcedOpenSet(zone)) {
+    const [fx, fy] = fk.split(',').map(Number);
     carveToStart(wall, fx, fy, zone.start, size);
   }
 
@@ -160,7 +177,10 @@ function populateTile(zone, tile, rng, hasSE = false, hasTitan = false) {
   tile.monsters = [];
   tile.clearedAt = null;
   if (tile.wall || tile.isStart) return; // walls + the haven never spawn creatures
-  const count = Math.floor(rng() * 4); // 0-3 creatures
+  // Sparse population — most tiles are empty ground to cross; big zones would be
+  // wall-to-wall monsters otherwise. Weighted 0-3, averaging ~0.6 per open tile.
+  const roll = rng();
+  const count = roll < 0.55 ? 0 : roll < 0.85 ? 1 : roll < 0.97 ? 2 : 3;
   for (let i = 0; i < count; i++) {
     // Each ordinary slot independently rolls Legendary (uncapped, ~5%).
     const legendary = rollLegendary(rng);

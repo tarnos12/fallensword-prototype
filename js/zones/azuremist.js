@@ -55,11 +55,11 @@ export const CREATURES = [
 export const ZONE = {
   id: 'azuremist',
   name: 'Azuremist Vale',
-  size: 11, // odd so the maze grid tiles cleanly (cells on even coords)
+  size: 21, // a modest starter zone; the camera shows an 11×11 window of it
   realm: 'Qi Condensation',
   start: { x: 0, y: 0 },
   startLabel: 'Sect Gate',
-  braid: 0.55, // the most open, forgiving maze — a starter vale with many loops
+  roomMax: 6,
   // Flat roster: any floor tile can spawn any of the vale's beasts — the wolf is
   // common, the serpent frequent, and the warded rogue a rare hard wall.
   spawns: [
@@ -69,7 +69,7 @@ export const ZONE = {
   ],
   portals: [
     // Deep in the vale; gated at QC4. Arrival lands ON Cindervein's return
-    // portal (0,6) — you step through and stand on the way back.
-    { x: 10, y: 8, to: 'cindervein', entryX: 0, entryY: 6, minStage: 4 },
+    // portal (0,18) — you step through and stand on the way back.
+    { x: 18, y: 18, to: 'cindervein', entryX: 0, entryY: 18, minStage: 4 },
   ],
 };

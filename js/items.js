@@ -5,12 +5,6 @@
 // always respected. Random drops only reach Rare — Epic/Legendary/Mythic are
 // reserved for hand-authored items (quests, bosses) per §6.1.
 
-// Gem sockets (task U). sockets.js owns the gem system; items.js only asks it
-// two pure questions -- how many sockets a rarity rolls, and mint a loose gem --
-// so socketed gear + gem drops ride the existing loot/save pipelines. Imports
-// are one-directional (sockets.js imports nothing back), so there is no cycle.
-import { socketCountFor, generateGem, GEM_DROP_CHANCE } from './sockets.js';
-
 export const RARITIES = {
   common: { key: 'common', label: 'Common', mult: 1.0, attributes: 1, weight: 70, maxDurability: 30, repairPerPoint: 0.5, sellMult: 2 },
   uncommon: { key: 'uncommon', label: 'Uncommon', mult: 1.35, attributes: 2, weight: 25, maxDurability: 45, repairPerPoint: 1, sellMult: 5 },
@@ -34,8 +28,8 @@ export const DROP_CHANCE = 0.22;
 // The full equippable slot list (item variety pass). weapon + robe were the
 // only Stage-1 slots; helm/gloves/boots/ring/amulet round the paper-doll out
 // to 7. Exported so every module that needs to enumerate "every slot"
-// (progression.js effectiveStats, sets.js, sockets.js, and the UI's gear
-// grids) has one canonical order instead of re-typing the list.
+// (progression.js effectiveStats, sets.js, and the UI's gear grids) has one
+// canonical order instead of re-typing the list.
 export const EQUIPMENT_SLOTS = ['weapon', 'robe', 'helm', 'gloves', 'boots', 'ring', 'amulet'];
 
 // Effective pack size: the base plus the Hall of Merit "Pack Expansion" upgrade
@@ -269,7 +263,6 @@ export function generateItem(slot, level, rarityKey, rng) {
     const [stat, value] = rollAttr(attr, level, rarity.mult, rng);
     bonuses[stat] = (bonuses[stat] ?? 0) + value;
   }
-  const socketN = socketCountFor(rarity.key); // Rare+ gear rolls empty sockets (task U)
   return {
     id: `item-${++itemCounter}`,
     slot,
@@ -279,7 +272,6 @@ export function generateItem(slot, level, rarityKey, rng) {
     bonuses,
     durability: rarity.maxDurability,
     maxDurability: rarity.maxDurability,
-    ...(socketN ? { sockets: new Array(socketN).fill(null) } : {}),
     ...(template.setId ? { setId: template.setId } : {}), // gear set membership (task B)
   };
 }
@@ -335,7 +327,6 @@ export function mintNamedItem(namedId) {
   const spec = NAMED_ITEMS[namedId];
   if (!spec) return null;
   const rarity = RARITIES[spec.rarity];
-  const socketN = socketCountFor(spec.rarity); // named epics/legendaries carry sockets too (task U)
   return {
     id: `item-${++itemCounter}`,
     slot: spec.slot,
@@ -346,7 +337,6 @@ export function mintNamedItem(namedId) {
     durability: rarity.maxDurability,
     maxDurability: rarity.maxDurability,
     named: namedId,
-    ...(socketN ? { sockets: new Array(socketN).fill(null) } : {}),
   };
 }
 
@@ -373,10 +363,6 @@ export function rollDrop(creatureLevel, rng, opts = {}) {
   // opts.forceDrop (debug 100%-drop toggle, §4) skips the drop gate. Backward-
   // compatible: every existing caller omits opts and keeps the DROP_CHANCE gate.
   if (!opts.forceDrop && rng() >= DROP_CHANCE) return null;
-  // A slice of drops are loose gems instead of gear (task U) — rolled after the
-  // drop gate so gems are a fraction of loot, not an extra roll. Gems ride the
-  // same inventory/save/sell path as gear (they carry id/name/rarity/level).
-  if (rng() < GEM_DROP_CHANCE) return generateGem(creatureLevel, rng);
   const slot = pickDropSlot(rng);
   return generateItem(slot, creatureLevel, null, rng);
 }
@@ -475,7 +461,7 @@ export function unequipItem(player, slot) {
 // kept OUT of effectiveStats (qiRegen is not a combat stat); its ONLY consumer
 // is game.js:tickQi. Returns 0 for all current gear (no item carries a qiRegen
 // bonus yet), so it is a no-op until Titan items land. Mirrors the *Bonuses()
-// convention of sockets.js/sets.js. Broken gear grants nothing.
+// convention of sets.js. Broken gear grants nothing.
 export function gearQiRegenBonus(player) {
   let bonus = 0;
   for (const item of Object.values(player.equipment ?? {})) {

@@ -43,14 +43,6 @@ function meridiansOpened(p) {
 function meridianRankTotal(p) {
   return Object.values(p.meridians?.nodes ?? {}).reduce((a, b) => a + (b || 0), 0);
 }
-// Gems slotted into equipped gear — item.sockets[] holds gem objects (sockets.js).
-function gemsSocketed(p) {
-  let n = 0;
-  for (const item of Object.values(p.equipment ?? {})) {
-    if (item && Array.isArray(item.sockets)) n += item.sockets.filter(Boolean).length;
-  }
-  return n;
-}
 // Whether a full gear set is worn — setBonuses() returns all-zero when none (sets.js).
 function setActive(p) {
   return Object.values(setBonuses(p)).some((v) => v > 0);
@@ -137,7 +129,6 @@ export function statsSummary(state) {
         ['Ascension tier', asc > 0 ? `${asc} (+${Math.round(asc * ASCENSION_STAT_PER_TIER * 100)}% stats)` : '0', 'Prestige resets performed; each grants a permanent stat bonus to every future run.'],
         ['Meridians opened', `${meridiansOpened(p)} / ${MERIDIAN_LIST.length}`, 'Meridian nodes with at least one rank spent, out of all eight.'],
         ['Meridian ranks channelled', `${meridianRankTotal(p)}`, 'Total ranks spent across all meridian nodes.'],
-        ['Gems socketed', `${gemsSocketed(p)}`, 'Gems currently slotted into your equipped gear.'],
         ['Gear set bonus', setActive(p) ? 'Active' : 'Inactive', 'Whether a complete matched gear set is currently worn for its bonus.'],
       ],
     },

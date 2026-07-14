@@ -16,7 +16,6 @@ import { activeBuffs } from './techniques.js'; // char-sheet buff breakdown (Ski
 import { BOSS_LIST, bossAtLair, bossLairStatus } from './boss.js';
 import { beginFx, turnFx, endFx } from './combatfx.js';
 import { compareRows, setCompareContext } from './itemcompare.js'; // task Y: hover deltas
-import { isGem, gemIcon, gemStatText, socketLine, socketBonuses } from './sockets.js'; // task U: gems + sockets
 import { setLine, setSetsContext, setBonuses } from './sets.js'; // task B: gear set progress in tooltip
 import { salvageYield, materialName } from './salvage.js'; // task M: salvage yield for the menu entry
 
@@ -342,13 +341,12 @@ export function renderCharSheet(state, onAllocate) {
   box.innerHTML = '';
 
   // True per-source stat breakdown mirroring progression.js effectiveStats
-  // exactly: base + trained + gear + meridians + gems + set (flat), then
+  // exactly: base + trained + gear + meridians + set (flat), then
   // technique/pill percentage buffs, then the global ascension scalar. Each flat
   // source is summed the same way (and honours the same broken-gear rule) as
   // effectiveStats, so the displayed parts recombine to the effective total.
   const now = Date.now();
   const merStat = meridianBonuses(p);
-  const socketStat = socketBonuses(p);
   const setStat = setBonuses(p);
   // Real gear sum (same iteration + broken-gear skip as effectiveStats).
   const gearSum = { attack: 0, defense: 0, damage: 0, armor: 0, hp: 0 };
@@ -364,17 +362,16 @@ export function renderCharSheet(state, onAllocate) {
   for (const stat of ALLOC_STATS) {
     const effKey = stat === 'hp' ? 'maxHp' : stat;
     // Flat parts. `stat` is already the bonus-map key ('hp' for Max HP), matching
-    // gearSum/merStat/socketStat/setStat which all key HP as 'hp'.
+    // gearSum/merStat/setStat which all key HP as 'hp'.
     const base = p.base[effKey];
     const trained = p.allocated[stat] * POINT_VALUE[stat];
     const gearPart = gearSum[stat] ?? 0;
     const merPart = merStat[stat] ?? 0;
-    const gemPart = socketStat[stat] ?? 0;
     const setPart = setStat[stat] ?? 0;
 
     // Flat subtotal, then the percentage buffs and ascension scalar applied with
     // the SAME rounding as effectiveStats (per-buff round; final ascension round).
-    let val = base + trained + gearPart + merPart + gemPart + setPart;
+    let val = base + trained + gearPart + merPart + setPart;
     const flatSubtotal = val;
     for (const buff of buffs) {
       const pct = buff.effect[stat];
@@ -388,9 +385,8 @@ export function renderCharSheet(state, onAllocate) {
     // only when non-zero to keep it compact.
     const flatBits = [`${base} base`, `${trained} trained`, `${gearPart} gear`];
     if (merPart) flatBits.push(`${merPart} meridians`);
-    if (gemPart) flatBits.push(`${gemPart} gems`);
     if (setPart) flatBits.push(`${setPart} set`);
-    const hasFlatExtra = merPart || gemPart || setPart;
+    const hasFlatExtra = merPart || setPart;
     // Show the running subtotal only when there's more math to follow (buffs or
     // ascension) so the reader can trace flat → buffed → final.
     const showSubtotal = (buffedVal !== flatSubtotal) || asc > 0;
@@ -439,15 +435,13 @@ export function renderCharSheet(state, onAllocate) {
 // equipped item to unequip; right-click for sell/destroy options. ---
 
 // SLOT_ICONS covers all 7 equippable slots (weapon/robe + the item-variety
-// pass: helm/gloves/boots/ring/amulet) plus 'gem' as a fallback glyph for
-// loose gems shown outside their own gemIcon() path.
+// pass: helm/gloves/boots/ring/amulet).
 const SLOT_ICONS = { weapon: '⚔️', robe: '👘', helm: '🪖', gloves: '🧤', boots: '🥾', ring: '💍', amulet: '📿' };
 const SLOT_LABELS = { weapon: 'Weapon', robe: 'Robe', helm: 'Helm', gloves: 'Gloves', boots: 'Boots', ring: 'Ring', amulet: 'Amulet' };
 
-// Glyph for a dropped item — gem face or the slot icon — so loot reads at a
-// glance in the combat-result banner instead of being a bare name.
+// Glyph for a dropped item — the slot icon — so loot reads at a glance in the
+// combat-result banner instead of being a bare name.
 function dropIcon(item) {
-  if (isGem(item)) return gemIcon(item);
   return SLOT_ICONS[item.slot] ?? '◈';
 }
 
@@ -458,20 +452,6 @@ function dropIcon(item) {
 // bleeds into the plain .tt-name/.tt-line tooltips used elsewhere (char-sheet
 // stat breakdowns, empty-slot hints).
 function itemTooltip(item, hint) {
-  // Gems (task U) are their own item kind — no slot/durability/compare; show the
-  // single flat bonus they grant when socketed.
-  if (isGem(item)) {
-    return `<div class="itemtip rarity-${item.rarity}">
-      <div class="itemtip-head">
-        <span class="itemtip-name rarity-${item.rarity}">${gemIcon(item)} ${item.name}</span>
-        <span class="itemtip-rarity rarity-${item.rarity}">${RARITIES[item.rarity].label}</span>
-      </div>
-      <div class="itemtip-meta">Lv ${item.level} gem</div>
-      <div class="itemtip-row">${gemStatText(item)} when socketed</div>
-      <div class="itemtip-row itemtip-sell"><span>Sell value</span><span>${sellValue(item)} ◆</span></div>
-      <div class="tt-hint">${hint}</div>
-    </div>`;
-  }
   const stats = Object.entries(item.bonuses)
     .map(([s, v]) => `<div class="itemtip-stat"><span class="itemtip-stat-label">${STAT_LABELS[s] ?? s}</span><span class="itemtip-stat-val">+${v}</span></div>`)
     .join('');
@@ -488,7 +468,6 @@ function itemTooltip(item, hint) {
     <div class="itemtip-meta">Lv ${item.level} · ${SLOT_LABELS[item.slot] ?? item.slot}</div>
     <div class="itemtip-stats">${stats}</div>
     ${dur}
-    ${socketLine(item)}
     ${setLine(item)}
     <div class="itemtip-row itemtip-sell"><span>Sell value</span><span>${sellValue(item)} ◆</span></div>
     ${compareRows(item)}
@@ -509,16 +488,10 @@ function makeItemSlot(item, { label, onClick, onMenu, tooltipHint }) {
   el.className = 'item-slot';
   if (item) {
     el.classList.add(`icon-${item.rarity}`);
-    if (isGem(item)) {
-      // Gems (task U): no slot glyph / durability bar — just the gem icon.
-      el.classList.add('is-gem');
-      el.innerHTML = `<span class="item-icon">${gemIcon(item)}</span>`;
-    } else {
-      const pct = Math.round((item.durability / item.maxDurability) * 100);
-      const durClass = item.durability <= 0 ? 'broken' : pct < 25 ? 'low' : '';
-      el.innerHTML = `<span class="item-icon">${SLOT_ICONS[item.slot]}</span>
-        <span class="dur-bar"><span class="dur-fill ${durClass}" style="width:${Math.max(4, pct)}%"></span></span>`;
-    }
+    const pct = Math.round((item.durability / item.maxDurability) * 100);
+    const durClass = item.durability <= 0 ? 'broken' : pct < 25 ? 'low' : '';
+    el.innerHTML = `<span class="item-icon">${SLOT_ICONS[item.slot]}</span>
+      <span class="dur-bar"><span class="dur-fill ${durClass}" style="width:${Math.max(4, pct)}%"></span></span>`;
     attachTooltip(el, () => itemTooltip(item, tooltipHint));
     el.addEventListener('click', () => {
       hideTip();
@@ -579,30 +552,6 @@ export function renderGear(state, { onEquip, onUnequip, onSell, onDestroy, onSal
     const item = p.inventory[i];
     if (!item) {
       inv.appendChild(makeItemSlot(null, {}));
-      continue;
-    }
-    if (isGem(item)) {
-      // Gems (task U) don't equip — they socket into gear via the 💎 Jewelcraft
-      // modal (sockets.js). Click is a no-op; right-click still sells/destroys.
-      inv.appendChild(
-        makeItemSlot(item, {
-          tooltipHint: atGate ? 'Socket in 💎 Jewelcraft · Right-click: sell / destroy' : 'Socket in 💎 Jewelcraft · Right-click: destroy (sell at Sect Gate)',
-          onClick: () => {},
-          onMenu: (e) =>
-            openMenu(e, [
-              { label: `Sell for ${sellValue(item)} ◆`, title: atGate ? `Sell this gem to the Sect Gate for ${sellValue(item)} spirit stones ◆.` : 'Selling is only available at the Sect Gate.', disabled: !atGate, onClick: () => onSell(item.id) },
-              salvageEntry(item, onSalvage),
-              {
-                label: 'Destroy',
-                title: 'Permanently delete this gem — no reward.',
-                danger: true,
-                onClick: () => {
-                  if (confirm(`Destroy ${item.name}? This is permanent.`)) onDestroy(item.id);
-                },
-              },
-            ]),
-        })
-      );
       continue;
     }
     inv.appendChild(

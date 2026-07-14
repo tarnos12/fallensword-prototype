@@ -169,7 +169,7 @@ export function buyMeritUpgrade(player, upgradeId, now = Date.now()) {
 }
 
 // The one add-line this module contributes to other systems' aggregates —
-// mirrors sets.js/sockets.js's `*Bonuses(player)` convention. Consumed (at
+// mirrors sets.js's `*Bonuses(player)` convention. Consumed (at
 // integration) by game.js's maxQi()/tickQi()/death-XP-loss calc, items.js's
 // effectiveInventorySize(), loadouts.js's effectiveMaxLoadouts(), and
 // market.js's effectiveMaxPlayerListings().

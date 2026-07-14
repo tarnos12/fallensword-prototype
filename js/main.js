@@ -72,8 +72,6 @@ import { allocateMeridian } from './meridians.js';
 import { initSkillTree, renderSkillTree } from './skilltree.js';
 import { initMeritShop, renderMeritShop, buyMeritUpgrade, pickDaoHeart } from './meritshop.js';
 import { initDebugBar, isDevMode } from './debug.js';
-import { initSockets, slotGem, unslotGem } from './sockets.js';
-import { INVENTORY_SIZE } from './items.js';
 import { toast, initToasts } from './toast.js';
 import { stageName } from './progression.js';
 import { recordFight, initReplay, getLastFight, setReplayVisible } from './replay.js';
@@ -433,18 +431,6 @@ initMeritShop(state, {
     p.merit = (p.merit ?? 0) + gained;
     toast(`Traded ${spend} spirit stones for ${gained} ✧ Merit.`, 'success');
     saveGame(state); renderMeritShop(state); renderAll();
-  },
-});
-initSockets(state, {
-  slot: (itemId, i, gemId) => {
-    const r = slotGem(state.player, itemId, i, gemId);
-    if (r.ok) { saveGame(state); renderAll(); toast(`Socketed ${r.gem.name}.`, 'success'); }
-    else if (r.reason) toast(r.reason, 'error');
-  },
-  unslot: (itemId, i) => {
-    const r = unslotGem(state.player, itemId, i, INVENTORY_SIZE);
-    if (r.ok) { saveGame(state); renderAll(); toast(`Removed ${r.gem.name}.`); }
-    else if (r.reason) toast(r.reason, 'error');
   },
 });
 initToasts(); // unified toast/feedback host (task X)

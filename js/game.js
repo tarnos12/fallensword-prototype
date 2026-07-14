@@ -750,7 +750,7 @@ export function destroyItem(state, itemId) {
 }
 
 // --- Salvage / materials (task M, GDD §5). Thin wrappers over salvage.js pure
-// helpers: break a PACK artifact (or loose gem) into spirit essence, and spend
+// helpers: break a PACK artifact into spirit essence, and spend
 // essence to mend an owned artifact's durability anywhere. Each persists on
 // success. Equipped items can't be salvaged (guarded — only pack items). ---
 

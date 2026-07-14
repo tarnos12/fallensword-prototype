@@ -6,7 +6,7 @@
 // a future 3rd slot / larger sets just add higher thresholds with no code change.
 //
 // setBonuses(player) is the ONE add-line into progression.js effectiveStats —
-// the sixth flat source, after gear / Spirit Cards / meridians / sockets. Like
+// a flat stat source, after gear / meridians. Like
 // those, it honours the broken-gear rule: a broken piece doesn't count toward
 // its set (it grants nothing while broken).
 //

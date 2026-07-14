@@ -5,7 +5,6 @@
 import { ZONES, rehydrateZone } from './map.js';
 import { getItemCounter, setItemCounter } from './items.js';
 import { getCreatureCounter, setCreatureCounter } from './actors.js';
-import { getGemCounter, setGemCounter } from './sockets.js'; // task U: unique gem ids
 
 const KEY = 'fallen-immortal-save';
 const VERSION = 2;
@@ -26,7 +25,7 @@ export function saveGame(state) {
     quests: state.quests,
     zones,
     log: state.log,
-    counters: { item: getItemCounter(), creature: getCreatureCounter(), gem: getGemCounter() },
+    counters: { item: getItemCounter(), creature: getCreatureCounter() },
   };
   try {
     localStorage.setItem(KEY, JSON.stringify(blob));
@@ -61,7 +60,6 @@ export function loadGame() {
 
   setItemCounter(blob.counters?.item ?? 1000);
   setCreatureCounter(blob.counters?.creature ?? 1000);
-  setGemCounter(blob.counters?.gem ?? 0); // task U (additive; old saves default to 0)
 
   const zones = {};
   for (const [id, tiles] of Object.entries(zonesData)) {

@@ -1,5 +1,5 @@
 // Salvage / materials (board task M, GDD §5). Right-click "Salvage" breaks an
-// unwanted artifact (or loose gem) down into stackable **spirit essence** — one
+// unwanted artifact down into stackable **spirit essence** — one
 // essence tier per rarity. Essence is then an interim sink: spend it to **mend
 // gear** (restore durability from anywhere) at a cost that feels cheaper than the
 // stone-based forge/haven repair, until full crafting consumes materials.
@@ -41,7 +41,6 @@ export function materialName(materialId) {
 
 // PURE: an item's salvage yield — its rarity picks the essence tier, and the
 // amount scales with level + rarity depth (a richer piece breaks into more).
-// Works uniformly for gear AND loose gems (both carry rarity + level).
 export function salvageYield(item) {
   const rarity = RARITIES[item?.rarity];
   const mat = MATERIALS[item?.rarity];
@@ -72,7 +71,7 @@ let overlay = null;
 let salvage = null; // { state, actions }
 
 // Every artifact the player holds that has durability to mend — worn first, then
-// pack — tagged with where it sits. Gems (no durability) are skipped for mending.
+// pack — tagged with where it sits.
 function damageableItems(player) {
   const worn = Object.entries(player.equipment)
     .filter(([, it]) => it && it.maxDurability != null)
@@ -113,7 +112,7 @@ function mendRow(entry) {
       <span class="dim">Lv ${item.level} ${RARITIES[item.rarity].label} ${item.slot}</span></div>
     <div class="salvage-dur ${broken ? 'broken' : 'dim'}">durability ${item.durability}/${item.maxDurability}</div>
     <div class="salvage-where dim">${where}</div>`;
-  info.title = `${item.name} — durability ${item.durability}/${item.maxDurability}${broken ? ' (broken — sockets/gems disabled until mended)' : ''}.`;
+  info.title = `${item.name} — durability ${item.durability}/${item.maxDurability}${broken ? ' (broken — grants no bonuses until mended)' : ''}.`;
 
   const actionsWrap = document.createElement('div');
   actionsWrap.className = 'salvage-actions';

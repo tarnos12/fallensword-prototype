@@ -62,13 +62,12 @@ export const ASCENSION_STAT_PER_TIER = 0.08;
 
 // --- Stat-modifier aggregation pipeline (GDD §7.3). Effective stats are
 // always derived, never mutated in place:
-//   base + allocated points + gear + meridians + sockets + sets + buffs.
-// Gear/meridians/sockets/sets are flat additions; technique buffs are % modifiers
+//   base + allocated points + gear + meridians + sets + buffs.
+// Gear/meridians/sets are flat additions; technique buffs are % modifiers
 // applied to that flat subtotal. Every future passive source plugs in here.
 
 import { activeBuffs } from './techniques.js';
 import { meridianBonuses } from './meridians.js';
-import { socketBonuses } from './sockets.js';
 import { setBonuses } from './sets.js';
 
 export function effectiveStats(player, now = Date.now()) {
@@ -90,22 +89,14 @@ export function effectiveStats(player, now = Date.now()) {
   // Meridian talent tree — a flat passive source (GDD §5): permanent passives
   // opened one point per breakthrough. (Spirit Cards, formerly the third flat
   // source, were removed in the redesign — this pipeline is now
-  // base+allocated → gear → meridians → sockets → sets → %buffs → ascension.)
+  // base+allocated → gear → meridians → sets → %buffs → ascension.)
   const merStat = meridianBonuses(player);
   for (const [stat, val] of Object.entries(merStat)) {
     if (!val) continue;
     if (stat === 'hp') eff.maxHp += val;
     else eff[stat] += val;
   }
-  // Socketed gems — the fifth flat source (task U): gems slotted into equipped
-  // gear. Broken gear's gems lie dormant (socketBonuses honours the durability rule).
-  const socketStat = socketBonuses(player);
-  for (const [stat, val] of Object.entries(socketStat)) {
-    if (!val) continue;
-    if (stat === 'hp') eff.maxHp += val;
-    else eff[stat] += val;
-  }
-  // Gear set bonuses — the sixth flat source (task B): a completed weapon+robe set
+  // Gear set bonuses — a completed weapon+robe set
   // grants a bonus on top of the pieces. Honours the broken-gear rule (a broken
   // piece doesn't count toward its set).
   const setStat = setBonuses(player);
@@ -114,7 +105,7 @@ export function effectiveStats(player, now = Date.now()) {
     if (stat === 'hp') eff.maxHp += val;
     else eff[stat] += val;
   }
-  // Technique buffs are percentage modifiers on the flat (gear+card+meridian+socket+set) subtotal.
+  // Technique buffs are percentage modifiers on the flat (gear+meridian+set) subtotal.
   for (const buff of activeBuffs(player, now)) {
     for (const [stat, pct] of Object.entries(buff.effect)) {
       const key = stat === 'hp' ? 'maxHp' : stat;

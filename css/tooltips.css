@@ -187,11 +187,10 @@
   font-weight: 600;
 }
 
-/* Nested set / socket / compare blocks (markup owned by sets.js, sockets.js,
-   itemcompare.js) — give them the same top-divider rhythm as itemtip rows so
-   the card reads as one cohesive panel rather than stacked fragments. */
+/* Nested set / compare blocks (markup owned by sets.js, itemcompare.js) — give
+   them the same top-divider rhythm as itemtip rows so the card reads as one
+   cohesive panel rather than stacked fragments. */
 #tooltip .itemtip .set-head,
-#tooltip .itemtip .socket-head,
 #tooltip .itemtip .cmp-head {
   margin-top: 7px;
   padding-top: 6px;

@@ -48,15 +48,6 @@ function bestRarityIndex(player) {
   return best;
 }
 
-// A gem is slotted into a socket of an equipped artifact (sockets.js fills an
-// item.sockets[] slot with a gem object; empty sockets are null/undefined).
-function hasFilledSocket(player) {
-  for (const item of Object.values(player.equipment ?? {})) {
-    if (item && Array.isArray(item.sockets) && item.sockets.some(Boolean)) return true;
-  }
-  return false;
-}
-
 // A full gear set is equipped (setBonuses returns all-zero stats otherwise).
 function hasCompleteSet(player) {
   return Object.values(setBonuses(player)).some((v) => v > 0);
@@ -95,15 +86,13 @@ export const ACHIEVEMENTS = [
     desc: 'Recruit your first sect disciple.', check: (p) => (p.guild?.members ?? []).length >= 1 },
   { id: 'codex_scholar', icon: '📖', name: 'Codex Scholar', tier: 'gold',
     desc: 'Encounter every creature in the bestiary.', check: (p) => creaturesSeen(p) >= TOTAL_CREATURES },
-  // --- Stage 3 milestones (crafting/sockets/sets/alchemy/meridians/realms/ascension) ---
+  // --- Stage 3 milestones (crafting/sets/alchemy/meridians/realms/ascension) ---
   { id: 'core_formation', icon: '🟡', name: 'Golden Core', tier: 'gold',
     desc: 'Condense your golden core — reach Core Formation.', check: (p) => p.level >= CORE_FORMATION_STAGE },
   { id: 'meridian_open', icon: '☯', name: 'Meridians Opened', tier: 'bronze',
     desc: 'Open your first extraordinary meridian.', check: (p) => bestMeridianRank(p) >= 1 },
   { id: 'meridian_master', icon: '🌌', name: 'Meridian Perfected', tier: 'gold',
     desc: 'Refine a single meridian to its highest rank.', check: (p) => bestMeridianRank(p) >= 5 },
-  { id: 'gem_socketed', icon: '💠', name: 'Jeweled Artifact', tier: 'silver',
-    desc: 'Slot a spirit gem into an equipped artifact.', check: hasFilledSocket },
   { id: 'set_complete', icon: '🎽', name: 'Matched Regalia', tier: 'gold',
     desc: 'Wear a complete matched gear set.', check: hasCompleteSet },
   { id: 'alchemist', icon: '🜁', name: 'Pill Refiner', tier: 'bronze',

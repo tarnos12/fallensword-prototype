@@ -19,7 +19,6 @@ import { MERIDIAN_NODES } from './meridians.js';
 import { SETS, equippedSetCount, setBonusAtCount } from './sets.js';
 import { activeBuffs, get as getTech } from './techniques.js';
 import { maxQi } from './game.js';
-import { isGem, gemIcon } from './sockets.js';
 import { RARITIES, sellValue, effectiveInventorySize } from './items.js';
 import { attachItemTooltip } from './ui.js';
 
@@ -81,18 +80,13 @@ function itemCell(item, { onClick, onMenu, hint, extraClass } = {}) {
   if (extraClass) btn.classList.add(extraClass);
   if (item) {
     btn.classList.add(`icon-${item.rarity}`);
-    if (isGem(item)) {
-      btn.classList.add('is-gem');
-      btn.innerHTML = `<span class="item-icon">${gemIcon(item)}</span>`;
-    } else {
-      let dur = '';
-      if (item.durability != null && item.maxDurability) {
-        const pct = Math.round((item.durability / item.maxDurability) * 100);
-        const durClass = item.durability <= 0 ? 'broken' : pct < 25 ? 'low' : '';
-        dur = `<span class="dur-bar"><span class="dur-fill ${durClass}" style="width:${Math.max(4, pct)}%"></span></span>`;
-      }
-      btn.innerHTML = `<span class="item-icon">${SLOT_ICONS[item.slot] ?? '◈'}</span>${dur}`;
+    let dur = '';
+    if (item.durability != null && item.maxDurability) {
+      const pct = Math.round((item.durability / item.maxDurability) * 100);
+      const durClass = item.durability <= 0 ? 'broken' : pct < 25 ? 'low' : '';
+      dur = `<span class="dur-bar"><span class="dur-fill ${durClass}" style="width:${Math.max(4, pct)}%"></span></span>`;
     }
+    btn.innerHTML = `<span class="item-icon">${SLOT_ICONS[item.slot] ?? '◈'}</span>${dur}`;
     attachItemTooltip(btn, item, hint); // rich RPG hover card (not a plain title)
     if (onClick) btn.addEventListener('click', () => { closeContextMenu(); onClick(); });
     if (onMenu) btn.addEventListener('contextmenu', onMenu);
@@ -314,8 +308,7 @@ function renderEquipmentDoll(player, actions) {
 // --- Right column: Inventory (5-wide pack grid) ----------------------------
 
 // The pack as a 5-wide grid of framed cells up to capacity. Click a gear item to
-// equip; right-click for a sell / destroy menu. Gems can't be equipped (they
-// socket via Jewelcraft) so their click is a no-op; the menu still works.
+// equip; right-click for a sell / destroy menu.
 function renderInventoryGrid(player, actions) {
   const box = $('profile-backpack');
   if (!box) return;
@@ -331,15 +324,14 @@ function renderInventoryGrid(player, actions) {
       grid.appendChild(itemCell(null));
       continue;
     }
-    const gem = isGem(item);
     const menu = (e) => openContextMenu(e, [
-      gem ? null : { label: 'Equip', title: `Equip this ${item.slot} into your gear.`, onClick: () => actions.onEquip(item.id) },
+      { label: 'Equip', title: `Equip this ${item.slot} into your gear.`, onClick: () => actions.onEquip(item.id) },
       { label: `Sell for ${sellValue(item)} ◆`, title: 'Sell this item for spirit stones (only at a Sect haven).', onClick: () => actions.onSell(item.id) },
       { label: 'Destroy', title: 'Permanently delete this item — no reward.', danger: true, onClick: () => { if (confirm(`Destroy ${item.name}? This is permanent.`)) actions.onDestroy(item.id); } },
     ]);
     grid.appendChild(itemCell(item, {
-      hint: gem ? 'Socket via 💎 Jewelcraft · Right-click: sell / destroy' : 'Click: equip · Right-click: sell / destroy',
-      onClick: gem ? null : () => actions.onEquip(item.id),
+      hint: 'Click: equip · Right-click: sell / destroy',
+      onClick: () => actions.onEquip(item.id),
       onMenu: menu,
     }));
   }

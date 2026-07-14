@@ -19,7 +19,7 @@
 //    must never double-show. Touch interactions are ignored (rich tooltips and
 //    native titles are mouse/keyboard affordances).
 
-const SHOW_DELAY = 80; // ms — near-instant, but not flickery when sweeping the cursor
+const SHOW_DELAY = 60; // ms — near-instant, but not flickery when sweeping the cursor
 const GAP = 8; // px between target and tooltip
 
 // Anything matching this is off-limits: the rich item tooltip's territory

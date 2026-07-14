@@ -39,3 +39,93 @@
 @media (prefers-reduced-motion: reduce) {
   #app-tooltip.visible { animation: none; }
 }
+
+/* --- Rich item tooltip (js/ui.js itemTooltip) ------------------------------
+   The hover card for a piece of gear or a gem, rendered inside the shared
+   #tooltip element (#tooltip's own dark-card/gold-border/shadow chrome lives
+   in style.css and is left alone here — this file only lays out the CONTENT).
+   Scoped entirely under #tooltip .itemtip so none of it leaks onto the
+   plain .tt-name/.tt-line tooltips #tooltip also renders elsewhere (char-sheet
+   stat breakdowns, empty-slot hints, quest text).
+   Token-driven off the ink-and-cinnabar custom properties in style.css
+   :root (--gold, --text, --dim, --jade, --win, --loss) so rarity colors and
+   accents stay in lockstep with the rest of the UI. Deliberately has no
+   light-theme override, mirroring #tooltip's own documented choice above
+   (theme.css supplies none either) — the item tooltip always renders as a
+   dark parchment card regardless of the active theme. */
+
+#tooltip .itemtip {
+  min-width: 168px;
+}
+
+#tooltip .itemtip-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 5px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid var(--gold-soft, rgba(200, 162, 74, 0.4));
+}
+
+#tooltip .itemtip-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  line-height: 1.25;
+}
+
+#tooltip .itemtip-rarity {
+  flex: 0 0 auto;
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.9;
+  white-space: nowrap;
+}
+
+#tooltip .itemtip-meta {
+  font-size: 0.72rem;
+  color: var(--dim, #9b8f74);
+  margin-bottom: 5px;
+}
+
+#tooltip .itemtip-stats {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 2px;
+}
+
+#tooltip .itemtip-stat {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.79rem;
+  line-height: 1.5;
+}
+
+#tooltip .itemtip-stat-label { color: var(--text, #e8e0cc); }
+
+#tooltip .itemtip-stat-val {
+  font-weight: 600;
+  color: var(--jade, #5fae7f);
+  font-variant-numeric: tabular-nums;
+}
+
+#tooltip .itemtip-row {
+  font-size: 0.74rem;
+  color: var(--dim, #9b8f74);
+  padding-top: 4px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(200, 162, 74, 0.16);
+}
+
+#tooltip .itemtip-dur.low .itemtip-dur-val { color: #d0a545; }
+#tooltip .itemtip-dur.broken { color: var(--loss, #b13a2e); font-weight: bold; }
+
+#tooltip .itemtip-sell {
+  display: flex;
+  justify-content: space-between;
+  color: var(--gold, #c8a24a);
+  font-weight: 600;
+}

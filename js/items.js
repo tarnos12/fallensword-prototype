@@ -31,6 +31,13 @@ export const RARITIES = {
 export const INVENTORY_SIZE = 12; // small starting pack per GDD §6.2
 export const DROP_CHANCE = 0.22;
 
+// The full equippable slot list (item variety pass). weapon + robe were the
+// only Stage-1 slots; helm/gloves/boots/ring/amulet round the paper-doll out
+// to 7. Exported so every module that needs to enumerate "every slot"
+// (progression.js effectiveStats, sets.js, sockets.js, and the UI's gear
+// grids) has one canonical order instead of re-typing the list.
+export const EQUIPMENT_SLOTS = ['weapon', 'robe', 'helm', 'gloves', 'boots', 'ring', 'amulet'];
+
 // Effective pack size: the base plus the Hall of Merit "Pack Expansion" upgrade
 // (+2 slots per purchase, Wave 3 Economy). Reads meritShop purchases directly to
 // avoid an items.js -> meritshop.js import cycle. (The task sketched
@@ -140,6 +147,84 @@ const TEMPLATES = {
     mythic: [
       { name: 'Voidsilk Shroud', attrs: [['defense', 1, 3], ['armor', 1, 2], ['hp', 2, 5], ['attack', 1, 1], ['damage', 1, 1]] },
       { name: 'Heaven-Patching Raiment', attrs: [['hp', 3, 6], ['defense', 1, 2], ['armor', 1, 1], ['attack', 1, 1], ['damage', 1, 1]] },
+    ],
+  },
+
+  // --- New Stage-1 slots (item variety pass). Random drops (rollDrop) only
+  // ever roll common/uncommon/rare (RARITIES weights above 0 top out at
+  // rare), so these five slots only need those three tiers — there is no
+  // epic/legendary/mythic/superElite/titan drop path for them (those stay
+  // weapon+robe, per the hand-authored Sets living there). Two named
+  // templates per rarity, same shape as weapon/robe: a 5-entry attrs pool,
+  // sliced to `rarity.attributes` by generateItem.
+  helm: {
+    common: [
+      { name: 'Cloth Disciple Cap', attrs: [['armor', 1, 2], ['hp', 1, 3], ['defense', 1, 1], ['attack', 1, 1], ['damage', 1, 1]] },
+      { name: 'Bronze-Studded Casque', attrs: [['defense', 1, 2], ['armor', 1, 1], ['hp', 1, 3], ['attack', 1, 1], ['damage', 1, 1]] },
+    ],
+    uncommon: [
+      { name: 'Silver Guardian Helm', attrs: [['armor', 1, 2], ['hp', 1, 3], ['defense', 1, 1], ['attack', 1, 1], ['damage', 1, 1]] },
+      { name: 'Beast-Horn Headpiece', attrs: [['defense', 1, 2], ['armor', 1, 1], ['hp', 1, 3], ['attack', 1, 1], ['damage', 1, 1]] },
+    ],
+    rare: [
+      { name: 'Nine Dragons Coronet', attrs: [['armor', 1, 2], ['hp', 1, 3], ['defense', 1, 1], ['attack', 1, 1], ['damage', 1, 1]] },
+      { name: 'Stormward Helm', attrs: [['defense', 1, 2], ['armor', 1, 1], ['hp', 1, 3], ['attack', 1, 1], ['damage', 1, 1]] },
+    ],
+  },
+  gloves: {
+    common: [
+      { name: 'Frayed Wrap Gloves', attrs: [['defense', 1, 2], ['armor', 1, 1], ['hp', 1, 3], ['attack', 1, 1], ['damage', 1, 1]] },
+      { name: 'Coarse Leather Gauntlets', attrs: [['armor', 1, 2], ['defense', 1, 1], ['hp', 1, 3], ['attack', 1, 1], ['damage', 1, 1]] },
+    ],
+    uncommon: [
+      { name: 'Silverthread Gauntlets', attrs: [['defense', 1, 2], ['armor', 1, 1], ['hp', 1, 3], ['attack', 1, 1], ['damage', 1, 1]] },
+      { name: 'Iron Knuckle Wraps', attrs: [['armor', 1, 2], ['defense', 1, 1], ['hp', 1, 3], ['attack', 1, 1], ['damage', 1, 1]] },
+    ],
+    rare: [
+      { name: 'Thunderfist Gauntlets', attrs: [['defense', 1, 2], ['armor', 1, 1], ['hp', 1, 3], ['attack', 1, 1], ['damage', 1, 1]] },
+      { name: 'Jade Serpent Gloves', attrs: [['armor', 1, 2], ['defense', 1, 1], ['hp', 1, 3], ['attack', 1, 1], ['damage', 1, 1]] },
+    ],
+  },
+  boots: {
+    common: [
+      { name: 'Straw Sandal Boots', attrs: [['hp', 1, 3], ['armor', 1, 1], ['defense', 1, 2], ['attack', 1, 1], ['damage', 1, 1]] },
+      { name: 'Hemp-Wrapped Treads', attrs: [['hp', 1, 3], ['defense', 1, 2], ['armor', 1, 1], ['attack', 1, 1], ['damage', 1, 1]] },
+    ],
+    uncommon: [
+      { name: 'Windstep Boots', attrs: [['hp', 1, 3], ['armor', 1, 1], ['defense', 1, 2], ['attack', 1, 1], ['damage', 1, 1]] },
+      { name: 'Beasthide Treads', attrs: [['hp', 1, 3], ['defense', 1, 2], ['armor', 1, 1], ['attack', 1, 1], ['damage', 1, 1]] },
+    ],
+    rare: [
+      { name: 'Cloudtreader Boots', attrs: [['hp', 1, 3], ['armor', 1, 1], ['defense', 1, 2], ['attack', 1, 1], ['damage', 1, 1]] },
+      { name: 'Stormrunner Greaves', attrs: [['hp', 1, 3], ['defense', 1, 2], ['armor', 1, 1], ['attack', 1, 1], ['damage', 1, 1]] },
+    ],
+  },
+  ring: {
+    common: [
+      { name: 'Copper Band Ring', attrs: [['attack', 1, 2], ['damage', 1, 2], ['hp', 1, 2], ['defense', 1, 1], ['armor', 1, 1]] },
+      { name: 'Simple Jade Loop', attrs: [['damage', 1, 2], ['attack', 1, 2], ['hp', 1, 2], ['defense', 1, 1], ['armor', 1, 1]] },
+    ],
+    uncommon: [
+      { name: 'Silver Crescent Ring', attrs: [['attack', 1, 2], ['damage', 1, 2], ['hp', 1, 2], ['defense', 1, 1], ['armor', 1, 1]] },
+      { name: 'Beast-Fang Ring', attrs: [['damage', 1, 2], ['attack', 1, 2], ['hp', 1, 2], ['defense', 1, 1], ['armor', 1, 1]] },
+    ],
+    rare: [
+      { name: 'Thunderbind Ring', attrs: [['attack', 1, 2], ['damage', 1, 2], ['hp', 1, 2], ['defense', 1, 1], ['armor', 1, 1]] },
+      { name: "Serpent's Coil Ring", attrs: [['damage', 1, 2], ['attack', 1, 2], ['hp', 1, 2], ['defense', 1, 1], ['armor', 1, 1]] },
+    ],
+  },
+  amulet: {
+    common: [
+      { name: 'Wooden Talisman', attrs: [['damage', 1, 2], ['attack', 1, 2], ['hp', 1, 2], ['defense', 1, 1], ['armor', 1, 1]] },
+      { name: 'Bone Pendant', attrs: [['attack', 1, 2], ['damage', 1, 2], ['hp', 1, 2], ['defense', 1, 1], ['armor', 1, 1]] },
+    ],
+    uncommon: [
+      { name: 'Silver Spirit Charm', attrs: [['damage', 1, 2], ['attack', 1, 2], ['hp', 1, 2], ['defense', 1, 1], ['armor', 1, 1]] },
+      { name: 'Jade Guardian Pendant', attrs: [['attack', 1, 2], ['damage', 1, 2], ['hp', 1, 2], ['defense', 1, 1], ['armor', 1, 1]] },
+    ],
+    rare: [
+      { name: 'Ninefold Thunder Amulet', attrs: [['damage', 1, 2], ['attack', 1, 2], ['hp', 1, 2], ['defense', 1, 1], ['armor', 1, 1]] },
+      { name: 'Phoenix Ember Pendant', attrs: [['attack', 1, 2], ['damage', 1, 2], ['hp', 1, 2], ['defense', 1, 1], ['armor', 1, 1]] },
     ],
   },
 };
@@ -265,6 +350,25 @@ export function mintNamedItem(namedId) {
   };
 }
 
+// Slot weights for a NORMAL (rarity-rolled) drop. weapon+robe stay the
+// majority (70%) since they're the two slots with a full rarity ladder and
+// Set membership; the five new slots split the rest evenly (6% each). Only
+// rollDrop consults this — the Legendary/SE/Titan drop branches in
+// game.js:attack() call generateItem('weapon'|'robe', ...) directly and are
+// untouched by this table.
+const DROP_SLOT_WEIGHTS = [
+  ['weapon', 35], ['robe', 35], ['helm', 6], ['gloves', 6], ['boots', 6], ['ring', 6], ['amulet', 6],
+];
+
+function pickDropSlot(rng) {
+  let roll = rng() * 100;
+  for (const [slot, w] of DROP_SLOT_WEIGHTS) {
+    roll -= w;
+    if (roll <= 0) return slot;
+  }
+  return 'weapon';
+}
+
 export function rollDrop(creatureLevel, rng, opts = {}) {
   // opts.forceDrop (debug 100%-drop toggle, §4) skips the drop gate. Backward-
   // compatible: every existing caller omits opts and keeps the DROP_CHANCE gate.
@@ -273,7 +377,7 @@ export function rollDrop(creatureLevel, rng, opts = {}) {
   // drop gate so gems are a fraction of loot, not an extra roll. Gems ride the
   // same inventory/save/sell path as gear (they carry id/name/rarity/level).
   if (rng() < GEM_DROP_CHANCE) return generateGem(creatureLevel, rng);
-  const slot = rng() < 0.5 ? 'weapon' : 'robe';
+  const slot = pickDropSlot(rng);
   return generateItem(slot, creatureLevel, null, rng);
 }
 

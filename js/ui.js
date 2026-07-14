@@ -6,7 +6,7 @@ import { maxQi, effectiveStats, stageName, totalRepairCost, marketListings, mark
 import { MAX_TURNS } from './combat.js';
 import { xpForBreakthrough, ALLOC_STATS, POINT_VALUE, MAX_STAGE, ASCENSION_STAT_PER_TIER } from './progression.js';
 import { meridianBonuses } from './meridians.js'; // per-source char-sheet stat breakdown
-import { sellValue, RARITIES, INVENTORY_SIZE, DROP_CHANCE, effectiveInventorySize } from './items.js';
+import { sellValue, RARITIES, INVENTORY_SIZE, DROP_CHANCE, effectiveInventorySize, EQUIPMENT_SLOTS } from './items.js';
 import { currentQuest, progressText, QUESTS } from './quests.js';
 import { CREATURE_TYPES, creatureStatBlock } from './actors.js';
 import { marketValue } from './market.js';
@@ -431,31 +431,55 @@ export function renderCharSheet(state, onAllocate) {
 // to equip (swapping the worn piece back into the pack, GDD §6.2); click an
 // equipped item to unequip; right-click for sell/destroy options. ---
 
-const SLOT_ICONS = { weapon: '⚔️', robe: '👘' };
+// SLOT_ICONS covers all 7 equippable slots (weapon/robe + the item-variety
+// pass: helm/gloves/boots/ring/amulet) plus 'gem' as a fallback glyph for
+// loose gems shown outside their own gemIcon() path.
+const SLOT_ICONS = { weapon: '⚔️', robe: '👘', helm: '🪖', gloves: '🧤', boots: '🥾', ring: '💍', amulet: '📿' };
+const SLOT_LABELS = { weapon: 'Weapon', robe: 'Robe', helm: 'Helm', gloves: 'Gloves', boots: 'Boots', ring: 'Ring', amulet: 'Amulet' };
 
+// Rich item tooltip: rarity-colored header, one stat per line, level/slot,
+// set membership + progress, durability, and sell value — everything a
+// player needs to judge a piece at a glance. Markup is wrapped in its own
+// .itemtip container (scoped styling lives in css/itemtip.css) so it never
+// bleeds into the plain .tt-name/.tt-line tooltips used elsewhere (char-sheet
+// stat breakdowns, empty-slot hints).
 function itemTooltip(item, hint) {
   // Gems (task U) are their own item kind — no slot/durability/compare; show the
   // single flat bonus they grant when socketed.
   if (isGem(item)) {
-    return `<div class="tt-name rarity-${item.rarity}">${gemIcon(item)} ${item.name}</div>
-      <div class="tt-line dim">Lv ${item.level} gem · ${RARITIES[item.rarity].label}</div>
-      <div class="tt-line">${gemStatText(item)} when socketed</div>
-      <div class="tt-hint">${hint}</div>`;
+    return `<div class="itemtip">
+      <div class="itemtip-head">
+        <span class="itemtip-name rarity-${item.rarity}">${gemIcon(item)} ${item.name}</span>
+        <span class="itemtip-rarity rarity-${item.rarity}">${RARITIES[item.rarity].label}</span>
+      </div>
+      <div class="itemtip-meta">Lv ${item.level} gem</div>
+      <div class="itemtip-row">${gemStatText(item)} when socketed</div>
+      <div class="itemtip-row itemtip-sell"><span>Sell value</span><span>${sellValue(item)} ◆</span></div>
+      <div class="tt-hint">${hint}</div>
+    </div>`;
   }
   const stats = Object.entries(item.bonuses)
-    .map(([s, v]) => `<div class="tt-line">+${v} ${STAT_LABELS[s] ?? s}</div>`)
+    .map(([s, v]) => `<div class="itemtip-stat"><span class="itemtip-stat-label">${STAT_LABELS[s] ?? s}</span><span class="itemtip-stat-val">+${v}</span></div>`)
     .join('');
+  const pct = Math.round((item.durability / item.maxDurability) * 100);
   const dur =
     item.durability <= 0
-      ? '<div class="tt-line broken">BROKEN — grants no bonuses until repaired</div>'
-      : `<div class="tt-line dim">Durability ${item.durability}/${item.maxDurability}</div>`;
-  return `<div class="tt-name rarity-${item.rarity}">${item.name}</div>
-    <div class="tt-line dim">Lv ${item.level} ${item.slot} · ${RARITIES[item.rarity].label}</div>
-    ${stats}${dur}
+      ? '<div class="itemtip-row itemtip-dur broken">BROKEN — grants no bonuses until repaired</div>'
+      : `<div class="itemtip-row itemtip-dur${pct < 25 ? ' low' : ''}">Durability <span class="itemtip-dur-val">${item.durability}/${item.maxDurability}</span></div>`;
+  return `<div class="itemtip">
+    <div class="itemtip-head">
+      <span class="itemtip-name rarity-${item.rarity}">${item.name}</span>
+      <span class="itemtip-rarity rarity-${item.rarity}">${RARITIES[item.rarity].label}</span>
+    </div>
+    <div class="itemtip-meta">Lv ${item.level} · ${SLOT_LABELS[item.slot] ?? item.slot}</div>
+    <div class="itemtip-stats">${stats}</div>
+    ${dur}
     ${socketLine(item)}
     ${setLine(item)}
+    <div class="itemtip-row itemtip-sell"><span>Sell value</span><span>${sellValue(item)} ◆</span></div>
     ${compareRows(item)}
-    <div class="tt-hint">${hint}</div>`;
+    <div class="tt-hint">${hint}</div>
+  </div>`;
 }
 
 function makeItemSlot(item, { label, onClick, onMenu, tooltipHint }) {
@@ -516,7 +540,7 @@ export function renderGear(state, { onEquip, onUnequip, onSell, onDestroy, onSal
   setSetsContext(p); // task B: give sets the live equipment for tooltip progress
   const slots = $('equipment-slots');
   slots.innerHTML = '';
-  for (const slot of ['weapon', 'robe']) {
+  for (const slot of EQUIPMENT_SLOTS) {
     slots.appendChild(
       makeItemSlot(p.equipment[slot], {
         label: slot,

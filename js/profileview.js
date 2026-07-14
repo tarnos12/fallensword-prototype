@@ -49,7 +49,7 @@ const STAT_TIPS = {
   stage: 'Stage — your rank within the current realm.',
   level: 'Level — total stages cultivated.',
   breakthrough: 'Breakthrough — XP banked toward your next stage.',
-  spiritStones: 'Spirit Stones — the common currency for repairs, forging and the market.',
+  spiritStones: 'Spirit Stones — the common currency for forging and the market.',
   merit: 'Merit — earned from sect deeds; spent in the Hall of Merit.',
   ascension: 'Ascension — rebirth tier; each tier scales all stats.',
   kills: 'Total kills — foes you have slain across the world.',
@@ -73,20 +73,14 @@ function totalKills(p) {
 // --- Shared item helpers (icon cell) --------------------------------------
 
 // A framed clickable item cell (mirrors ui.js makeItemSlot behaviour). Returns a
-// <button>; icon + optional durability bar + hover title, with click / menu wiring.
+// <button>; icon + rich hover card, with click / menu wiring.
 function itemCell(item, { onClick, onMenu, hint, extraClass } = {}) {
   const btn = el('button', 'item-slot');
   btn.type = 'button';
   if (extraClass) btn.classList.add(extraClass);
   if (item) {
     btn.classList.add(`icon-${item.rarity}`);
-    let dur = '';
-    if (item.durability != null && item.maxDurability) {
-      const pct = Math.round((item.durability / item.maxDurability) * 100);
-      const durClass = item.durability <= 0 ? 'broken' : pct < 25 ? 'low' : '';
-      dur = `<span class="dur-bar"><span class="dur-fill ${durClass}" style="width:${Math.max(4, pct)}%"></span></span>`;
-    }
-    btn.innerHTML = `<span class="item-icon">${SLOT_ICONS[item.slot] ?? '◈'}</span>${dur}`;
+    btn.innerHTML = `<span class="item-icon">${SLOT_ICONS[item.slot] ?? '◈'}</span>`;
     attachItemTooltip(btn, item, hint); // rich RPG hover card (not a plain title)
     if (onClick) btn.addEventListener('click', () => { closeContextMenu(); onClick(); });
     if (onMenu) btn.addEventListener('contextmenu', onMenu);

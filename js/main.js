@@ -13,7 +13,6 @@ import {
   unequipItem,
   sellItem,
   destroyItem,
-  repairAll,
   claimQuest,
   learnTechnique,
   castTechnique,
@@ -31,13 +30,11 @@ import {
   checkAchievements,
   forgeReforge,
   forgeUpgrade,
-  forgeRepair,
   acceptBounty,
   claimBounty,
   tickPlaytime,
   ascend,
   salvageItemAction,
-  essenceRepairAction,
   debugSpawnLegendary,
   debugSpawnSuperElite,
   debugSpawnTitan,
@@ -132,10 +129,6 @@ function renderAll() {
     },
     onAttack,
     canAttack: () => canAttack(state) && !inCombat,
-    onRepair: () => {
-      repairAll(state);
-      renderAll();
-    },
     onTravel: (portal) => {
       const res = travel(state, portal);
       if (!res.ok && res.reason) addLog(state, res.reason);
@@ -349,16 +342,8 @@ initAchievements(state);
 initForge(state, {
   reforge: (id) => { forgeReforge(state, id); renderAll(); },
   upgrade: (id) => { forgeUpgrade(state, id); renderAll(); },
-  repair: (id) => { forgeRepair(state, id); renderAll(); },
 });
-initSalvage(state, {
-  repair: (id) => {
-    const r = essenceRepairAction(state, id);
-    renderSalvage(state); renderAll();
-    if (r?.ok) toast('Gear mended with spirit essence.', 'success');
-    else if (r?.reason === 'essence') toast('Not enough spirit essence.', 'error');
-  },
-});
+initSalvage(state, {});
 initBounties(state, {
   accept: (id) => {
     const r = acceptBounty(state, id);
@@ -387,10 +372,29 @@ initAscension(state, {
 // NOTE: allocateMeridian's real signature is (player, id) — adapted from the
 // task's (state, id) sketch. learnTechnique/castTechnique are game.js wrappers
 // (state, id) and already saveGame internally; the extra saveGame is harmless.
+// Friendly reasons for why a meridian click did nothing — so a click always
+// gives feedback instead of silently just re-rendering (which read as "broken").
+const MERIDIAN_FAIL = {
+  points: 'No free meridian points — break through a realm to earn one.',
+  locked: 'This meridian opens at a higher cultivation stage.',
+  max: 'This meridian is already fully opened.',
+};
 initSkillTree(state, {
-  allocateMeridian: (id) => { allocateMeridian(state.player, id); saveGame(state); renderAll(); },
-  learnTechnique: (id) => { learnTechnique(state, id); saveGame(state); renderAll(); },
-  castTechnique: (id) => { castTechnique(state, id); saveGame(state); renderAll(); },
+  allocateMeridian: (id) => {
+    const res = allocateMeridian(state.player, id);
+    if (res.ok) { saveGame(state); renderAll(); toast(`Opened ${res.node.name} to rank ${res.rank}.`, 'success'); }
+    else toast(MERIDIAN_FAIL[res.reason] ?? 'Cannot open this meridian yet.', 'warn');
+  },
+  learnTechnique: (id) => {
+    const res = learnTechnique(state, id);
+    if (res.ok) { saveGame(state); renderAll(); toast('Technique comprehended.', 'success'); }
+    else toast(res.reason || 'Cannot learn this technique yet.', 'warn');
+  },
+  castTechnique: (id) => {
+    const res = castTechnique(state, id);
+    if (res.ok) { saveGame(state); renderAll(); toast('Technique channelled.', 'success'); }
+    else toast(res.reason || 'Cannot channel this technique yet.', 'warn');
+  },
 });
 // Hall of Merit (Wave 3): premium shop off the ✧ HUD icon. meritshop.js applies
 // most effects itself; the instant qiRestore row returns { effect } for us to

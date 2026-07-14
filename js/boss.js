@@ -15,7 +15,7 @@
 // every function here operates over it, so a new boss is a new data block (+ its
 // card in cards.js) — no new logic. The fight reuses everything: a boss is an
 // Actor-shaped monster on its lair tile, so inspect / combat / playback /
-// gear-degrade / bestiary all work unchanged; only the REWARD path branches
+// bestiary all works unchanged; only the REWARD path branches
 // (game.js attack()), pulling the hand-authored numbers + rolls from here.
 
 import { createActor } from './actors.js';

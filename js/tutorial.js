@@ -46,7 +46,7 @@ const STEPS = [
   {
     title: 'Artifacts',
     target: 'gear-box',
-    body: `Equip weapons and robes from your pack (click to equip, right-click to sell/destroy). Gear has a rarity ladder and <b>degrades with use</b> — repair it at the Sect Gate before it breaks and stops giving bonuses.`,
+    body: `Equip weapons and robes from your pack (click to equip, right-click to sell/destroy). Gear comes in a rarity ladder — finer pieces grant bigger bonuses. Chase better drops and sets.`,
   },
   {
     title: 'Techniques',

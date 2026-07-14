@@ -1,21 +1,20 @@
 // Salvage / materials (board task M, GDD §5). Right-click "Salvage" breaks an
-// unwanted artifact down into stackable **spirit essence** — one
-// essence tier per rarity. Essence is then an interim sink: spend it to **mend
-// gear** (restore durability from anywhere) at a cost that feels cheaper than the
-// stone-based forge/haven repair, until full crafting consumes materials.
+// unwanted artifact down into stackable **spirit essence** — one essence tier
+// per rarity — as a recycle sink for gear you don't want to sell. The Salvage
+// Workbench is a ledger of the essence you've accumulated (a crafting material
+// for future use; durability/mending was removed).
 //
 // Self-contained like js/crafting.js: this module owns the material catalog, the
-// pure yield/cost helpers, the ♻ Salvage modal (own button injected into
-// #nav-menu, own modal DOM), and its own stylesheet (css/salvage.css, linked in
-// index.html). The stateful mutation (removing the item, crediting/spending
-// essence, logging, saving) lives in thin game.js wrappers; this file is the
-// view + the pure math. Imports are one-directional (items.js only), so no cycle.
+// pure yield helper, the ♻ Salvage modal (own button injected into the equipment
+// menu, own modal DOM), and its own stylesheet (css/salvage.css, linked in
+// index.html). The stateful mutation (removing the item, crediting essence,
+// logging, saving) lives in a thin game.js wrapper; this file is the view + the
+// pure math. Imports are one-directional (items.js only), so no cycle.
 
-import { RARITIES, repairCost } from './items.js';
+import { RARITIES } from './items.js';
 
 // One essence tier per rarity (keyed by the item's rarity). Higher-rarity gear
-// yields — and repairs with — its own richer essence, so tiers don't fungibly
-// mix (mending an epic wants epic essence, salvaged from epic gear).
+// yields its own richer essence, so tiers don't fungibly mix.
 export const MATERIALS = {
   common: { id: 'essence_common', name: 'Murky Spirit Dust', rarity: 'common', icon: '·' },
   uncommon: { id: 'essence_uncommon', name: 'Clear Spirit Essence', rarity: 'uncommon', icon: '◦' },
@@ -49,97 +48,27 @@ export function salvageYield(item) {
   return { materialId: mat.id, qty };
 }
 
-// PURE: the essence cost to fully mend an item's durability. Deliberately cheaper
-// -feeling than the stone repairCost baseline (a few essence vs dozens of stones)
-// and paid in the item's own rarity tier. { materialId, qty } — qty 0 when full.
-export function essenceRepairCost(item) {
-  const mat = MATERIALS[item?.rarity];
-  if (!mat) return null;
-  const missing = (item.maxDurability ?? 0) - (item.durability ?? 0);
-  if (missing <= 0) return { materialId: mat.id, qty: 0 };
-  const qty = Math.max(1, Math.ceil(missing / 15));
-  return { materialId: mat.id, qty };
-}
-
-// --- Modal (view only; actions are injected callbacks wired to game.js) ---
+// --- Modal (view only; the essence ledger) ---
 
 const $ = (id) => document.getElementById(id);
-const STAT_LABELS = { attack: 'Attack', defense: 'Defense', damage: 'Damage', armor: 'Armor', hp: 'Max HP' };
-const SLOT_ICONS = { weapon: '⚔️', robe: '👘' };
 
 let overlay = null;
 let salvage = null; // { state, actions }
 
-// Every artifact the player holds that has durability to mend — worn first, then
-// pack — tagged with where it sits.
-function damageableItems(player) {
-  const worn = Object.entries(player.equipment)
-    .filter(([, it]) => it && it.maxDurability != null)
-    .map(([slot, it]) => ({ item: it, where: `equipped ${slot}` }));
-  const packed = player.inventory
-    .filter((it) => it && it.maxDurability != null && it.slot)
-    .map((it) => ({ item: it, where: 'pack' }));
-  return [...worn, ...packed];
-}
-
 function ledgerRow(mat, qty) {
   const row = document.createElement('div');
   row.className = `salvage-mat rarity-${mat.rarity}`;
-  row.title = `${mat.name} — ${RARITIES[mat.rarity]?.label ?? mat.rarity} salvage material, used to mend ${RARITIES[mat.rarity]?.label ?? mat.rarity} gear. You have ${qty}.`;
+  row.title = `${mat.name} — ${RARITIES[mat.rarity]?.label ?? mat.rarity} salvage essence. You have ${qty}.`;
   row.innerHTML = `<span class="salvage-mat-icon">${mat.icon}</span>
     <span class="salvage-mat-name">${mat.name}</span>
     <span class="salvage-mat-qty">${qty}</span>`;
   return row;
 }
 
-function mendRow(entry) {
-  const { state, actions } = salvage;
-  const { item, where } = entry;
-  const mats = state.player.materials || {};
-  const cost = essenceRepairCost(item);
-
-  const row = document.createElement('div');
-  row.className = 'salvage-row';
-
-  const icon = document.createElement('div');
-  icon.className = `item-slot salvage-icon icon-${item.rarity}`;
-  icon.innerHTML = `<span class="item-icon">${SLOT_ICONS[item.slot] ?? '◈'}</span>`;
-
-  const info = document.createElement('div');
-  info.className = 'salvage-info';
-  const broken = item.durability <= 0;
-  info.innerHTML = `<div class="salvage-name rarity-${item.rarity}">${item.name}
-      <span class="dim">Lv ${item.level} ${RARITIES[item.rarity].label} ${item.slot}</span></div>
-    <div class="salvage-dur ${broken ? 'broken' : 'dim'}">durability ${item.durability}/${item.maxDurability}</div>
-    <div class="salvage-where dim">${where}</div>`;
-  info.title = `${item.name} — durability ${item.durability}/${item.maxDurability}${broken ? ' (broken — grants no bonuses until mended)' : ''}.`;
-
-  const actionsWrap = document.createElement('div');
-  actionsWrap.className = 'salvage-actions';
-
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.className = 'salvage-btn';
-  const mat = MATERIAL_BY_ID[cost.materialId];
-  const have = mats[cost.materialId] || 0;
-  btn.textContent = `Mend · ${cost.qty} ${mat.icon}`;
-  btn.title = have < cost.qty
-    ? `Not enough ${mat.name} — mending costs ${cost.qty}, you have ${have}. Salvage more ${RARITIES[item.rarity].label} gear to get it.`
-    : `Spend ${cost.qty} ${mat.name} to restore this artifact's durability to full.`;
-  btn.disabled = have < cost.qty;
-  btn.addEventListener('click', () => { actions.repair(item.id); rerender(); });
-  actionsWrap.appendChild(btn);
-
-  row.append(icon, info, actionsWrap);
-  return row;
-}
-
 export function renderSalvage(state) {
   if (!overlay) return;
-  const p = state.player;
-  const mats = p.materials || {};
+  const mats = state.player.materials || {};
 
-  // Essence ledger.
   const ledger = $('salvage-ledger');
   ledger.innerHTML = '';
   const owned = MATERIAL_LIST.filter((m) => (mats[m.id] || 0) > 0);
@@ -151,39 +80,18 @@ export function renderSalvage(state) {
   } else {
     for (const m of owned) ledger.appendChild(ledgerRow(m, mats[m.id]));
   }
-
-  // Mend-gear list.
-  const body = $('salvage-mend');
-  body.innerHTML = '';
-  const items = damageableItems(p).filter((e) => e.item.durability < e.item.maxDurability);
-  if (items.length === 0) {
-    const none = document.createElement('p');
-    none.className = 'empty-note';
-    none.textContent = 'All your artifacts are at full durability.';
-    body.appendChild(none);
-    return;
-  }
-  const list = document.createElement('div');
-  list.className = 'salvage-list';
-  for (const entry of items) list.appendChild(mendRow(entry));
-  body.appendChild(list);
-}
-
-function rerender() {
-  renderSalvage(salvage.state);
 }
 
 export function initSalvage(state, actions) {
   salvage = { state, actions };
 
-  // Own ♻ button, dropped into the existing nav-menu grid (no index.html edit).
+  // Own ♻ button, dropped into the existing equipment menu (no index.html edit).
   const btn = document.createElement('button');
   btn.id = 'btn-salvage';
   btn.type = 'button';
   btn.className = 'salvage-nav-btn';
-  btn.title = 'Salvage — break gear into spirit essence & mend with it';
+  btn.title = 'Salvage — break unwanted gear into spirit essence';
   btn.innerHTML = '<span class="gi gi-shard" aria-hidden="true"></span> Salvage';
-  // IA restructure (Wave 1): Salvage lives on the Equipment tab.
   ($('equipment-menu') ?? document.getElementById('equip-panel'))?.appendChild(btn);
 
   // Own modal DOM.
@@ -196,11 +104,9 @@ export function initSalvage(state, actions) {
         <h2>Salvage Workbench</h2>
         <button id="btn-close-salvage" type="button" title="Close">✕</button>
       </div>
-      <p class="salvage-intro">Break unwanted artifacts into spirit essence (right-click gear in your pack → Salvage), then spend essence to mend your gear anywhere — cheaper than a stone repair.</p>
+      <p class="salvage-intro">Break unwanted artifacts into spirit essence — right-click gear in your pack and choose Salvage. Essence is a crafting material you accumulate here.</p>
       <h3 class="salvage-subhead">Spirit Essence</h3>
       <div id="salvage-ledger"></div>
-      <h3 class="salvage-subhead">Mend Gear with Essence</h3>
-      <div id="salvage-mend"></div>
     </div>`;
   document.body.appendChild(overlay);
 

@@ -33,10 +33,8 @@ import {
   rollDrop,
   generateItem,
   mintNamedItem,
-  degradeEquipment,
   equipItem as equip,
   unequipItem as unequip,
-  repairCost,
   sellValue,
   INVENTORY_SIZE,
   reforgeItem,
@@ -62,7 +60,7 @@ import { recordAchievements } from './achievements.js';
 import * as Trials from './trials.js';
 import { eventReward } from './events.js';
 import { pillById, applyPillBuffs, cleanPillBuffs } from './alchemy.js';
-import { salvageYield, essenceRepairCost, materialName } from './salvage.js';
+import { salvageYield, materialName } from './salvage.js';
 import { saveGame, loadGame, clearSave } from './save.js';
 
 // --- Qi (stamina) tuning. Base regen is 1 Qi/3s (~20/min, 1200/hr) so the
@@ -333,7 +331,7 @@ export function currentZone(state) {
 }
 
 // A haven (each zone's start tile) is spawn-free and offers sect services
-// (repair, sell). Kept as one predicate so services follow the player to
+// (selling). Kept as one predicate so services follow the player to
 // each zone's outpost.
 export function atHaven(state) {
   return currentTile(state).isStart;
@@ -507,7 +505,6 @@ export function attack(state, monsterId) {
   state.qi -= result.staminaSpent;
 
   const p = state.player;
-  degradeEquipment(p); // gear wears with use, win or lose
   ensureSeen(state, monster.typeId); // facing a beast enters it in the codex
   Quests.onFace(state.quests, monster.typeId);
 
@@ -749,10 +746,9 @@ export function destroyItem(state, itemId) {
   return true;
 }
 
-// --- Salvage / materials (task M, GDD §5). Thin wrappers over salvage.js pure
-// helpers: break a PACK artifact into spirit essence, and spend
-// essence to mend an owned artifact's durability anywhere. Each persists on
-// success. Equipped items can't be salvaged (guarded — only pack items). ---
+// --- Salvage / materials (task M, GDD §5). Break a PACK artifact into spirit
+// essence (a recycle sink for unwanted gear). Equipped items can't be salvaged
+// (guarded — only pack items). ---
 
 export function salvageItemAction(state, itemId) {
   const p = state.player;
@@ -770,47 +766,10 @@ export function salvageItemAction(state, itemId) {
   return { ok: true, materialId: y.materialId, qty: y.qty, materialName: name };
 }
 
-export function essenceRepairAction(state, itemId) {
-  const p = state.player;
-  const item = ownedItem(p, itemId); // worn or pack
-  if (!item) return { ok: false };
-  const cost = essenceRepairCost(item);
-  if (!cost || cost.qty === 0) return { ok: false, reason: 'full' };
-  const have = (p.materials && p.materials[cost.materialId]) || 0;
-  if (have < cost.qty) {
-    addLog(state, `Mending ${item.name} needs ${cost.qty} ${materialName(cost.materialId)}.`);
-    return { ok: false, reason: 'essence' };
-  }
-  p.materials[cost.materialId] -= cost.qty;
-  item.durability = item.maxDurability;
-  addLog(state, `Mended ${item.name} with ${cost.qty} ${materialName(cost.materialId)}.`);
-  saveGame(state);
-  return { ok: true, materialId: cost.materialId, qty: cost.qty };
-}
-
-export function totalRepairCost(state) {
-  return Object.values(state.player.equipment)
-    .filter(Boolean)
-    .reduce((sum, item) => sum + repairCost(item), 0);
-}
-
-export function repairAll(state) {
-  if (!atHaven(state)) return false;
-  const cost = totalRepairCost(state);
-  if (cost === 0 || state.player.spiritStones < cost) return false;
-  state.player.spiritStones -= cost;
-  for (const item of Object.values(state.player.equipment)) {
-    if (item) item.durability = item.maxDurability;
-  }
-  addLog(state, `Repaired your artifacts for ${cost} stones.`);
-  saveGame(state);
-  return true;
-}
-
 // --- Crafting & Forge (GDD §5). Thin wrappers over the items.js forge helpers:
-// spend spirit stones to reroll ("reforge"), level up ("temper/upgrade"), or
-// repair one artifact — from anywhere, not just a haven. Each persists on
-// success. The Forge modal (js/crafting.js) reads the same cost fns for display.
+// spend spirit stones to reroll ("reforge") or level up ("temper/upgrade") an
+// artifact — from anywhere, not just a haven. Each persists on success. The
+// Forge modal (js/crafting.js) reads the same cost fns for display.
 
 // Resolve an item id to the live object whether it's worn or in the pack.
 function ownedItem(player, itemId) {
@@ -852,21 +811,6 @@ export function forgeUpgrade(state, itemId) {
   return { ok: true, item };
 }
 
-export function forgeRepair(state, itemId) {
-  const item = ownedItem(state.player, itemId);
-  if (!item) return { ok: false };
-  const cost = repairCost(item);
-  if (cost === 0) return { ok: false, reason: 'full' };
-  if (state.player.spiritStones < cost) {
-    addLog(state, `Repairing ${item.name} needs ${cost} spirit stones.`);
-    return { ok: false, reason: 'stones' };
-  }
-  state.player.spiritStones -= cost;
-  item.durability = item.maxDurability;
-  addLog(state, `Repaired ${item.name} at the forge (−${cost} ◆).`);
-  saveGame(state);
-  return { ok: true, item };
-}
 
 export function claimQuest(state) {
   const qs = state.quests;

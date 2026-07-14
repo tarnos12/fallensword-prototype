@@ -2,7 +2,7 @@
 // through the action functions passed in from main.js.
 
 import { ZONES, portalAt } from './map.js';
-import { maxQi, qiPerMinute, effectiveStats, stageName, totalRepairCost, marketListings, marketPlayerListings, marketMailbox, guildMembers, guildRecruits, guildBuffSummary } from './game.js';
+import { maxQi, qiPerMinute, effectiveStats, stageName, marketListings, marketPlayerListings, marketMailbox, guildMembers, guildRecruits, guildBuffSummary } from './game.js';
 import { MAX_TURNS } from './combat.js';
 import { xpForBreakthrough, ALLOC_STATS, POINT_VALUE, MAX_STAGE, ASCENSION_STAT_PER_TIER } from './progression.js';
 import { meridianBonuses } from './meridians.js'; // per-source char-sheet stat breakdown
@@ -135,7 +135,7 @@ function bossLairNote(status) {
   return box;
 }
 
-export function renderTilePanel(state, { onInspect, onAttack, canAttack, onRepair, onTravel }) {
+export function renderTilePanel(state, { onInspect, onAttack, canAttack, onTravel }) {
   const zone = ZONES[state.zoneId];
   const tile = state.map.at(state.pos.x, state.pos.y);
   const portal = portalAt(state.zoneId, tile.x, tile.y);
@@ -143,7 +143,7 @@ export function renderTilePanel(state, { onInspect, onAttack, canAttack, onRepai
   $('tile-title').textContent = `${zone.name} · (${tile.x}, ${tile.y})${havenLabel}`;
 
   // Location actions come before monsters (GDD §6.6): travel portals, then
-  // haven services (repair; selling is enabled in the pack panel at a haven).
+  // haven services (selling is enabled in the pack panel at a haven).
   const gate = $('gate-actions');
   gate.innerHTML = '';
   let hasActions = false;
@@ -166,14 +166,6 @@ export function renderTilePanel(state, { onInspect, onAttack, canAttack, onRepai
 
   if (tile.isStart) {
     hasActions = true;
-    const cost = totalRepairCost(state);
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.textContent = cost > 0 ? `Repair artifacts (${cost} ◆)` : 'Artifacts fully repaired';
-    btn.disabled = cost === 0 || state.player.spiritStones < cost;
-    if (cost > state.player.spiritStones) btn.title = 'Not enough spirit stones';
-    btn.addEventListener('click', onRepair);
-    gate.appendChild(btn);
     const note = document.createElement('p');
     note.className = 'empty-note';
     note.textContent = 'A sect haven — sell items from your pack here.';
@@ -352,15 +344,15 @@ export function renderCharSheet(state, onAllocate) {
   // True per-source stat breakdown mirroring progression.js effectiveStats
   // exactly: base + trained + gear + meridians + set (flat), then
   // technique/pill percentage buffs, then the global ascension scalar. Each flat
-  // source is summed the same way (and honours the same broken-gear rule) as
+  // source is summed the same way as
   // effectiveStats, so the displayed parts recombine to the effective total.
   const now = Date.now();
   const merStat = meridianBonuses(p);
   const setStat = setBonuses(p);
-  // Real gear sum (same iteration + broken-gear skip as effectiveStats).
+  // Real gear sum (same iteration as effectiveStats).
   const gearSum = { attack: 0, defense: 0, damage: 0, armor: 0, hp: 0 };
   for (const item of Object.values(p.equipment)) {
-    if (!item || item.durability <= 0) continue; // broken gear grants nothing
+    if (!item) continue;
     for (const [s, v] of Object.entries(item.bonuses)) gearSum[s] += v;
   }
   const buffs = activeBuffs(p, now);
@@ -455,7 +447,7 @@ function dropIcon(item) {
 }
 
 // Rich item tooltip: rarity-colored header, one stat per line, level/slot,
-// set membership + progress, durability, and sell value — everything a
+// set membership + progress, and sell value — everything a
 // player needs to judge a piece at a glance. Markup is wrapped in its own
 // .itemtip container (scoped styling lives in css/itemtip.css) so it never
 // bleeds into the plain .tt-name/.tt-line tooltips used elsewhere (char-sheet
@@ -464,11 +456,6 @@ function itemTooltip(item, hint) {
   const stats = Object.entries(item.bonuses)
     .map(([s, v]) => `<div class="itemtip-stat"><span class="itemtip-stat-label">${STAT_LABELS[s] ?? s}</span><span class="itemtip-stat-val">+${v}</span></div>`)
     .join('');
-  const pct = Math.round((item.durability / item.maxDurability) * 100);
-  const dur =
-    item.durability <= 0
-      ? '<div class="itemtip-row itemtip-dur broken">BROKEN — grants no bonuses until repaired</div>'
-      : `<div class="itemtip-row itemtip-dur${pct < 25 ? ' low' : ''}">Durability <span class="itemtip-dur-val">${item.durability}/${item.maxDurability}</span></div>`;
   return `<div class="itemtip rarity-${item.rarity}">
     <div class="itemtip-head">
       <span class="itemtip-name rarity-${item.rarity}">${item.name}</span>
@@ -476,7 +463,6 @@ function itemTooltip(item, hint) {
     </div>
     <div class="itemtip-meta">Lv ${item.level} · ${SLOT_LABELS[item.slot] ?? item.slot}</div>
     <div class="itemtip-stats">${stats}</div>
-    ${dur}
     ${setLine(item)}
     <div class="itemtip-row itemtip-sell"><span>Sell value</span><span>${sellValue(item)} ◆</span></div>
     ${compareRows(item)}
@@ -497,10 +483,7 @@ function makeItemSlot(item, { label, onClick, onMenu, tooltipHint }) {
   el.className = 'item-slot';
   if (item) {
     el.classList.add(`icon-${item.rarity}`);
-    const pct = Math.round((item.durability / item.maxDurability) * 100);
-    const durClass = item.durability <= 0 ? 'broken' : pct < 25 ? 'low' : '';
-    el.innerHTML = `<span class="item-icon">${SLOT_ICONS[item.slot]}</span>
-      <span class="dur-bar"><span class="dur-fill ${durClass}" style="width:${Math.max(4, pct)}%"></span></span>`;
+    el.innerHTML = `<span class="item-icon">${SLOT_ICONS[item.slot]}</span>`;
     attachTooltip(el, () => itemTooltip(item, tooltipHint));
     el.addEventListener('click', () => {
       hideTip();
@@ -529,7 +512,7 @@ function salvageEntry(item, onSalvage) {
   const label = y ? `Salvage → ${y.qty} ${materialName(y.materialId)}` : 'Salvage';
   return {
     label,
-    title: y ? `Break this item down into ${y.qty} ${materialName(y.materialId)} — permanent, used to mend gear at the ♻ Salvage Workbench.` : 'Break this item down into spirit essence — permanent.',
+    title: y ? `Break this item down into ${y.qty} ${materialName(y.materialId)} — permanent (a crafting material tracked at the ♻ Salvage Workbench).` : 'Break this item down into spirit essence — permanent.',
     onClick: () => {
       if (!onSalvage || !y) return;
       if (confirm(`Salvage ${item.name} into ${y.qty} ${materialName(y.materialId)}? This is permanent.`)) onSalvage(item.id);

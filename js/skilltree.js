@@ -200,7 +200,7 @@ function meridianNode(state, actions, panel, node) {
   else if (free > 0) el.classList.add('available');
 
   if (!locked && !maxed) {
-    el.addEventListener('click', () => actions.allocateMeridian(node.id));
+    el.addEventListener('click', () => { actions.allocateMeridian(node.id); el.blur(); });
   } else {
     el.disabled = false; // keep hoverable/focusable for its description
   }
@@ -230,9 +230,9 @@ function abilityNode(state, actions, panel, t) {
 
   // Click = learn (unlearned) or channel/refresh (learned).
   if (canLearnNow) {
-    el.addEventListener('click', () => actions.learnTechnique(t.id));
+    el.addEventListener('click', () => { actions.learnTechnique(t.id); el.blur(); });
   } else if (learned) {
-    el.addEventListener('click', () => actions.castTechnique(t.id));
+    el.addEventListener('click', () => { actions.castTechnique(t.id); el.blur(); });
   }
   wireHover(el, panel, () => abilityInfo(state, t));
   return el;

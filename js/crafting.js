@@ -1,7 +1,7 @@
 // Crafting & Forge (GDD §5). Spend spirit stones at the ⚒ Forge to improve gear
-// three ways: **Reforge** (reroll an artifact's stat values within its rarity/
-// level — chase a better spread), **Temper** (raise its level, scaling stats up),
-// and **Repair** (restore durability from anywhere, not just a haven).
+// two ways: **Reforge** (reroll an artifact's stat values within its rarity/
+// level — chase a better spread) and **Temper** (raise its level, scaling stats
+// up).
 //
 // Kept self-contained to stay parallel-work-safe (the same discipline as
 // loadouts.js / tutorial.js): this module owns its own ⚒ button (injected into
@@ -14,7 +14,6 @@ import {
   RARITIES,
   reforgeCost,
   upgradeCost,
-  repairCost,
   canUpgradeItem,
   MAX_FORGE_LEVEL,
 } from './items.js';
@@ -56,14 +55,11 @@ function forgeRow(entry) {
 
   const info = document.createElement('div');
   info.className = 'forge-info';
-  const dur = item.durability < item.maxDurability
-    ? ` · <span class="${item.durability <= 0 ? 'broken' : 'dim'}">dur ${item.durability}/${item.maxDurability}</span>`
-    : '';
   info.innerHTML = `<div class="forge-name rarity-${item.rarity}">${item.name}
       <span class="dim">Lv ${item.level} ${RARITIES[item.rarity].label} ${item.slot}</span></div>
     <div class="forge-stats dim">${statLine(item)}</div>
-    <div class="forge-where dim">${where}${dur}</div>`;
-  info.title = `${item.name} — currently ${statLine(item)}, durability ${item.durability}/${item.maxDurability}.`;
+    <div class="forge-where dim">${where}</div>`;
+  info.title = `${item.name} — currently ${statLine(item)}.`;
 
   const actionsWrap = document.createElement('div');
   actionsWrap.className = 'forge-actions';
@@ -100,21 +96,6 @@ function forgeRow(entry) {
   }
   actionsWrap.appendChild(temper);
 
-  // Repair — only when worn/damaged.
-  const rpCost = repairCost(item);
-  if (rpCost > 0) {
-    const repair = document.createElement('button');
-    repair.type = 'button';
-    repair.className = 'forge-btn';
-    repair.textContent = `Repair · ${rpCost} ◆`;
-    repair.title = stones < rpCost
-      ? `Not enough spirit stones — repairing costs ${rpCost} ◆, you have ${stones} ◆.`
-      : `Spend ${rpCost} spirit stones ◆ to restore this artifact's durability to full.`;
-    repair.disabled = stones < rpCost;
-    repair.addEventListener('click', () => { actions.repair(item.id); rerender(); });
-    actionsWrap.appendChild(repair);
-  }
-
   row.append(icon, info, actionsWrap);
   return row;
 }
@@ -122,13 +103,13 @@ function forgeRow(entry) {
 export function renderForge(state) {
   if (!overlay) return;
   $('forge-stones').textContent = `— ◆ ${state.player.spiritStones}`;
-  $('forge-stones').title = `Spirit stones on hand: ${state.player.spiritStones} ◆ — spend them here to reforge, temper, or repair gear.`;
+  $('forge-stones').title = `Spirit stones on hand: ${state.player.spiritStones} ◆ — spend them here to reforge or temper gear.`;
   const body = $('forge-body');
   body.innerHTML = '';
 
   const intro = document.createElement('p');
   intro.className = 'empty-note';
-  intro.textContent = 'Spend spirit stones to refine your artifacts. Reforge rerolls its stats, Temper raises its level, Repair restores durability.';
+  intro.textContent = 'Spend spirit stones to refine your artifacts. Reforge rerolls its stats, Temper raises its level.';
   body.appendChild(intro);
 
   const items = ownedItems(state.player);
@@ -159,7 +140,7 @@ export function initForge(state, actions) {
   btn.id = 'btn-forge';
   btn.type = 'button';
   btn.className = 'forge-nav-btn';
-  btn.title = 'The Forge — reforge, temper & repair your artifacts';
+  btn.title = 'The Forge — reforge & temper your artifacts';
   btn.innerHTML = '<span class="gi gi-hammer" aria-hidden="true"></span> Forge';
   // IA restructure (Wave 1): Forge lives on the Equipment tab.
   ($('equipment-menu') ?? document.getElementById('equip-panel'))?.appendChild(btn);

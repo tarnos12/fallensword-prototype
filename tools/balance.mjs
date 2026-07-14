@@ -42,7 +42,7 @@ globalThis.localStorage = {
 
 import { createPlayer, spawnCreature, creatureStatBlock, CREATURE_TYPES } from '../js/actors.js';
 import {
-  generateItem, sellValue, repairCost, rollDrop, RARITIES, DROP_CHANCE, MAX_FORGE_LEVEL,
+  generateItem, sellValue, rollDrop, RARITIES, DROP_CHANCE, MAX_FORGE_LEVEL,
 } from '../js/items.js';
 import {
   playerCombatActor, STAT_POINTS_PER_STAGE, MAX_STAGE, REALMS,
@@ -456,22 +456,14 @@ function expectedDropValue(creatureLevel) {
   return sum / N_DROP_SAMPLES;
 }
 
-// Per-fight repair cost for a kit: each equipped piece wears 1 durability/fight
-// (items.js degradeEquipment), so the amortized cost is items.js repairCost() of
-// a weapon + a robe of this rarity each down one durability point.
-function repairPerFight(rarityKey, level) {
-  const rng = mulberry32(1234);
-  let cost = 0;
-  for (const slot of ['weapon', 'robe']) {
-    const it = generateItem(slot, level, rarityKey, rng);
-    it.durability = it.maxDurability - 1; // one fight's wear
-    cost += repairCost(it);
-  }
-  return cost;
+// Durability was removed — gear no longer wears, so there is no per-fight repair
+// cost. Kept as a stub returning 0 so the economy table's math is unchanged.
+function repairPerFight() {
+  return 0;
 }
 
 function sectionDropEconomy() {
-  hr('(d) DROP ECONOMY  — expected stones + drop value per fight vs wear (farming net-positive?)');
+  hr('(d) DROP ECONOMY  — expected stones + drop value per fight (farming net-positive?)');
   // For each zone band creature, at its rep level, vs the rarity a player farming
   // it is likely wearing.
   const rows = [
@@ -490,7 +482,7 @@ function sectionDropEconomy() {
     const lv = repLevel(r.typeId);
     const stones = spawnCreature(r.typeId, lv, Math.random).stoneReward;
     const dropV = expectedDropValue(lv);
-    const wear = repairPerFight(r.gearRarity, lv);
+    const wear = repairPerFight();
     const net = stones + dropV - wear;
     const ok = net >= ECON_MIN_NET;
     tallyVerdict(ok);
@@ -500,7 +492,7 @@ function sectionDropEconomy() {
       + pad(net.toFixed(1), 11, true) + '  ' + (ok ? 'PASS' : 'WARN')
     );
   }
-  console.log(`\n  drop$ = expected sell value/fight (DROP_CHANCE ${DROP_CHANCE} incl. gem split).  wear = repair cost/fight for the kit's rarity.`);
+  console.log(`\n  drop$ = expected sell value/fight (DROP_CHANCE ${DROP_CHANCE}).  wear = 0 (durability removed).`);
   console.log(`  net-positive tolerance: ≥ ${ECON_MIN_NET} stones margin/fight.`);
 }
 

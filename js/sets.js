@@ -6,9 +6,7 @@
 // a future 3rd slot / larger sets just add higher thresholds with no code change.
 //
 // setBonuses(player) is the ONE add-line into progression.js effectiveStats —
-// a flat stat source, after gear / meridians. Like
-// those, it honours the broken-gear rule: a broken piece doesn't count toward
-// its set (it grants nothing while broken).
+// a flat stat source, after gear / meridians.
 //
 // This module imports nothing game-side (pure data + reads of player.equipment),
 // so progression.js can import setBonuses in headless sims, and there is no cycle.
@@ -94,12 +92,11 @@ export function setById(setId) {
   return SETS[setId] ?? null;
 }
 
-// How many of a set's pieces are currently equipped AND intact (durability > 0 —
-// a broken piece grants nothing, so it doesn't count toward the set either).
+// How many of a set's pieces are currently equipped.
 export function equippedSetCount(player, setId) {
   let n = 0;
   for (const item of Object.values(player.equipment ?? {})) {
-    if (item && item.setId === setId && item.durability > 0) n += 1;
+    if (item && item.setId === setId) n += 1;
   }
   return n;
 }
@@ -162,7 +159,7 @@ export function setLine(item) {
   const members = set.members
     .map((name) => {
       const on = ctxPlayer
-        ? Object.values(ctxPlayer.equipment ?? {}).some((it) => it && it.name === name && it.durability > 0)
+        ? Object.values(ctxPlayer.equipment ?? {}).some((it) => it && it.name === name)
         : false;
       const cls = on ? 'set-member on' : 'set-member';
       return `<div class="tt-line ${cls}">${on ? '◆' : '◇'} ${name}</div>`;

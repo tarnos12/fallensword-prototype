@@ -6,20 +6,20 @@
 // reserved for hand-authored items (quests, bosses) per §6.1.
 
 export const RARITIES = {
-  common: { key: 'common', label: 'Common', mult: 1.0, attributes: 1, weight: 70, maxDurability: 30, repairPerPoint: 0.5, sellMult: 2 },
-  uncommon: { key: 'uncommon', label: 'Uncommon', mult: 1.35, attributes: 2, weight: 25, maxDurability: 45, repairPerPoint: 1, sellMult: 5 },
-  rare: { key: 'rare', label: 'Rare', mult: 1.8, attributes: 3, weight: 5, maxDurability: 60, repairPerPoint: 2, sellMult: 12 },
-  epic: { key: 'epic', label: 'Epic', mult: 2.3, attributes: 4, weight: 0, maxDurability: 80, repairPerPoint: 3, sellMult: 30 },
-  legendary: { key: 'legendary', label: 'Legendary', mult: 2.9, attributes: 5, weight: 0, maxDurability: 100, repairPerPoint: 5, sellMult: 75 },
+  common: { key: 'common', label: 'Common', mult: 1.0, attributes: 1, weight: 70, sellMult: 2 },
+  uncommon: { key: 'uncommon', label: 'Uncommon', mult: 1.35, attributes: 2, weight: 25, sellMult: 5 },
+  rare: { key: 'rare', label: 'Rare', mult: 1.8, attributes: 3, weight: 5, sellMult: 12 },
+  epic: { key: 'epic', label: 'Epic', mult: 2.3, attributes: 4, weight: 0, sellMult: 30 },
+  legendary: { key: 'legendary', label: 'Legendary', mult: 2.9, attributes: 5, weight: 0, sellMult: 75 },
   // Two Wave-2 explicit-only tiers (weight 0 — never randomly rolled; reached
   // only via generateItem(slot, level, 'superElite'|'titan', rng) from the
   // Legendary/SE/Titan drop branches in game.js attack()). superElite sits
   // between legendary and mythic on the raw power curve (rarer monster = better
   // loot). titan is deliberately NOT slotted as "better than Mythic": its
   // defining trait is the guaranteed qiRegen line (§1.4), not stat supremacy.
-  superElite: { key: 'superElite', label: 'Super Elite', mult: 3.25, attributes: 5, weight: 0, maxDurability: 110, repairPerPoint: 6, sellMult: 130 },
-  titan: { key: 'titan', label: 'Titan', mult: 3.10, attributes: 4, weight: 0, maxDurability: 110, repairPerPoint: 6, sellMult: 140 },
-  mythic: { key: 'mythic', label: 'Mythic', mult: 3.6, attributes: 5, weight: 0, maxDurability: 120, repairPerPoint: 8, sellMult: 180 },
+  superElite: { key: 'superElite', label: 'Super Elite', mult: 3.25, attributes: 5, weight: 0, sellMult: 130 },
+  titan: { key: 'titan', label: 'Titan', mult: 3.10, attributes: 4, weight: 0, sellMult: 140 },
+  mythic: { key: 'mythic', label: 'Mythic', mult: 3.6, attributes: 5, weight: 0, sellMult: 180 },
 };
 
 export const INVENTORY_SIZE = 12; // small starting pack per GDD §6.2
@@ -270,8 +270,6 @@ export function generateItem(slot, level, rarityKey, rng) {
     rarity: rarity.key,
     level,
     bonuses,
-    durability: rarity.maxDurability,
-    maxDurability: rarity.maxDurability,
     ...(template.setId ? { setId: template.setId } : {}), // gear set membership (task B)
   };
 }
@@ -280,7 +278,7 @@ export function generateItem(slot, level, rarityKey, rng) {
 // loot tables — only granted by explicit sources like the epic quest chain.
 // Stats are fixed (a named reward is always the same item, unlike RNG drops),
 // but the values are kept in-band for their rarity/level so they don't upset
-// tuning. Durability derives from rarity like any other item.
+// tuning.
 export const NAMED_ITEMS = {
   ashenAegis: {
     slot: 'robe',
@@ -326,7 +324,6 @@ export const NAMED_ITEMS = {
 export function mintNamedItem(namedId) {
   const spec = NAMED_ITEMS[namedId];
   if (!spec) return null;
-  const rarity = RARITIES[spec.rarity];
   return {
     id: `item-${++itemCounter}`,
     slot: spec.slot,
@@ -334,8 +331,6 @@ export function mintNamedItem(namedId) {
     rarity: spec.rarity,
     level: spec.level,
     bonuses: { ...spec.bonuses },
-    durability: rarity.maxDurability,
-    maxDurability: rarity.maxDurability,
     named: namedId,
   };
 }
@@ -367,11 +362,6 @@ export function rollDrop(creatureLevel, rng, opts = {}) {
   return generateItem(slot, creatureLevel, null, rng);
 }
 
-export function repairCost(item) {
-  const missing = item.maxDurability - item.durability;
-  return Math.ceil(missing * RARITIES[item.rarity].repairPerPoint);
-}
-
 export function sellValue(item) {
   return Math.max(1, item.level * RARITIES[item.rarity].sellMult);
 }
@@ -379,7 +369,7 @@ export function sellValue(item) {
 // --- Crafting & Forge (GDD §5). Additive helpers the Forge (js/crafting.js)
 // drives: find an item's source template, reroll its stat values within the same
 // rarity/level ("reforge"), or raise its level and scale its stats up
-// ("upgrade"). Costs live here alongside sellValue/repairCost. ---
+// ("upgrade"). Costs live here alongside sellValue. ---
 
 export const MAX_FORGE_LEVEL = 20;
 
@@ -429,14 +419,6 @@ export function upgradeCost(item) {
   return Math.round(RARITIES[item.rarity].sellMult * (item.level + 1) * 1.5);
 }
 
-// Equipped gear wears 1 durability per fight, win or lose (GDD §3: degrades
-// with use). At 0 it stops granting bonuses until repaired.
-export function degradeEquipment(player) {
-  for (const item of Object.values(player.equipment)) {
-    if (item && item.durability > 0) item.durability -= 1;
-  }
-}
-
 export function equipItem(player, itemId) {
   const idx = player.inventory.findIndex((i) => i.id === itemId);
   if (idx === -1) return false;
@@ -461,11 +443,11 @@ export function unequipItem(player, slot) {
 // kept OUT of effectiveStats (qiRegen is not a combat stat); its ONLY consumer
 // is game.js:tickQi. Returns 0 for all current gear (no item carries a qiRegen
 // bonus yet), so it is a no-op until Titan items land. Mirrors the *Bonuses()
-// convention of sets.js. Broken gear grants nothing.
+// convention of sets.js.
 export function gearQiRegenBonus(player) {
   let bonus = 0;
   for (const item of Object.values(player.equipment ?? {})) {
-    if (item && item.durability > 0 && item.bonuses?.qiRegen) bonus += item.bonuses.qiRegen;
+    if (item && item.bonuses?.qiRegen) bonus += item.bonuses.qiRegen;
   }
   return bonus;
 }

@@ -79,7 +79,7 @@ export function effectiveStats(player, now = Date.now()) {
     maxHp: player.base.maxHp + player.allocated.hp * POINT_VALUE.hp,
   };
   for (const item of Object.values(player.equipment)) {
-    if (!item || item.durability <= 0) continue; // broken gear grants nothing
+    if (!item) continue;
     for (const [stat, val] of Object.entries(item.bonuses)) {
       if (stat === 'qiRegen') continue; // Titan-gear Qi-regen is NOT a combat stat (see items.js:gearQiRegenBonus, consumed by tickQi)
       if (stat === 'hp') eff.maxHp += val;
@@ -96,9 +96,8 @@ export function effectiveStats(player, now = Date.now()) {
     if (stat === 'hp') eff.maxHp += val;
     else eff[stat] += val;
   }
-  // Gear set bonuses — a completed weapon+robe set
-  // grants a bonus on top of the pieces. Honours the broken-gear rule (a broken
-  // piece doesn't count toward its set).
+  // Gear set bonuses — a completed weapon+robe set grants a bonus on top of the
+  // pieces.
   const setStat = setBonuses(player);
   for (const [stat, val] of Object.entries(setStat)) {
     if (!val) continue;

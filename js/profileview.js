@@ -21,6 +21,7 @@ import { activeBuffs, get as getTech } from './techniques.js';
 import { maxQi } from './game.js';
 import { isGem, gemIcon } from './sockets.js';
 import { RARITIES, sellValue, effectiveInventorySize } from './items.js';
+import { attachItemTooltip } from './ui.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -70,34 +71,7 @@ function totalKills(p) {
   return Object.values(p.bestiary ?? {}).reduce((s, e) => s + (e.kills || 0), 0);
 }
 
-// --- Shared item helpers (icon cell + hover text) -------------------------
-
-function itemBonusText(item) {
-  return Object.entries(item.bonuses ?? {})
-    .filter(([, v]) => v)
-    .map(([s, v]) => `+${v} ${STAT_LABELS[s] ?? s}`)
-    .join(', ');
-}
-
-// Plain-text tooltip for an item (task allows `title` attributes). Multi-line so
-// it reads like the game's item card: name / tier / bonuses / durability.
-function itemTitle(item, hint) {
-  if (isGem(item)) {
-    return `${item.name}\nLv ${item.level} gem · ${RARITIES[item.rarity].label}\nSocket into gear via 💎 Jewelcraft${hint ? '\n' + hint : ''}`;
-  }
-  const bonuses = itemBonusText(item);
-  const dur = item.durability != null
-    ? (item.durability <= 0 ? 'BROKEN — grants no bonuses until repaired' : `Durability ${item.durability}/${item.maxDurability}`)
-    : '';
-  const lines = [
-    item.name,
-    `Lv ${item.level} ${item.slot ?? ''} · ${RARITIES[item.rarity]?.label ?? item.rarity}`.trim(),
-  ];
-  if (bonuses) lines.push(bonuses);
-  if (dur) lines.push(dur);
-  if (hint) lines.push(hint);
-  return lines.join('\n');
-}
+// --- Shared item helpers (icon cell) --------------------------------------
 
 // A framed clickable item cell (mirrors ui.js makeItemSlot behaviour). Returns a
 // <button>; icon + optional durability bar + hover title, with click / menu wiring.
@@ -119,7 +93,7 @@ function itemCell(item, { onClick, onMenu, hint, extraClass } = {}) {
       }
       btn.innerHTML = `<span class="item-icon">${SLOT_ICONS[item.slot] ?? '◈'}</span>${dur}`;
     }
-    btn.title = itemTitle(item, hint);
+    attachItemTooltip(btn, item, hint); // rich RPG hover card (not a plain title)
     if (onClick) btn.addEventListener('click', () => { closeContextMenu(); onClick(); });
     if (onMenu) btn.addEventListener('contextmenu', onMenu);
   } else {

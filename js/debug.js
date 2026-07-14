@@ -64,7 +64,9 @@ function ensureStyle() {
 // bypass the natural 1-per-zone caps — the author needs MULTIPLE for testing, so
 // each button can be clicked repeatedly to stack rares onto the current tile.
 export function initDebugBar(state, actions, onChange) {
-  if (!isDevMode()) return; // never renders for a normal player
+  // Prototype testing build: the spawn bar renders for everyone (the author needs
+  // it in the playable artifact, which has no ?dev=1). Re-gate behind isDevMode()
+  // at the pre-1.0 TESTING pass before a real player-facing cut.
   const bar = document.getElementById('debug-bar');
   if (!bar) return;         // Wave-1 container missing — nothing to populate
   if (bar.dataset.populated === '1') return; // idempotent

@@ -17,7 +17,7 @@
 
 #profile-cols {
   display: grid;
-  grid-template-columns: minmax(240px, 340px) 1fr;
+  grid-template-columns: minmax(300px, 2fr) minmax(0, 3fr); /* ~40/60 stats : gear */
   gap: 16px;
   align-items: start;
 }
@@ -95,7 +95,7 @@
   padding-top: 10px;
   border-top: 1px dashed var(--panel-edge);
 }
-.pv-combat { grid-template-columns: 1fr 1fr 1fr; }
+.pv-combat { grid-template-columns: 1fr 1fr; } /* 2-wide so value + "+" never clip */
 .pv-stat-row {
   display: flex;
   align-items: baseline;
@@ -191,7 +191,8 @@
   padding: 4px 2px 2px;
 }
 .pv-doll-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.pv-doll-slot .item-slot { width: 56px; height: 56px; }
+.pv-doll-slot .item-slot { width: 68px; height: 68px; }
+.pv-doll-slot .item-icon { font-size: 1.95rem; } /* larger icons in equipment */
 .pv-doll-tag {
   font-size: 0.6rem;
   text-transform: uppercase;
@@ -202,10 +203,12 @@
 /* ---- Inventory: 5-wide pack grid ------------------------------------ */
 .pv-inv-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(5, minmax(0, 44px));
+  justify-content: start;
+  gap: 6px;
 }
-.pv-inv-grid .item-slot { width: 100%; aspect-ratio: 1 / 1; height: auto; }
+.pv-inv-grid .item-slot { width: 44px; height: 44px; } /* compact — inventory takes less space */
+.pv-inv-grid .item-icon { font-size: 1.05rem; }        /* smaller icons in inventory */
 
 /* Legacy grid kept for any external reference; harmless if unused. */
 .pv-item-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); gap: 8px; }

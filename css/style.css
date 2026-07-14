@@ -501,6 +501,10 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 .rarity-superElite { color: var(--r-superelite); }
 .rarity-titan { color: var(--r-titan); }
 
+/* Loot glyph shown before an item name in the combat-result banner. */
+.loot-drop { font-weight: 600; white-space: nowrap; }
+.loot-drop-icon { font-size: 1.1em; vertical-align: -1px; }
+
 .broken { color: var(--loss); font-weight: bold; }
 
 .danger-btn { color: var(--loss); }

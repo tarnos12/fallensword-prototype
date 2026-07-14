@@ -2,7 +2,7 @@
 // through the action functions passed in from main.js.
 
 import { ZONES, portalAt } from './map.js';
-import { maxQi, effectiveStats, stageName, totalRepairCost, marketListings, marketPlayerListings, marketMailbox, guildMembers, guildRecruits, guildBuffSummary } from './game.js';
+import { maxQi, qiPerMinute, effectiveStats, stageName, totalRepairCost, marketListings, marketPlayerListings, marketMailbox, guildMembers, guildRecruits, guildBuffSummary } from './game.js';
 import { MAX_TURNS } from './combat.js';
 import { xpForBreakthrough, ALLOC_STATS, POINT_VALUE, MAX_STAGE, ASCENSION_STAT_PER_TIER } from './progression.js';
 import { meridianBonuses } from './meridians.js'; // per-source char-sheet stat breakdown
@@ -51,6 +51,13 @@ export function renderPlayerBar(state) {
   chipText('chip-stones', `◆ ${p.spiritStones}`);
   chipText('chip-merit', `✧ ${p.merit ?? 0}`);
   chipText('chip-qi', `${qi} / ${qiMax}`);
+  // Qi regen tooltip — how fast the pool refills, in the player's terms.
+  const qpm = qiPerMinute(p);
+  const secsPer = qpm > 0 ? Math.round(60 / qpm) : 0;
+  const qiHost = $('chip-qi')?.closest('.hud-stat') || $('chip-qi');
+  if (qiHost) {
+    qiHost.title = `Qi ${qi} / ${qiMax}\nRegenerates ~${qpm.toFixed(1)} Qi/min (1 every ${secsPer}s) while offline or idle.\nSpent to move, fight and cast.`;
+  }
   // Retained (guarded) so a layout that still shows them keeps working.
   chipText('chip-hp', eff.maxHp);
   const pts = $('chip-points');
@@ -437,6 +444,13 @@ export function renderCharSheet(state, onAllocate) {
 const SLOT_ICONS = { weapon: '⚔️', robe: '👘', helm: '🪖', gloves: '🧤', boots: '🥾', ring: '💍', amulet: '📿' };
 const SLOT_LABELS = { weapon: 'Weapon', robe: 'Robe', helm: 'Helm', gloves: 'Gloves', boots: 'Boots', ring: 'Ring', amulet: 'Amulet' };
 
+// Glyph for a dropped item — gem face or the slot icon — so loot reads at a
+// glance in the combat-result banner instead of being a bare name.
+function dropIcon(item) {
+  if (isGem(item)) return gemIcon(item);
+  return SLOT_ICONS[item.slot] ?? '◈';
+}
+
 // Rich item tooltip: rarity-colored header, one stat per line, level/slot,
 // set membership + progress, durability, and sell value — everything a
 // player needs to judge a piece at a glance. Markup is wrapped in its own
@@ -447,7 +461,7 @@ function itemTooltip(item, hint) {
   // Gems (task U) are their own item kind — no slot/durability/compare; show the
   // single flat bonus they grant when socketed.
   if (isGem(item)) {
-    return `<div class="itemtip">
+    return `<div class="itemtip rarity-${item.rarity}">
       <div class="itemtip-head">
         <span class="itemtip-name rarity-${item.rarity}">${gemIcon(item)} ${item.name}</span>
         <span class="itemtip-rarity rarity-${item.rarity}">${RARITIES[item.rarity].label}</span>
@@ -466,7 +480,7 @@ function itemTooltip(item, hint) {
     item.durability <= 0
       ? '<div class="itemtip-row itemtip-dur broken">BROKEN — grants no bonuses until repaired</div>'
       : `<div class="itemtip-row itemtip-dur${pct < 25 ? ' low' : ''}">Durability <span class="itemtip-dur-val">${item.durability}/${item.maxDurability}</span></div>`;
-  return `<div class="itemtip">
+  return `<div class="itemtip rarity-${item.rarity}">
     <div class="itemtip-head">
       <span class="itemtip-name rarity-${item.rarity}">${item.name}</span>
       <span class="itemtip-rarity rarity-${item.rarity}">${RARITIES[item.rarity].label}</span>
@@ -480,6 +494,13 @@ function itemTooltip(item, hint) {
     ${compareRows(item)}
     <div class="tt-hint">${hint}</div>
   </div>`;
+}
+
+// Attach the rich RPG item tooltip to any element (used by profileview.js so
+// the profile's paper-doll + pack cells get the same hover card as the market/
+// gear lists, instead of a plain browser `title` bubble).
+export function attachItemTooltip(el, item, hint) {
+  attachTooltip(el, () => itemTooltip(item, hint));
 }
 
 function makeItemSlot(item, { label, onClick, onMenu, tooltipHint }) {
@@ -777,7 +798,7 @@ function titanProgressBanner(tp) {
 function outcomeBanner(result) {
   if (result.outcome === 'win') {
     const r = result.rewards;
-    const drop = r.itemDrop ? `, looted <span class="rarity-${r.itemDrop.rarity}">${r.itemDrop.name}</span>` : '';
+    const drop = r.itemDrop ? `, looted <span class="loot-drop rarity-${r.itemDrop.rarity}"><span class="loot-drop-icon">${dropIcon(r.itemDrop)}</span> ${r.itemDrop.name}</span>` : '';
     let banner;
     if (result.bossKill) {
       banner = `<div class="banner boss-win">☠ CALAMITY FELLED — ${result.monster.name} is vanquished! +${r.xp} XP, +${r.stones} spirit stones${drop} <span class="dim">(${result.staminaSpent} Qi spent)</span></div>`;

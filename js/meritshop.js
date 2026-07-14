@@ -20,58 +20,62 @@ import { resetTechniques, techniquePointsSpent } from './techniques.js';
 
 // --- Catalog data (doc 20 §3.2) ---------------------------------------------
 
+// Every stacking row uses costGrowth 1.0 — a FLAT price per purchase (the
+// author's rule: Merit upgrades never get more expensive as you stack them).
+// Descriptions state the CONCRETE per-purchase gain and the total cap so it's
+// obvious what one buy grants.
 export const MERIT_UPGRADES = {
   packSlots: {
     name: 'Pack Expansion', kind: 'stacking',
-    desc: 'Widen your inventory pack.',
+    desc: '+2 inventory pack slots per purchase (up to +12 total).',
     perPurchase: 2, maxPurchases: 6, // +2 to +12 slots total (12 -> 24)
-    baseCost: 15, costGrowth: 1.6,
+    baseCost: 15, costGrowth: 1.0,
   },
   qiCap: {
     name: 'Qi Reservoir', kind: 'stacking',
-    desc: 'Raise your maximum Qi.',
+    desc: '+10 maximum Qi per purchase (up to +80 total).',
     perPurchase: 10, maxPurchases: 8, // +10 to +80 max Qi
-    baseCost: 10, costGrowth: 1.5,
+    baseCost: 10, costGrowth: 1.0,
   },
   qiRegenPct: {
     name: 'Qi Current Talisman', kind: 'stacking',
-    desc: 'Speed up passive Qi regeneration.',
+    desc: '−5% Qi-regen interval per purchase — Qi refills faster (up to −30%).',
     perPurchase: 0.05, maxPurchases: 6, // -5% to -30% regen interval, capped so the Qi gate never disappears
-    baseCost: 20, costGrowth: 1.7,
+    baseCost: 20, costGrowth: 1.0,
   },
   loadoutSlots: {
     name: 'Combat Set Expansion', kind: 'stacking',
-    desc: 'Save more Combat Sets (gear loadouts).',
+    desc: '+1 saved Combat Set (gear loadout) per purchase (up to +2).',
     perPurchase: 1, maxPurchases: 2,
-    baseCost: 25, costGrowth: 2.0,
+    baseCost: 25, costGrowth: 1.0,
   },
   marketSlots: {
     name: 'Auction Stall Expansion', kind: 'stacking',
-    desc: 'List more items at once in the Treasure Pavilion.',
+    desc: '+1 Auction stall slot per purchase — list more at once (up to +3).',
     perPurchase: 1, maxPurchases: 3,
-    baseCost: 20, costGrowth: 1.8,
+    baseCost: 20, costGrowth: 1.0,
   },
   xpProtection: {
     name: 'Ward Against Regression', kind: 'stacking',
-    desc: 'Reduce the XP lost on death.',
+    desc: '−25% XP lost on death per purchase (up to −100%: lose no XP).',
     perPurchase: 0.25, maxPurchases: 4, // -25% to -100% of death XP loss
-    baseCost: 25, costGrowth: 1.8,
+    baseCost: 25, costGrowth: 1.0,
   },
   statRespec: {
     name: 'Cultivation Respec Talisman', kind: 'respec',
-    desc: 'Refund every allocated stat point to spend again.',
+    desc: 'Refund every allocated stat point so you can re-spend them.',
     respecFn: 'respecStats', costFn: 'statPointsSpent',
     maxPurchases: Infinity, baseCost: 20, costScalesWithPointsSpent: 2,
   },
   meridianRespec: {
     name: 'Meridian Respec Talisman', kind: 'respec',
-    desc: 'Refund every opened meridian rank to spend again.',
+    desc: 'Refund every opened meridian rank so you can re-spend them.',
     respecFn: 'resetMeridians', costFn: 'meridianPointsSpent',
     maxPurchases: Infinity, baseCost: 20, costScalesWithPointsSpent: 2,
   },
   techniqueRespec: {
     name: 'Technique Respec Talisman', kind: 'respec',
-    desc: 'Unlearn every technique and refund the points to spend again.',
+    desc: 'Unlearn every technique and refund the points to re-spend.',
     respecFn: 'resetTechniques', costFn: 'techniquePointsSpent',
     maxPurchases: Infinity, baseCost: 20, costScalesWithPointsSpent: 2,
   },
@@ -83,13 +87,13 @@ export const MERIT_UPGRADES = {
   },
   xpBoost: {
     name: 'Insight Charm', kind: 'timed',
-    desc: '+25% battle XP for 1 hour. Repurchasing extends the timer.',
+    desc: '+25% battle XP for 1 hour. Buying again extends the timer.',
     maxPurchases: Infinity, baseCost: 15, costGrowth: 1.0,
     effect: { xpPct: 0.25, durationMs: 60 * 60 * 1000 },
   },
   dropBoost: {
     name: 'Fortune Draught', kind: 'timed',
-    desc: '+25% drop chance for 1 hour. Repurchasing extends the timer.',
+    desc: '+25% item-drop chance for 1 hour. Buying again extends the timer.',
     maxPurchases: Infinity, baseCost: 15, costGrowth: 1.0,
     effect: { dropPct: 0.25, durationMs: 60 * 60 * 1000 },
   },

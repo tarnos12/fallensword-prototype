@@ -54,8 +54,45 @@
    (theme.css supplies none either) — the item tooltip always renders as a
    dark parchment card regardless of the active theme. */
 
+/* When #tooltip is hosting an item card, hand ALL the chrome (border, bg,
+   padding, shadow) to .itemtip so the card can carry a rarity-tinted frame the
+   plain gold #tooltip box can't. The base box is neutralised for this case. */
+#tooltip:has(.itemtip) {
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+  max-width: 340px;
+}
+
+/* Per-rarity accent colour, exposed as --rar so the frame, name, glow and the
+   little rarity pill all read from one source. (.rarity-* also sets `color`,
+   but the card body is forced back to --text below, so only the name/pill keep
+   the rarity hue.) */
+#tooltip .itemtip.rarity-common    { --rar: var(--r-common, #b3a992); }
+#tooltip .itemtip.rarity-uncommon  { --rar: var(--r-uncommon, #6faf87); }
+#tooltip .itemtip.rarity-rare      { --rar: var(--r-rare, #6b93c4); }
+#tooltip .itemtip.rarity-epic      { --rar: var(--r-epic, #a184c9); }
+#tooltip .itemtip.rarity-legendary { --rar: var(--r-legendary, #d4a94e); }
+#tooltip .itemtip.rarity-mythic    { --rar: var(--r-mythic, #eb8a72); }
+#tooltip .itemtip.rarity-superElite{ --rar: var(--r-superelite, #58b5a4); }
+#tooltip .itemtip.rarity-titan     { --rar: var(--r-titan, #aab4d4); }
+
 #tooltip .itemtip {
-  min-width: 168px;
+  --rar: var(--gold, #c8a24a);
+  min-width: 208px;
+  color: var(--text, #e8e0cc);
+  padding: 11px 13px 10px;
+  border: 1px solid color-mix(in srgb, var(--rar) 45%, #241d14);
+  border-top: 3px solid var(--rar);
+  border-radius: 7px;
+  background:
+    radial-gradient(120% 90% at 50% -10%, color-mix(in srgb, var(--rar) 12%, transparent), transparent 60%),
+    linear-gradient(160deg, #16110b 0%, #1c1712 55%, #110d09 100%);
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.62),
+    0 0 16px -6px var(--rar),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 #tooltip .itemtip-head {
@@ -63,51 +100,70 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 10px;
-  padding-bottom: 5px;
-  margin-bottom: 5px;
-  border-bottom: 1px solid var(--gold-soft, rgba(200, 162, 74, 0.4));
+  padding-bottom: 7px;
+  margin-bottom: 7px;
+  border-bottom: 1px solid color-mix(in srgb, var(--rar) 34%, transparent);
 }
 
 #tooltip .itemtip-name {
+  font-family: var(--font-display, Georgia, serif);
   font-weight: 700;
-  font-size: 0.9rem;
-  line-height: 1.25;
+  font-size: 0.98rem;
+  line-height: 1.2;
+  text-shadow: 0 0 10px color-mix(in srgb, var(--rar) 40%, transparent);
 }
 
 #tooltip .itemtip-rarity {
   flex: 0 0 auto;
-  font-size: 0.62rem;
-  font-weight: 600;
+  align-self: center;
+  font-size: 0.58rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  opacity: 0.9;
+  letter-spacing: 0.09em;
   white-space: nowrap;
+  color: var(--rar);
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--rar) 45%, transparent);
+  background: color-mix(in srgb, var(--rar) 14%, transparent);
 }
 
 #tooltip .itemtip-meta {
   font-size: 0.72rem;
   color: var(--dim, #9b8f74);
-  margin-bottom: 5px;
+  letter-spacing: 0.03em;
+  margin-bottom: 8px;
 }
 
 #tooltip .itemtip-stats {
   display: flex;
   flex-direction: column;
-  margin-bottom: 2px;
+  gap: 1px;
+  padding: 6px 9px;
+  margin-bottom: 4px;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.26);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
 
 #tooltip .itemtip-stat {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  font-size: 0.79rem;
-  line-height: 1.5;
+  font-size: 0.8rem;
+  line-height: 1.55;
 }
 
-#tooltip .itemtip-stat-label { color: var(--text, #e8e0cc); }
+#tooltip .itemtip-stat-label {
+  color: var(--dim, #9b8f74);
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  align-self: center;
+}
 
 #tooltip .itemtip-stat-val {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--jade, #5fae7f);
   font-variant-numeric: tabular-nums;
 }
@@ -115,11 +171,12 @@
 #tooltip .itemtip-row {
   font-size: 0.74rem;
   color: var(--dim, #9b8f74);
-  padding-top: 4px;
-  margin-top: 4px;
-  border-top: 1px solid rgba(200, 162, 74, 0.16);
+  padding-top: 5px;
+  margin-top: 5px;
+  border-top: 1px solid rgba(200, 162, 74, 0.14);
 }
 
+#tooltip .itemtip-dur-val { font-weight: 600; color: var(--text, #e8e0cc); font-variant-numeric: tabular-nums; }
 #tooltip .itemtip-dur.low .itemtip-dur-val { color: #d0a545; }
 #tooltip .itemtip-dur.broken { color: var(--loss, #b13a2e); font-weight: bold; }
 
@@ -129,3 +186,23 @@
   color: var(--gold, #c8a24a);
   font-weight: 600;
 }
+
+/* Nested set / socket / compare blocks (markup owned by sets.js, sockets.js,
+   itemcompare.js) — give them the same top-divider rhythm as itemtip rows so
+   the card reads as one cohesive panel rather than stacked fragments. */
+#tooltip .itemtip .set-head,
+#tooltip .itemtip .socket-head,
+#tooltip .itemtip .cmp-head {
+  margin-top: 7px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(200, 162, 74, 0.14);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+#tooltip .itemtip .cmp-head { color: var(--dim, #9b8f74); }
+#tooltip .itemtip .cmp-row { display: flex; justify-content: space-between; gap: 12px; font-size: 0.76rem; line-height: 1.5; }
+#tooltip .itemtip .cmp-row .cmp-stat { color: var(--dim, #9b8f74); }
+#tooltip .itemtip .cmp-row.cmp-up .cmp-delta   { color: var(--win, #6faf87); font-weight: 600; }
+#tooltip .itemtip .cmp-row.cmp-down .cmp-delta { color: var(--loss, #b13a2e); font-weight: 600; }
+#tooltip .itemtip .cmp-row.cmp-same .cmp-delta { color: var(--dim, #9b8f74); }
+#tooltip .itemtip .tt-hint { margin-top: 8px; }

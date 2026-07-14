@@ -79,6 +79,16 @@ export function maxQi(player) {
   return MAX_QI + guildBuffs(player).qiCap + meritShopBonuses(player).qiCap;
 }
 
+// Effective Qi regenerated per minute, folding in the Hall of Merit regen
+// talisman (shorter interval) and any Titan gear per-tick bonus. Mirrors the
+// exact math tickQi() uses so the HUD tooltip never drifts from reality.
+export function qiPerMinute(player) {
+  const perTick = 1 + gearQiRegenBonus(player);
+  const regenPct = meritShopBonuses(player).qiRegenPct;
+  const interval = Math.max(1, Math.round(QI_REGEN_MS * (1 - regenPct)));
+  return (perTick * 60_000) / interval;
+}
+
 // Death penalty (GDD §8.3 starting values). XP loss is progress toward the
 // next stage only — a death can never undo a breakthrough.
 const DEATH_STONE_LOSS = 0.05;

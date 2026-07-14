@@ -53,28 +53,21 @@ export const ZONE = {
   realm: 'Foundation Establishment',
   start: { x: 0, y: 0 },
   startLabel: 'Gorge Outpost',
-  bands: [
-    { max: 3, band: 1 },
-    { max: 6, band: 2 },
-    { max: Infinity, band: 3 },
+  wallDensity: 0.30, // a tighter, more broken layout than the starter vale
+  keepOpen: [{ x: 9, y: 9 }, { x: 0, y: 9 }], // the two calamity lairs stay reachable through the maze
+  // Flat roster across the whole gorge: hound common, golem frequent, revenant a
+  // hard armoured wall.
+  spawns: [
+    { type: 'emberHound', weight: 4 },
+    { type: 'cinderGolem', weight: 3 },
+    { type: 'ashenRevenant', weight: 2 },
   ],
-  spawns: {
-    1: [{ type: 'emberHound', weight: 1 }],
-    2: [
-      { type: 'emberHound', weight: 1 },
-      { type: 'cinderGolem', weight: 2 },
-    ],
-    3: [
-      { type: 'cinderGolem', weight: 1 },
-      { type: 'ashenRevenant', weight: 2 },
-    ],
-  },
   portals: [
-    { x: 0, y: 0, to: 'azuremist', entryX: 9, entryY: 9, minStage: 0 },
-    // Ascend to Stormcrown Peak (Core Formation tier). Gated at CF1 (level 19 =
-    // Foundation Establishment 9 -> Core Formation 1 barrier). Placed at the free
-    // (9,0) corner — clear of the two boss lairs at (9,9) and (0,9) and the
-    // Azuremist return portal at (0,0).
-    { x: 9, y: 0, to: 'thunderpeak', entryX: 0, entryY: 0, minStage: 19 },
+    // The Outpost doubles as the road home to Azuremist (arrive at its Sect Gate).
+    { x: 0, y: 0, to: 'azuremist', entryX: 0, entryY: 0, minStage: 0 },
+    // Ascend to Stormcrown Peak (Core Formation tier). Gated at CF1 (level 19).
+    // Set mid-gorge, clear of the two boss lairs and the return gate; arrival
+    // lands on the Peak's Cloudgate haven.
+    { x: 4, y: 3, to: 'thunderpeak', entryX: 0, entryY: 0, minStage: 19 },
   ],
 };

@@ -37,10 +37,10 @@ export const MERIT_UPGRADES = {
     perPurchase: 10, maxPurchases: 8, // +10 to +80 max Qi
     baseCost: 10, costGrowth: 1.0,
   },
-  qiRegenPct: {
+  qiRegen: {
     name: 'Qi Current Talisman', kind: 'stacking',
-    desc: '−5% Qi-regen interval per purchase — Qi refills faster (up to −30%).',
-    perPurchase: 0.05, maxPurchases: 6, // -5% to -30% regen interval, capped so the Qi gate never disappears
+    desc: '+1 Qi restored per regen tick — a permanent, flat regen boost (up to +8).',
+    perPurchase: 1, maxPurchases: 8, // +1 to +8 Qi per regen tick (flat, stacks on the base 1/tick)
     baseCost: 20, costGrowth: 1.0,
   },
   loadoutSlots: {
@@ -177,7 +177,7 @@ export function meritShopBonuses(player) {
   const p = player.meritShop?.purchases ?? {};
   return {
     qiCap: (p.qiCap ?? 0) * MERIT_UPGRADES.qiCap.perPurchase,
-    qiRegenPct: Math.min(0.3, (p.qiRegenPct ?? 0) * MERIT_UPGRADES.qiRegenPct.perPurchase),
+    qiRegenFlat: (p.qiRegen ?? 0) * MERIT_UPGRADES.qiRegen.perPurchase,
     packSlots: (p.packSlots ?? 0) * MERIT_UPGRADES.packSlots.perPurchase,
     loadoutSlots: (p.loadoutSlots ?? 0) * MERIT_UPGRADES.loadoutSlots.perPurchase,
     marketSlots: (p.marketSlots ?? 0) * MERIT_UPGRADES.marketSlots.perPurchase,

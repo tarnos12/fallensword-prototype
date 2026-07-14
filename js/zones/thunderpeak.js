@@ -82,24 +82,17 @@ export const ZONE = {
   realm: 'Core Formation',
   start: { x: 0, y: 0 },
   startLabel: 'Cloudgate Terrace',
-  bands: [
-    { max: 3, band: 1 },
-    { max: 6, band: 2 },
-    { max: Infinity, band: 3 },
+  wallDensity: 0.32, // the most broken, storm-wracked layout
+  keepOpen: [{ x: 9, y: 9 }], // the Celestial Warden's summit lair stays reachable
+  // Flat roster across the whole peak: roc common, wyrm frequent, Warden a
+  // punishing apex wall.
+  spawns: [
+    { type: 'galewingRoc', weight: 4 },
+    { type: 'stormscaleWyrm', weight: 3 },
+    { type: 'celestialWarden', weight: 2 },
   ],
-  spawns: {
-    1: [{ type: 'galewingRoc', weight: 1 }],
-    2: [
-      { type: 'galewingRoc', weight: 1 },
-      { type: 'stormscaleWyrm', weight: 2 },
-    ],
-    3: [
-      { type: 'stormscaleWyrm', weight: 1 },
-      { type: 'celestialWarden', weight: 2 },
-    ],
-  },
   portals: [
-    // Return to Cindervein Gorge (arrives beside the Stormcrown portal at (9,0)).
-    { x: 0, y: 0, to: 'cindervein', entryX: 9, entryY: 0, minStage: 0 },
+    // The Cloudgate is the road home to Cindervein (arrive at the Gorge Outpost).
+    { x: 0, y: 0, to: 'cindervein', entryX: 0, entryY: 0, minStage: 0 },
   ],
 };

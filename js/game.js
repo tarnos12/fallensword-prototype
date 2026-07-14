@@ -65,12 +65,11 @@ import { pillById, applyPillBuffs, cleanPillBuffs } from './alchemy.js';
 import { salvageYield, essenceRepairCost, materialName } from './salvage.js';
 import { saveGame, loadGame, clearSave } from './save.js';
 
-// --- Qi (stamina) tuning. Retuned (doc 30 §1.1) from the prototype's fast
-// 1 Qi/3s (~1200/hr) to 1 Qi/48s (~75/hr, mid-band of the sourced 50–90/hr) so
-// Qi is actually scarce — the premise every ability cost + session-length knob
-// depends on. MAX_QI raised to 1000 for testing (a larger Qi battery).
+// --- Qi (stamina) tuning. Base regen is 1 Qi/3s (~20/min, 1200/hr) so the
+// stamina gate is present but not punishing; the Hall of Merit "Qi Current
+// Talisman" adds FLAT Qi-per-tick on top. MAX_QI is 1000 (a large Qi battery).
 export const MAX_QI = 1000;
-export const QI_REGEN_MS = 48_000; // 1 Qi per 48s, wall-clock (~75/hr)
+export const QI_REGEN_MS = 3_000; // 1 Qi per 3s base, wall-clock (~20/min, 1200/hr)
 const STONE_ACCRUAL_MS = 3_600_000; // spirit-stones/hour accrued per real hour (sect disciples)
 
 // Effective Qi cap: base cap + Qi-cap bonuses from sect disciples (GDD §4.3) and
@@ -79,14 +78,12 @@ export function maxQi(player) {
   return MAX_QI + guildBuffs(player).qiCap + meritShopBonuses(player).qiCap;
 }
 
-// Effective Qi regenerated per minute, folding in the Hall of Merit regen
-// talisman (shorter interval) and any Titan gear per-tick bonus. Mirrors the
-// exact math tickQi() uses so the HUD tooltip never drifts from reality.
+// Effective Qi regenerated per minute, folding in the Hall of Merit flat regen
+// talisman and any Titan gear per-tick bonus. Mirrors the exact math tickQi()
+// uses so the HUD tooltip never drifts from reality.
 export function qiPerMinute(player) {
-  const perTick = 1 + gearQiRegenBonus(player);
-  const regenPct = meritShopBonuses(player).qiRegenPct;
-  const interval = Math.max(1, Math.round(QI_REGEN_MS * (1 - regenPct)));
-  return (perTick * 60_000) / interval;
+  const perTick = 1 + gearQiRegenBonus(player) + meritShopBonuses(player).qiRegenFlat;
+  return (perTick * 60_000) / QI_REGEN_MS;
 }
 
 // Death penalty (GDD §8.3 starting values). XP loss is progress toward the
@@ -395,12 +392,10 @@ export function tickQi(state, now = Date.now()) {
     state.lastQiTick = now;
     return;
   }
-  // Titan gear (Wave 2) grants extra Qi per regen tick; gearQiRegenBonus is 0 for
-  // all current gear, so perTick is 1 today. Kept OUT of effectiveStats by design.
-  const perTick = 1 + gearQiRegenBonus(state.player);
-  // Hall of Merit's "Qi Current Talisman" shortens the regen interval (up to -30%).
-  const regenPct = meritShopBonuses(state.player).qiRegenPct;
-  const interval = Math.max(1, Math.round(QI_REGEN_MS * (1 - regenPct)));
+  // Per-tick Qi = 1 base + Titan-gear bonus + the Hall of Merit "Qi Current
+  // Talisman" (a FLAT +Qi-per-tick upgrade). The interval itself is fixed.
+  const perTick = 1 + gearQiRegenBonus(state.player) + meritShopBonuses(state.player).qiRegenFlat;
+  const interval = QI_REGEN_MS;
   const ticks = Math.floor((now - state.lastQiTick) / interval);
   if (ticks > 0) {
     state.qi = Math.min(cap, state.qi + ticks * perTick);
@@ -431,6 +426,11 @@ export function tryMove(state, x, y) {
   if (x < 0 || y < 0 || x >= size || y >= size) return { ok: false, reason: 'Out of bounds' };
   const cost = moveCost(state.pos, { x, y });
   if (cost === null) return { ok: false, reason: 'Not adjacent' };
+  if (state.map.at(x, y).wall) return { ok: false, reason: 'A wall blocks the way' };
+  // No diagonal squeeze between two wall tiles (keeps the maze meaningful).
+  if (cost === 2 && state.map.at(state.pos.x, y).wall && state.map.at(x, state.pos.y).wall) {
+    return { ok: false, reason: 'A wall blocks the way' };
+  }
   if (state.qi < cost) return { ok: false, reason: `Need ${cost} Qi to move` };
   state.qi -= cost;
   state.pos = { x, y };
@@ -637,17 +637,17 @@ export function attack(state, monsterId) {
 // — the author explicitly needs to spawn MULTIPLE for testing. ?dev=1-gated at
 // the UI layer (debug.js only renders the bar in dev mode). ---
 
-// Pick a native creature type for the current tile's danger band without needing
-// map.js's private pickType (kept out of my ownership) — weighting is irrelevant
-// for a debug spawn, so a uniform pick over the band's spawn table suffices.
-function debugPickType(state, tile) {
-  const spawns = ZONES[state.zoneId].spawns[tile.band];
+// Pick a native creature type for the current zone without needing map.js's
+// private pickType — weighting is irrelevant for a debug spawn, so a uniform
+// pick over the zone's flat spawn table suffices.
+function debugPickType(state) {
+  const spawns = ZONES[state.zoneId].spawns;
   return spawns[Math.floor(state.worldRng() * spawns.length)].type;
 }
 
 export function debugSpawnLegendary(state) {
   const tile = currentTile(state);
-  const actor = spawnCreature(debugPickType(state, tile), null, state.worldRng, { legendary: true, statMult: LEGENDARY_STAT_MULT });
+  const actor = spawnCreature(debugPickType(state), null, state.worldRng, { legendary: true, statMult: LEGENDARY_STAT_MULT });
   tile.monsters.push(actor);
   tile.clearedAt = null;
   addLog(state, `[debug] Spawned ${actor.name}.`);
@@ -657,7 +657,7 @@ export function debugSpawnLegendary(state) {
 
 export function debugSpawnSuperElite(state) {
   const tile = currentTile(state);
-  const actor = spawnCreature(debugPickType(state, tile), null, state.worldRng, { superElite: true, statMult: SUPER_ELITE_STAT_MULT });
+  const actor = spawnCreature(debugPickType(state), null, state.worldRng, { superElite: true, statMult: SUPER_ELITE_STAT_MULT });
   tile.monsters.push(actor);
   tile.clearedAt = null;
   addLog(state, `[debug] Spawned ${actor.name}.`);

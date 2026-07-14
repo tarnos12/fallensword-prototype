@@ -65,8 +65,8 @@ export function spawnTitanActor(zoneId) {
 // Place (or relocate) a Titan onto a random non-start tile, excluding its
 // current cell — "moves to a DIFFERENT cell" is enforced here, not left to chance.
 export function placeTitanRandomly(map, actor, rng, excludeXY) {
-  const pool = map.tiles.filter((t) => !t.isStart && !(excludeXY && t.x === excludeXY.x && t.y === excludeXY.y));
-  const tiles = pool.length ? pool : map.tiles.filter((t) => !t.isStart);
+  const pool = map.tiles.filter((t) => !t.isStart && !t.wall && !(excludeXY && t.x === excludeXY.x && t.y === excludeXY.y));
+  const tiles = pool.length ? pool : map.tiles.filter((t) => !t.isStart && !t.wall);
   const tile = tiles[Math.floor(rng() * tiles.length)];
   tile.monsters.push(actor);
   tile.clearedAt = null;

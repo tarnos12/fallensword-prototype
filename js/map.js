@@ -1,9 +1,11 @@
 // Grid map (GDD §3, §6.6). map.js is now loader + grid logic only: zone
-// definitions (grid size, danger bands, spawn tables, portals) and creatures
-// live per-zone under js/zones/ and are composed by the zone registry (task E).
-// Zones are connected by portals; danger scales with distance from a zone's
-// haven tile; each tile holds 0-3 creatures; cleared tiles repopulate after a
-// respawn delay when re-entered.
+// definitions (grid size, wall density, flat spawn table, portals, landmarks)
+// and creatures live per-zone under js/zones/ and are composed by the zone
+// registry (task E). Zones are connected by portals. There is NO danger
+// scaling: every zone spawns its own fixed roster across all its floor tiles.
+// What varies a zone is its LAYOUT — a braided maze of impassable wall tiles.
+// Each open tile holds 0-3 creatures; cleared tiles repopulate after a respawn
+// delay when re-entered.
 
 import { spawnCreature } from './actors.js';
 // ZONES is composed from the per-zone modules; re-exported here so every
@@ -25,14 +27,75 @@ export function moveCost(from, to) {
   return dx + dy === 2 ? 2 : 1;
 }
 
-function dangerBand(zone, x, y) {
-  const d = Math.max(Math.abs(x - zone.start.x), Math.abs(y - zone.start.y));
-  for (const b of zone.bands) if (d <= b.max) return b.band;
-  return zone.bands[zone.bands.length - 1].band;
+// --- Dungeon layout (maze of walls) -----------------------------------------
+// No danger scaling any more: each zone spawns its OWN fixed roster everywhere
+// (js/zones/<id>.js `spawns` is one flat weighted table). What makes a zone
+// interesting is its LAYOUT — a braided maze of impassable wall tiles the
+// player threads through, with the haven, portals and boss lairs guaranteed
+// reachable.
+
+const DIRS4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+const cellKey = (x, y) => `${x},${y}`;
+const inBounds = (x, y, size) => x >= 0 && y >= 0 && x < size && y < size;
+
+// Tiles that must never be a wall: the haven, every portal, and any zone
+// landmark (boss lairs, declared per-zone in `keepOpen`).
+function forcedOpenSet(zone) {
+  const s = new Set([cellKey(zone.start.x, zone.start.y)]);
+  for (const p of zone.portals || []) s.add(cellKey(p.x, p.y));
+  for (const k of zone.keepOpen || []) s.add(cellKey(k.x, k.y));
+  return s;
 }
 
-function pickType(zone, band, rng) {
-  const spawns = zone.spawns[band];
+// Carve an L-shaped corridor from (x,y) toward the haven, clearing walls — so a
+// forced-open tile is guaranteed to connect to the (always-reachable) start.
+function carveToStart(wall, x, y, start, size) {
+  let cx = x, cy = y;
+  while (cx !== start.x) { cx += cx < start.x ? 1 : -1; wall[cy * size + cx] = false; }
+  while (cy !== start.y) { cy += cy < start.y ? 1 : -1; wall[cy * size + cx] = false; }
+}
+
+// Build the wall mask: random walls at the zone's density, then guarantee every
+// forced-open tile connects to the haven, then seal off any leftover pocket so
+// the whole floor is one navigable dungeon (no unreachable, wasted spawns).
+function generateLayout(zone, rng) {
+  const size = zone.size;
+  const density = zone.wallDensity ?? 0.28;
+  const forced = forcedOpenSet(zone);
+  const wall = new Array(size * size).fill(false);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      if (forced.has(cellKey(x, y))) continue;
+      if (rng() < density) wall[y * size + x] = true;
+    }
+  }
+  for (const fk of forced) {
+    const [fx, fy] = fk.split(',').map(Number);
+    carveToStart(wall, fx, fy, zone.start, size);
+  }
+  // Flood-fill from the haven over open tiles; seal any open tile the flood
+  // never reached (isolated pocket) into a wall.
+  const startI = zone.start.y * size + zone.start.x;
+  const seen = new Array(size * size).fill(false);
+  const stack = [startI];
+  seen[startI] = true;
+  while (stack.length) {
+    const i = stack.pop();
+    const x = i % size, y = Math.floor(i / size);
+    for (const [dx, dy] of DIRS4) {
+      const nx = x + dx, ny = y + dy;
+      if (!inBounds(nx, ny, size)) continue;
+      const ni = ny * size + nx;
+      if (!seen[ni] && !wall[ni]) { seen[ni] = true; stack.push(ni); }
+    }
+  }
+  for (let i = 0; i < size * size; i++) if (!wall[i] && !seen[i]) wall[i] = true;
+  return wall;
+}
+
+// Weighted pick from the zone's single flat spawn table.
+function pickType(zone, rng) {
+  const spawns = zone.spawns;
   const total = spawns.reduce((s, e) => s + e.weight, 0);
   let roll = rng() * total;
   for (const e of spawns) {
@@ -45,25 +108,26 @@ function pickType(zone, band, rng) {
 // hasSE / hasTitan: is a Super-Elite / Titan already alive elsewhere in the zone?
 // Passed by the caller so the "1 SE / 1 Titan per zone" caps hold across tiles.
 function populateTile(zone, tile, rng, hasSE = false, hasTitan = false) {
-  const count = tile.isStart ? 0 : Math.floor(rng() * 4); // 0-3 creatures
   tile.monsters = [];
+  tile.clearedAt = null;
+  if (tile.wall || tile.isStart) return; // walls + the haven never spawn creatures
+  const count = Math.floor(rng() * 4); // 0-3 creatures
   for (let i = 0; i < count; i++) {
     // Each ordinary slot independently rolls Legendary (uncapped, ~5%).
-    const legendary = !tile.isStart && rollLegendary(rng);
+    const legendary = rollLegendary(rng);
     tile.monsters.push(
-      spawnCreature(pickType(zone, tile.band, rng), null, rng, legendary ? { legendary: true, statMult: LEGENDARY_STAT_MULT } : undefined)
+      spawnCreature(pickType(zone, rng), null, rng, legendary ? { legendary: true, statMult: LEGENDARY_STAT_MULT } : undefined)
     );
   }
   // At most one Super-Elite alive per zone.
-  if (!tile.isStart && !hasSE && maybeRollSuperElite(rng)) {
-    tile.monsters.push(spawnCreature(pickType(zone, tile.band, rng), null, rng, { superElite: true, statMult: SUPER_ELITE_STAT_MULT }));
+  if (!hasSE && maybeRollSuperElite(rng)) {
+    tile.monsters.push(spawnCreature(pickType(zone, rng), null, rng, { superElite: true, statMult: SUPER_ELITE_STAT_MULT }));
   }
   // At most one Titan alive per zone (rare natural manifestation).
-  if (!tile.isStart && !hasTitan) {
+  if (!hasTitan) {
     const t = maybeNaturalTitanSpawn(zone.id, rng);
     if (t) tile.monsters.push(t);
   }
-  tile.clearedAt = null;
 }
 
 function makeMapObject(zoneId, tiles) {
@@ -80,6 +144,7 @@ function makeMapObject(zoneId, tiles) {
 
 export function createZone(zoneId, rng) {
   const zone = ZONES[zoneId];
+  const wall = generateLayout(zone, rng);
   const tiles = [];
   let hasSE = false, hasTitan = false; // enforce the 1-per-zone caps as we fill
   for (let y = 0; y < zone.size; y++) {
@@ -87,7 +152,7 @@ export function createZone(zoneId, rng) {
       const tile = {
         x,
         y,
-        band: dangerBand(zone, x, y),
+        wall: wall[y * zone.size + x],
         isStart: x === zone.start.x && y === zone.start.y,
         monsters: [],
         clearedAt: null,

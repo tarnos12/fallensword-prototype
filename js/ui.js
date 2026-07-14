@@ -77,12 +77,21 @@ export function renderMap(state, onTileClick) {
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
       const tile = state.map.at(x, y);
-      const portal = portalAt(state.zoneId, x, y);
       const el = document.createElement('button');
       el.type = 'button';
-      el.className = `tile band-${tile.band}`;
       el.dataset.x = x;
       el.dataset.y = y;
+      // Wall tiles are impassable — render them as dungeon stone and skip all
+      // the marker/monster logic (a wall never holds a portal, lair or creature).
+      if (tile.wall) {
+        el.className = 'tile wall';
+        el.title = `(${x},${y}) — solid rock`;
+        el.addEventListener('click', () => onTileClick(x, y));
+        grid.appendChild(el);
+        continue;
+      }
+      const portal = portalAt(state.zoneId, x, y);
+      el.className = 'tile floor';
       const here = state.pos.x === x && state.pos.y === y;
       const lairBoss = bossAtLair(state.zoneId, x, y);
       const isLair = !!lairBoss;
@@ -100,7 +109,7 @@ export function renderMap(state, onTileClick) {
         (dots > 0 ? `<span class="monster-dots">${'●'.repeat(dots)}</span>` : '');
       const portalNote = portal ? `, portal to ${ZONES[portal.to].name}` : '';
       const lairNote = isLair ? (hasBoss ? `, ${lairBoss.name} lurks here` : ', an ancient lair') : '';
-      el.title = `(${x},${y}) — danger band ${tile.band}${dots ? `, ${dots} creature(s)` : ''}${lairNote}${portalNote}`;
+      el.title = `(${x},${y})${dots ? ` — ${dots} creature(s)` : ''}${lairNote}${portalNote}`;
       el.addEventListener('click', () => onTileClick(x, y));
       grid.appendChild(el);
     }

@@ -48,9 +48,10 @@ export const CREATURES = [
   },
 ];
 
-// The zone definition (GDD §3, §6.6). `start` is the safe haven; `bands` map
-// Chebyshev distance from the haven to a danger tier; `spawns` weight creatures
-// per band; `portals` connect zones (looked up by position, not stored per-tile).
+// The zone definition (GDD §3, §6.6). `start` is the safe haven; `wallDensity`
+// sets how mazey the dungeon layout is; `spawns` is ONE flat weighted table used
+// across every floor tile (no danger scaling — fixed roster per zone); `portals`
+// connect zones (looked up by position, not stored per-tile).
 export const ZONE = {
   id: 'azuremist',
   name: 'Azuremist Vale',
@@ -58,23 +59,17 @@ export const ZONE = {
   realm: 'Qi Condensation',
   start: { x: 0, y: 0 },
   startLabel: 'Sect Gate',
-  bands: [
-    { max: 3, band: 1 },
-    { max: 6, band: 2 },
-    { max: Infinity, band: 3 },
+  wallDensity: 0.24, // the gentlest maze — a forgiving starter vale
+  // Flat roster: any floor tile can spawn any of the vale's beasts — the wolf is
+  // common, the serpent frequent, and the warded rogue a rare hard wall.
+  spawns: [
+    { type: 'wolfSpirit', weight: 5 },
+    { type: 'boneSerpent', weight: 3 },
+    { type: 'rogueCultivator', weight: 1 },
   ],
-  spawns: {
-    1: [{ type: 'wolfSpirit', weight: 1 }],
-    2: [
-      { type: 'wolfSpirit', weight: 1 },
-      { type: 'boneSerpent', weight: 2 },
-    ],
-    3: [
-      { type: 'boneSerpent', weight: 1 },
-      { type: 'rogueCultivator', weight: 2 },
-    ],
-  },
   portals: [
-    { x: 9, y: 9, to: 'cindervein', entryX: 0, entryY: 0, minStage: 4 },
+    // Set deep in the vale (not the corner) so the player threads the maze to
+    // reach it; gated at QC4. Arrival lands on the Gorge Outpost haven.
+    { x: 7, y: 6, to: 'cindervein', entryX: 0, entryY: 0, minStage: 4 },
   ],
 };

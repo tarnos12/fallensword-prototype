@@ -138,15 +138,110 @@
 .pv-enh-row.on .pv-enh-fill { background: linear-gradient(90deg, var(--cinnabar, #c8433a), var(--gold)); }
 .pv-enh-row.on .pv-enh-name { color: var(--gold); }
 
-/* ---- Inventory / Backpack item grids -------------------------------- */
-.pv-item-grid {
+/* ---- Statistics: stat-point allocation ------------------------------ */
+.pv-points-banner {
+  margin: 10px 0;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm, 4px);
+  border: 1px dashed var(--panel-edge);
+  text-align: center;
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  color: var(--dim);
+  background: rgba(0, 0, 0, 0.14);
+}
+.pv-points-banner.on {
+  color: var(--gold);
+  border-color: var(--gold);
+  border-style: solid;
+  font-weight: 600;
+  box-shadow: 0 0 0 1px rgba(200, 162, 74, 0.25), inset 0 0 12px rgba(200, 162, 74, 0.12);
+}
+.pv-alloc-row { padding-right: 2px; }
+.pv-alloc-btn {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  margin-left: 6px;
+  padding: 0;
+  line-height: 1;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--gold);
+  background: rgba(200, 162, 74, 0.12);
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+  transition: background 0.12s ease, transform 0.08s ease;
+}
+.pv-alloc-btn:hover:not(:disabled) { background: var(--gold); color: var(--ink, #17120c); }
+.pv-alloc-btn:active:not(:disabled) { transform: scale(0.9); }
+.pv-alloc-btn:disabled { opacity: 0.28; cursor: default; border-color: var(--panel-edge); color: var(--dim); background: transparent; }
+
+/* ---- Equipment paper-doll ------------------------------------------- */
+.pv-doll {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-areas:
+    ".      helm   amulet"
+    "weapon robe   ring"
+    "gloves boots  .";
+  gap: 12px 10px;
+  justify-items: center;
+  padding: 4px 2px 2px;
+}
+.pv-doll-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.pv-doll-slot .item-slot { width: 56px; height: 56px; }
+.pv-doll-tag {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--dim);
+}
+
+/* ---- Inventory: 5-wide pack grid ------------------------------------ */
+.pv-inv-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
   gap: 8px;
 }
-#profile-inventory .pv-item-grid { grid-template-columns: repeat(auto-fill, 52px); }
+.pv-inv-grid .item-slot { width: 100%; aspect-ratio: 1 / 1; height: auto; }
+
+/* Legacy grid kept for any external reference; harmless if unused. */
+.pv-item-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); gap: 8px; }
+
 /* .item-slot styling is inherited from style.css (icon-<rarity>, item-icon). */
-#profile-page .item-slot { cursor: default; }
+#profile-page .item-slot { cursor: pointer; }
+#profile-page .item-slot.empty { cursor: default; }
+
+/* ---- Right-click context menu (self-contained) ---------------------- */
+.pv-ctx-menu {
+  position: fixed;
+  z-index: 2000;
+  min-width: 148px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--panel, #1c1712);
+  border: 1px solid var(--panel-edge);
+  border-radius: var(--radius-sm, 4px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+.pv-ctx-item {
+  text-align: left;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.pv-ctx-item:hover:not(:disabled) { background: rgba(200, 162, 74, 0.16); color: var(--gold); }
+.pv-ctx-item.danger { color: var(--cinnabar, #c8433a); }
+.pv-ctx-item.danger:hover:not(:disabled) { background: rgba(200, 67, 58, 0.18); color: var(--cinnabar, #c8433a); }
+.pv-ctx-item:disabled { opacity: 0.4; cursor: default; }
 
 /* ---- Active buffs ---------------------------------------------------- */
 .pv-buff-list { display: flex; flex-direction: column; gap: 6px; }

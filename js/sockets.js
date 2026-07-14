@@ -182,7 +182,7 @@ let overlay = null;
 let sk = null; // { state, actions }
 
 function socketedItems(player) {
-  return ['weapon', 'robe']
+  return Object.keys(player.equipment ?? {})
     .map((slot) => player.equipment?.[slot])
     .filter((it) => it && Array.isArray(it.sockets) && it.sockets.length > 0);
 }

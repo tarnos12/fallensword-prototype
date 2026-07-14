@@ -98,9 +98,7 @@
         <h2 class="side-group-title">Character</h2>
         <button class="tab-btn side-link" data-tab="profile" role="tab" type="button" aria-selected="false" style="--side-glyph: var(--i-lotus);"><span class="side-label">Profile</span></button>
         <button class="tab-btn side-link" data-tab="skills" role="tab" type="button" aria-selected="false" style="--side-glyph: var(--i-tree);"><span class="side-label">Skills</span></button>
-        <button class="tab-btn side-link" data-tab="cultivator" role="tab" type="button" aria-selected="false" style="--side-glyph: var(--i-spark);"><span class="side-label">Level Up</span></button>
-        <button class="tab-btn side-link" data-tab="equipment" role="tab" type="button" aria-selected="false" style="--side-glyph: var(--i-sword);"><span class="side-label">Equipment</span></button>
-        <button class="tab-btn side-link" data-tab="cultivator" role="tab" type="button" aria-selected="false" style="--side-glyph: var(--i-trophy);"><span class="side-label">Records</span></button>
+        <button class="tab-btn side-link" data-tab="records" role="tab" type="button" aria-selected="false" style="--side-glyph: var(--i-trophy);"><span class="side-label">Records</span></button>
       </div>
       <div class="side-group">
         <h2 class="side-group-title">Market</h2>
@@ -168,6 +166,8 @@
             <div id="profile-inventory" class="panel-box"></div>
             <div id="profile-backpack" class="panel-box"></div>
             <div id="profile-active-buffs" class="panel-box"></div>
+            <div id="cultivator-menu" class="panel-box"></div><!-- Ascension button injects here -->
+            <div id="equipment-menu" class="panel-box"><h3 class="nav-dock-title">Smithing &amp; Gear</h3></div><!-- Forge/Salvage/Jewelcraft inject here -->
           </div>
         </div>
       </div>
@@ -180,15 +180,17 @@
         <div id="char-sheet" class="panel-box">
           <h2>Cultivator</h2>
           <div id="char-stats"></div>
-          <div id="cultivator-menu"></div><!-- Ascension button injects here -->
         </div>
+      </div>
+    </section>
 
-        <div id="records" class="panel-box">
-          <h2>Records</h2>
-          <div id="records-menu">
-            <button id="btn-achievements" type="button" class="achievements-btn" title="Achievements — cultivation milestones"><span class="gi gi-trophy" aria-hidden="true"></span> Achievements <span id="achievements-badge" class="dim"></span></button>
-          </div><!-- Titles + Chronicle buttons inject here -->
-        </div>
+    <!-- Records: its own page (Achievements / Titles / Chronicle of Deeds). -->
+    <section id="view-records" class="tab-view" data-tab="records" role="tabpanel" aria-label="Records">
+      <div id="records" class="panel-box">
+        <h2>Records</h2>
+        <div id="records-menu">
+          <button id="btn-achievements" type="button" class="achievements-btn" title="Achievements — cultivation milestones"><span class="gi gi-trophy" aria-hidden="true"></span> Achievements <span id="achievements-badge" class="dim"></span></button>
+        </div><!-- Titles + Chronicle buttons inject here -->
       </div>
     </section>
 
@@ -204,10 +206,6 @@
         </div>
         <!-- loadouts.js injects #loadouts-box right after #gear-box -->
 
-        <div id="equipment-menu" class="panel-box">
-          <h3 class="nav-dock-title">Smithing &amp; Gear</h3>
-          <!-- Forge, Salvage, Jewelcraft buttons inject here -->
-        </div>
       </div>
     </section>
 

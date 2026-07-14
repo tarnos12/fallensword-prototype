@@ -110,6 +110,17 @@ const allocHandler = (stat) => {
   renderAll();
 };
 
+// Profile page (paper-doll equipment + 5-wide inventory + stat allocation) actions.
+// Each mutates via the existing game.js exports, then renderAll() re-draws the
+// profile (with these actions) and the HUD — restoring equip from the profile.
+const profileActions = {
+  onEquip: (id) => { equipItem(state, id); renderAll(); },
+  onUnequip: (slot) => { unequipItem(state, slot); renderAll(); },
+  onSell: (id) => { sellItem(state, id); renderAll(); },
+  onDestroy: (id) => { destroyItem(state, id); renderAll(); },
+  allocateStat: (stat) => { allocateStat(state, stat); renderAll(); },
+};
+
 function renderAll() {
   // Evaluate milestones first so a fresh unlock's log line renders this pass and
   // its toast fires alongside the UI update (GDD §6.5).
@@ -164,7 +175,7 @@ function renderAll() {
     renderAll();
   });
   renderSkillTree(state);
-  renderProfilePage(state); // FallenSword-style Profile view (js/profileview.js)
+  renderProfilePage(state, profileActions); // FallenSword-style Profile view (js/profileview.js)
   renderEventLog(state);
   updatePavilionBadge(state);
   renderLoadouts(state);
@@ -440,7 +451,7 @@ initToasts(); // unified toast/feedback host (task X)
 initTooltips(); // global instant-tooltip engine — styled hover tips over native title="" (slice T1)
 initTabs(); // full-view tab shell — wire the left sidebar nav (markup in index.html)
 // Refresh the Profile page the moment its tab is revealed (buff countdowns etc).
-setTabChangeHandler((id) => { if (id === 'profile') renderProfilePage(state); });
+setTabChangeHandler((id) => { if (id === 'profile') renderProfilePage(state, profileActions); });
 // Combat's "Continue" button just hides the inline side-panel (ui.js owns that
 // handler) — no tab switch needed now that the fight resolves on the Map.
 initReplay(state, { onReplay: (result) => runPlayback(result) });

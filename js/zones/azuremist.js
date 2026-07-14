@@ -55,11 +55,11 @@ export const CREATURES = [
 export const ZONE = {
   id: 'azuremist',
   name: 'Azuremist Vale',
-  size: 10,
+  size: 11, // odd so the maze grid tiles cleanly (cells on even coords)
   realm: 'Qi Condensation',
   start: { x: 0, y: 0 },
   startLabel: 'Sect Gate',
-  wallDensity: 0.24, // the gentlest maze — a forgiving starter vale
+  braid: 0.55, // the most open, forgiving maze — a starter vale with many loops
   // Flat roster: any floor tile can spawn any of the vale's beasts — the wolf is
   // common, the serpent frequent, and the warded rogue a rare hard wall.
   spawns: [
@@ -68,8 +68,8 @@ export const ZONE = {
     { type: 'rogueCultivator', weight: 1 },
   ],
   portals: [
-    // Set deep in the vale (not the corner) so the player threads the maze to
-    // reach it; gated at QC4. Arrival lands on the Gorge Outpost haven.
-    { x: 7, y: 6, to: 'cindervein', entryX: 0, entryY: 0, minStage: 4 },
+    // Deep in the vale; gated at QC4. Arrival lands ON Cindervein's return
+    // portal (0,6) — you step through and stand on the way back.
+    { x: 10, y: 8, to: 'cindervein', entryX: 0, entryY: 6, minStage: 4 },
   ],
 };

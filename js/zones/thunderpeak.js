@@ -78,12 +78,12 @@ export const CREATURES = [
 export const ZONE = {
   id: 'thunderpeak',
   name: 'Stormcrown Peak',
-  size: 10,
+  size: 11, // odd so the maze grid tiles cleanly (cells on even coords)
   realm: 'Core Formation',
   start: { x: 0, y: 0 },
   startLabel: 'Cloudgate Terrace',
-  wallDensity: 0.32, // the most broken, storm-wracked layout
-  keepOpen: [{ x: 9, y: 9 }], // the Celestial Warden's summit lair stays reachable
+  braid: 0.32, // the tightest, most storm-wracked maze
+  keepOpen: [{ x: 10, y: 10 }], // the Celestial Warden's summit lair stays reachable
   // Flat roster across the whole peak: roc common, wyrm frequent, Warden a
   // punishing apex wall.
   spawns: [
@@ -92,7 +92,7 @@ export const ZONE = {
     { type: 'celestialWarden', weight: 2 },
   ],
   portals: [
-    // The Cloudgate is the road home to Cindervein (arrive at the Gorge Outpost).
-    { x: 0, y: 0, to: 'cindervein', entryX: 0, entryY: 0, minStage: 0 },
+    // Road home to Cindervein — arrive ON its outbound Stormcrown portal (10,2).
+    { x: 0, y: 6, to: 'cindervein', entryX: 10, entryY: 2, minStage: 0 },
   ],
 };

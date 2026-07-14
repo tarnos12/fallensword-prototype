@@ -41,7 +41,7 @@ export const BOSSES = {
     maxHp: 315,
     reward: { xp: 2500, stones: 900 },
     drop: { level: 12, legendaryChance: 0.18 },
-    lair: { zoneId: 'cindervein', x: 9, y: 9 }, // deepest tile of the endgame zone
+    lair: { zoneId: 'cindervein', x: 10, y: 10 }, // deepest tile of the endgame zone
     lairHint: 'the deepest reach of the Gorge',
     minStage: 10, // Foundation Establishment 1 — you must cross the realm barrier
     cooldownMs: 30 * 60_000,
@@ -60,7 +60,7 @@ export const BOSSES = {
     maxHp: 450,
     reward: { xp: 5200, stones: 1800 },
     drop: { level: 15, legendaryChance: 0.3 },
-    lair: { zoneId: 'cindervein', x: 0, y: 9 }, // opposite band-3 corner from the Terror
+    lair: { zoneId: 'cindervein', x: 0, y: 10 }, // opposite far corner from the Terror
     lairHint: 'the coal-dark far corner of the Gorge',
     minStage: 14, // Foundation Establishment 5
     cooldownMs: 45 * 60_000,
@@ -84,7 +84,7 @@ export const BOSSES = {
     maxHp: 750,
     reward: { xp: 12000, stones: 3600 },
     drop: { level: 24, baseRarity: 'legendary', upgradeRarity: 'mythic', upgradeChance: 0.3 },
-    lair: { zoneId: 'thunderpeak', x: 9, y: 9 }, // storm-wracked summit, opposite the (0,0) Cloudgate portal
+    lair: { zoneId: 'thunderpeak', x: 10, y: 10 }, // storm-wracked summit, opposite the Cloudgate haven
     lairHint: 'the storm-wracked summit of the Peak',
     minStage: 23, // Core Formation 5 — the golden-core barrier's own guardian
     cooldownMs: 60 * 60_000,

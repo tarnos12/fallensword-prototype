@@ -411,6 +411,18 @@ initMeritShop(state, {
     if (r.ok) { saveGame(state); renderMeritShop(state); renderAll(); toast('Dao Heart path set.', 'success'); }
     else if (r.reason) toast(r.reason, 'warn');
   },
+  // Testing shortcut: trade spirit stones for Merit at 10 : 1 (whole 10s only).
+  convert: (stones) => {
+    const p = state.player;
+    const spend = Math.floor((stones || 0) / 10) * 10;
+    if (spend <= 0) { toast('Enter at least 10 spirit stones.', 'warn'); return; }
+    if ((p.spiritStones ?? 0) < spend) { toast('Not enough spirit stones.', 'error'); return; }
+    p.spiritStones -= spend;
+    const gained = spend / 10;
+    p.merit = (p.merit ?? 0) + gained;
+    toast(`Traded ${spend} spirit stones for ${gained} ✧ Merit.`, 'success');
+    saveGame(state); renderMeritShop(state); renderAll();
+  },
 });
 initSockets(state, {
   slot: (itemId, i, gemId) => {

@@ -341,6 +341,22 @@ export function renderMeritShop(state) {
   intro.textContent = 'Heaven does not coin money, but it keeps a ledger. Spend Merit where spirit stones cannot buy.';
   body.appendChild(intro);
 
+  // Testing shortcut: trade spirit stones for Merit at 10 : 1.
+  const conv = document.createElement('div');
+  conv.className = 'merit-convert';
+  conv.style.cssText = 'margin:0 0 16px;padding:11px 13px;border:1px solid var(--line,rgba(200,162,74,.28));border-radius:6px;display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;justify-content:space-between';
+  conv.innerHTML = `
+    <span style="font-weight:600">Trade spirit stones → Merit <em style="opacity:.7;font-style:normal">(10 : 1)</em><br>
+      <small style="opacity:.65">You have &#9670; ${p.spiritStones ?? 0} spirit stones</small></span>
+    <span style="display:flex;gap:8px;align-items:center">
+      <input id="merit-convert-input" type="number" min="10" step="10" value="100" style="width:92px;padding:5px 7px;text-align:right">
+      <button id="merit-convert-btn" type="button">Convert</button>
+    </span>`;
+  body.appendChild(conv);
+  $('merit-convert-btn').addEventListener('click', () => {
+    shop.actions.convert?.(parseInt($('merit-convert-input').value, 10) || 0);
+  });
+
   const grid = document.createElement('div');
   grid.className = 'merit-grid';
   for (const id of Object.keys(MERIT_UPGRADES)) grid.appendChild(upgradeRow(id));
@@ -375,5 +391,8 @@ export function initMeritShop(state, actions) {
   const close = () => overlay.classList.add('hidden');
   $('btn-premium')?.addEventListener('click', open);
   $('btn-close-meritshop').addEventListener('click', close);
+  // The top-bar Merit tile is a shortcut into the Hall of Merit.
+  const meritTile = $('chip-merit')?.closest('.hud-stat') || $('chip-merit');
+  if (meritTile) { meritTile.style.cursor = 'pointer'; meritTile.title = 'Open the Hall of Merit'; meritTile.addEventListener('click', open); }
   overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
 }

@@ -68,8 +68,8 @@ import { saveGame, loadGame, clearSave } from './save.js';
 // --- Qi (stamina) tuning. Retuned (doc 30 §1.1) from the prototype's fast
 // 1 Qi/3s (~1200/hr) to 1 Qi/48s (~75/hr, mid-band of the sourced 50–90/hr) so
 // Qi is actually scarce — the premise every ability cost + session-length knob
-// depends on. MAX_QI stays 120 (a full-from-empty tank now takes ~96 min).
-export const MAX_QI = 120;
+// depends on. MAX_QI raised to 1000 for testing (a larger Qi battery).
+export const MAX_QI = 1000;
 export const QI_REGEN_MS = 48_000; // 1 Qi per 48s, wall-clock (~75/hr)
 const STONE_ACCRUAL_MS = 3_600_000; // spirit-stones/hour accrued per real hour (sect disciples)
 

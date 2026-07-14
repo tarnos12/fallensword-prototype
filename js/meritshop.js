@@ -17,6 +17,7 @@
 import { respecStats, statPointsSpent } from './progression.js';
 import { resetMeridians, meridianPointsSpent } from './meridians.js';
 import { resetTechniques, techniquePointsSpent } from './techniques.js';
+import { setActiveTab } from './tabs.js';
 
 // --- Catalog data (doc 20 §3.2) ---------------------------------------------
 
@@ -241,7 +242,6 @@ export function daoHeartBonuses(player) {
 
 const $ = (id) => document.getElementById(id);
 
-let overlay = null;
 let shop = null; // { state, actions }
 
 function ensureStylesheet() {
@@ -331,7 +331,7 @@ function daoHeartSection() {
 }
 
 export function renderMeritShop(state) {
-  if (!overlay) return;
+  if (!$('meritshop-body')) return;
   const p = state.player;
   ensureMeritShopState(p);
 
@@ -376,27 +376,9 @@ export function renderMeritShop(state) {
 export function initMeritShop(state, actions) {
   shop = { state, actions };
   ensureStylesheet();
-
-  overlay = document.createElement('div');
-  overlay.id = 'meritshop-overlay';
-  overlay.className = 'hidden';
-  overlay.innerHTML = `
-    <div id="meritshop-panel">
-      <div id="meritshop-header">
-        <h2>Hall of Merit</h2>
-        <span id="meritshop-balance" class="meritshop-balance"></span>
-        <button id="btn-close-meritshop" type="button" title="Close">✕</button>
-      </div>
-      <div id="meritshop-body"></div>
-    </div>`;
-  document.body.appendChild(overlay);
-
-  const open = () => { renderMeritShop(state); overlay.classList.remove('hidden'); };
-  const close = () => overlay.classList.add('hidden');
-  $('btn-premium')?.addEventListener('click', open);
-  $('btn-close-meritshop').addEventListener('click', close);
-  // The top-bar Merit tile is a shortcut into the Hall of Merit.
+  // The Hall of Merit is a full page (#view-merit) now — #btn-premium is a
+  // tab-btn that tabs.js switches to (main.js renders it on tab-show). The HUD
+  // ✧ Merit tile is a shortcut that jumps to the page.
   const meritTile = $('chip-merit')?.closest('.hud-stat') || $('chip-merit');
-  if (meritTile) { meritTile.style.cursor = 'pointer'; meritTile.title = 'Open the Hall of Merit'; meritTile.addEventListener('click', open); }
-  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+  if (meritTile) { meritTile.style.cursor = 'pointer'; meritTile.title = 'Open the Hall of Merit'; meritTile.addEventListener('click', () => setActiveTab('merit')); }
 }

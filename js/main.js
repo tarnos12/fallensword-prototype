@@ -54,6 +54,7 @@ import {
   initCombatSettings,
   initCodex,
   initPavilion,
+  showPavilion,
   updatePavilionBadge,
 } from './ui.js';
 import { initTutorial } from './tutorial.js';
@@ -441,7 +442,11 @@ initToasts(); // unified toast/feedback host (task X)
 initTooltips(); // global instant-tooltip engine — styled hover tips over native title="" (slice T1)
 initTabs(); // full-view tab shell — wire the left sidebar nav (markup in index.html)
 // Refresh the Profile page the moment its tab is revealed (buff countdowns etc).
-setTabChangeHandler((id) => { if (id === 'profile') renderProfilePage(state, profileActions); });
+setTabChangeHandler((id) => {
+  if (id === 'profile') renderProfilePage(state, profileActions);
+  else if (id === 'pavilion') showPavilion();
+  else if (id === 'merit') renderMeritShop(state);
+});
 // Combat's "Continue" button just hides the inline side-panel (ui.js owns that
 // handler) — no tab switch needed now that the fight resolves on the Map.
 initReplay(state, { onReplay: (result) => runPlayback(result) });

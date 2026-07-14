@@ -1166,23 +1166,28 @@ export function updatePavilionBadge(state) {
 
 export function initPavilion(state, actions) {
   pav = { state, actions };
-  const overlay = $('pavilion-overlay');
-  $('btn-pavilion').addEventListener('click', () => {
-    pavTab = 'buy';
-    renderPavilion();
-    overlay.classList.remove('hidden');
-  });
-  $('btn-close-pavilion').addEventListener('click', () => overlay.classList.add('hidden'));
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) overlay.classList.add('hidden');
-  });
+  // The Pavilion is now a full page (#view-pavilion), not a modal — tabs.js
+  // switches to it when the sidebar "Treasure Pavilion" tab-btn is clicked; we
+  // just wire its internal sub-tabs and render on demand.
   for (const btn of document.querySelectorAll('.pav-tab')) {
     btn.addEventListener('click', () => {
       pavTab = btn.dataset.tab;
+      for (const b of document.querySelectorAll('.pav-tab')) b.classList.toggle('active', b === btn);
       renderPavilion();
     });
   }
   updatePavilionBadge(state);
+}
+
+// Render the Pavilion page (called by main.js's tab-change handler when the
+// Treasure Pavilion tab is revealed). Resets to the Browse sub-tab each open.
+export function showPavilion() {
+  if (!pav) return;
+  pavTab = 'buy';
+  for (const btn of document.querySelectorAll('.pav-tab')) {
+    btn.classList.toggle('active', btn.dataset.tab === 'buy');
+  }
+  renderPavilion();
 }
 
 // --- Sect / Warband (GDD §4.3). A modal listing your hired disciples (with

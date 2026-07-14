@@ -101,8 +101,8 @@
       </div>
       <div class="side-group">
         <h2 class="side-group-title">Market</h2>
-        <button id="btn-pavilion" class="side-link" type="button" title="Treasure Pavilion — the auction house" style="--side-glyph: var(--i-coin);"><span class="side-label">Treasure Pavilion</span><span id="pavilion-mail-count" class="mail-badge hidden"></span></button>
-        <button id="btn-premium" class="side-link" type="button" title="Hall of Merit — premium Merit shop" style="--side-glyph: var(--i-spark);"><span class="side-label">Hall of Merit</span></button>
+        <button id="btn-pavilion" class="tab-btn side-link" data-tab="pavilion" role="tab" type="button" aria-selected="false" title="Treasure Pavilion — the auction house" style="--side-glyph: var(--i-coin);"><span class="side-label">Treasure Pavilion</span><span id="pavilion-mail-count" class="mail-badge hidden"></span></button>
+        <button id="btn-premium" class="tab-btn side-link" data-tab="merit" role="tab" type="button" aria-selected="false" title="Hall of Merit — premium Merit shop" style="--side-glyph: var(--i-spark);"><span class="side-label">Hall of Merit</span></button>
       </div>
       <div class="side-group">
         <h2 class="side-group-title">Quests</h2>
@@ -234,6 +234,34 @@
         <ul id="event-list"></ul>
       </div>
     </section>
+
+    <!-- Treasure Pavilion (auction house) — a full page, not a modal. -->
+    <section id="view-pavilion" class="tab-view" data-tab="pavilion" role="tabpanel" aria-label="Treasure Pavilion">
+      <div id="pavilion-panel" class="panel-box">
+        <div id="pavilion-header">
+          <h2>Treasure Pavilion <span id="pavilion-stones" class="dim"></span></h2>
+        </div>
+        <div id="pavilion-tabs">
+          <button type="button" class="pav-tab active" data-tab="buy">Browse</button>
+          <button type="button" class="pav-tab" data-tab="sell">Sell</button>
+          <button type="button" class="pav-tab" data-tab="mine">My Listings</button>
+          <button type="button" class="pav-tab" data-tab="mailbox">Mailbox <span id="pav-mail-badge" class="mail-badge hidden"></span></button>
+        </div>
+        <div id="pavilion-body"></div>
+      </div>
+    </section>
+
+    <!-- Hall of Merit (premium shop) — a full page, not a modal. meritshop.js
+         renders into #meritshop-body. -->
+    <section id="view-merit" class="tab-view" data-tab="merit" role="tabpanel" aria-label="Hall of Merit">
+      <div id="meritshop-panel" class="panel-box">
+        <div id="meritshop-header">
+          <h2>Hall of Merit</h2>
+          <span id="meritshop-balance" class="meritshop-balance"></span>
+        </div>
+        <div id="meritshop-body"></div>
+      </div>
+    </section>
   </main>
 
   <div id="codex-overlay" class="hidden">
@@ -244,22 +272,6 @@
       </div>
       <div id="codex-summary"></div>
       <div id="codex-body"></div>
-    </div>
-  </div>
-
-  <div id="pavilion-overlay" class="hidden">
-    <div id="pavilion-panel">
-      <div id="pavilion-header">
-        <h2>Treasure Pavilion <span id="pavilion-stones" class="dim"></span></h2>
-        <button id="btn-close-pavilion" type="button" title="Close">✕</button>
-      </div>
-      <div id="pavilion-tabs">
-        <button type="button" class="pav-tab active" data-tab="buy">Browse</button>
-        <button type="button" class="pav-tab" data-tab="sell">Sell</button>
-        <button type="button" class="pav-tab" data-tab="mine">My Listings</button>
-        <button type="button" class="pav-tab" data-tab="mailbox">Mailbox <span id="pav-mail-badge" class="mail-badge hidden"></span></button>
-      </div>
-      <div id="pavilion-body"></div>
     </div>
   </div>
 

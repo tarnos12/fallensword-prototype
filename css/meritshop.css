@@ -1,28 +1,12 @@
 /* Hall of Merit — premium upgrade shop (doc 20 §3). Own sheet — injected by
    meritshop.js. Reuses the shared design tokens (:root in style.css), so it
-   themes for free. Opens from the HUD's #btn-premium (✧) icon, not a nav
-   button, so this file has no *-nav-btn rule of its own. */
-
-#meritshop-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 80;
-  background: rgba(8, 9, 13, 0.8);
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 40px 16px;
-  overflow-y: auto;
-}
+   themes for free. It is a full PAGE now (#view-merit), reached from the sidebar
+   "Hall of Merit" tab and the HUD ✧ Merit tile. */
 
 #meritshop-panel {
-  background: var(--panel);
-  border: 1px solid var(--gold);
-  border-radius: 8px;
-  width: 100%;
-  max-width: 620px;
+  max-width: 900px;
+  margin: 0 auto;
   padding: 16px 20px 22px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
 }
 
 #meritshop-header {

@@ -17,7 +17,7 @@
 // IA restructure (Wave 1): Combat tab deleted (combat resolves in a Map
 // side-panel) and Halls dissolved. UI-shell revamp adds the Profile surface.
 // The switchable views (nav lives in the left #sidebar now):
-const TABS = ['map', 'profile', 'cultivator', 'equipment', 'records', 'skills', 'quests'];
+const TABS = ['map', 'profile', 'cultivator', 'equipment', 'records', 'skills', 'quests', 'pavilion', 'merit'];
 let active = 'map';
 let bound = false;
 

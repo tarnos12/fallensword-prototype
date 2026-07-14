@@ -15,16 +15,25 @@
 // =====================================================================
 
 // IA restructure (Wave 1): Combat tab deleted (combat resolves in a Map
-// side-panel) and Halls dissolved. The five core surfaces:
-const TABS = ['map', 'cultivator', 'equipment', 'skills', 'quests'];
+// side-panel) and Halls dissolved. UI-shell revamp adds the Profile surface.
+// The switchable views (nav lives in the left #sidebar now):
+const TABS = ['map', 'profile', 'cultivator', 'equipment', 'skills', 'quests'];
 let active = 'map';
 let bound = false;
+
+// Optional per-switch hook (registered by main.js). Lets a view refresh its
+// contents the moment it's revealed (e.g. the Profile page) without tabs.js
+// importing any game logic. Kept presentation-neutral: it just forwards the id.
+let onChange = null;
+export function setTabChangeHandler(fn) { onChange = fn; }
 
 function views() {
   return Array.from(document.querySelectorAll('#layout .tab-view'));
 }
 function buttons() {
-  return Array.from(document.querySelectorAll('#tab-bar .tab-btn'));
+  // Nav lives in the left sidebar now; only the view-switching entries carry
+  // .tab-btn (modal-opening links in the sidebar do not).
+  return Array.from(document.querySelectorAll('#sidebar .tab-btn'));
 }
 
 export function activeTab() {
@@ -49,6 +58,7 @@ export function setActiveTab(id) {
   // its start rather than a stale scroll position.
   const view = views().find((v) => v.dataset.tab === id);
   if (view) view.scrollTop = 0;
+  if (onChange) onChange(id);
 }
 
 // Find the tab-view that contains the element with the given id and activate

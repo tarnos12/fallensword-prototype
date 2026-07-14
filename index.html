@@ -36,20 +36,27 @@
   <link rel="stylesheet" href="css/fixes.css"><!-- desktop overflow fix: after responsive so the >=621px override wins -->
   <link rel="stylesheet" href="css/modalfx.css"><!-- subtle modal open animation: linked last so it layers on top -->
   <link rel="stylesheet" href="css/tabs.css"><!-- full-view tab shell: linked LAST so its single-viewport layout wins over style/hud/responsive -->
+  <link rel="stylesheet" href="css/shell.css"><!-- FallenSword shell: top bar + left sidebar grid + Profile page -->
+  <link rel="stylesheet" href="css/profileview.css"><!-- Profile page (js/profileview.js) -->
   <script>/* theme bootstrap — set data-theme before paint to avoid a flash */try{var t=localStorage.getItem('fallen-immortal-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}</script>
 </head>
 <body>
   <a href="#map-grid" class="skip-link">Skip to map</a>
   <header id="header">
     <h1>Fallen Immortal <span class="subtitle">Cultivate · Hunt · Ascend</span></h1>
-    <!-- HUD (board task AB): labelled stat tiles + Qi/breakthrough meters. The
-         chip-* ids are kept as the value/text spans so renderPlayerBar + the
-         tutorial spotlight (#chip-qi) keep binding unchanged; the bar-* fills
-         are new elements renderPlayerBar also drives. -->
+    <!-- Slim top bar (FallenSword layout): basic player info only —
+         Realm · Level · Breakthrough(XP) · Qi · Spirit Stones · Merit. The
+         chip-* / bar-* ids are kept so renderPlayerBar + the tutorial spotlight
+         (#chip-qi) keep binding unchanged. Nav + utility buttons moved to the
+         left sidebar. -->
     <div id="player-bar">
       <div class="hud-stat hud-key">
         <span class="hud-label">Realm</span>
         <span class="hud-value" id="chip-level" title="Cultivation stage"></span>
+      </div>
+      <div class="hud-stat">
+        <span class="hud-label">Level</span>
+        <span class="hud-value" id="chip-levelnum" title="Cultivation level"></span>
       </div>
       <div class="hud-stat hud-meter">
         <span class="hud-label">Breakthrough</span>
@@ -66,38 +73,49 @@
         </div>
       </div>
       <div class="hud-stat">
-        <span class="hud-label">Vitality</span>
-        <span class="hud-value" id="chip-hp" title="Health (effective)"></span>
-      </div>
-      <div class="hud-stat">
         <span class="hud-label">Spirit Stones</span>
         <span class="hud-value hud-gold" id="chip-stones" title="Spirit stones"></span>
       </div>
       <div class="hud-stat">
-        <span class="hud-label">Points</span>
-        <span class="hud-value" id="chip-points" title="Unspent stat points"></span>
+        <span class="hud-label">Merit</span>
+        <span class="hud-value hud-merit" id="chip-merit" title="Merit — premium currency, spent in the Hall of Merit"></span>
       </div>
-    </div>
-    <!-- Persistent HUD icons (IA restructure, Wave 1): the Auction House and the
-         premium Hall of Merit shop are HUD icons, not tabs; settings + save backup
-         are small utility icons. The ✧ premium button is a Wave-2 hook. -->
-    <div id="hud-actions">
-      <button id="btn-pavilion" class="hud-icon-btn pavilion-btn" type="button" title="Auction House — Treasure Pavilion">◆<span id="pavilion-mail-count" class="mail-badge hidden"></span></button>
-      <button id="btn-premium" class="hud-icon-btn" type="button" title="Hall of Merit — premium Merit shop">✧</button>
-      <button id="btn-settings" class="hud-icon-btn settings-btn" type="button" title="Settings — display preferences, tutorial &amp; save">⚙</button>
-      <button id="btn-backup" class="hud-icon-btn backup-btn" type="button" title="Back up or restore your save">💾</button>
     </div>
   </header>
 
-  <!-- Full-view tab bar (UI revamp): top-level tabs switch the entire main area
-       so only one screen shows at a time and the page never scrolls. Buttons
-       carry data-tab matching a .tab-view below; js/tabs.js wires them. -->
-  <nav id="tab-bar" role="tablist" aria-label="Main sections">
-    <button class="tab-btn tab-active" data-tab="map" role="tab" type="button" aria-selected="true"><span class="tab-icon">🗺</span><span class="tab-label">Map</span></button>
-    <button class="tab-btn" data-tab="cultivator" role="tab" type="button" aria-selected="false"><span class="tab-icon">🧘</span><span class="tab-label">Cultivator</span></button>
-    <button class="tab-btn" data-tab="equipment" role="tab" type="button" aria-selected="false"><span class="tab-icon">⚔</span><span class="tab-label">Equipment</span></button>
-    <button class="tab-btn" data-tab="skills" role="tab" type="button" aria-selected="false"><span class="tab-icon">🌳</span><span class="tab-label">Skills</span></button>
-    <button class="tab-btn" data-tab="quests" role="tab" type="button" aria-selected="false"><span class="tab-icon">📜</span><span class="tab-label">Quests</span></button>
+  <!-- Left-side navigation (FallenSword-style vertical sidebar). Grouped links:
+       view-switching entries are .tab-btn[data-tab] driven by js/tabs.js; the
+       Market + footer entries keep their original modal-opening button ids
+       (#btn-pavilion / #btn-premium / #btn-settings / #btn-backup) so all
+       existing wiring in main.js/ui.js binds unchanged. -->
+  <nav id="sidebar" aria-label="Main navigation">
+    <div class="side-scroll">
+      <div class="side-group" role="tablist" aria-label="World">
+        <h2 class="side-group-title">World</h2>
+        <button class="tab-btn side-link tab-active" data-tab="map" role="tab" type="button" aria-selected="true" style="--side-glyph: var(--i-map);"><span class="side-label">Map</span></button>
+      </div>
+      <div class="side-group" role="tablist" aria-label="Character">
+        <h2 class="side-group-title">Character</h2>
+        <button class="tab-btn side-link" data-tab="profile" role="tab" type="button" aria-selected="false" style="--side-glyph: var(--i-lotus);"><span class="side-label">Profile</span></button>
+        <button class="tab-btn side-link" data-tab="skills" role="tab" type="button" aria-selected="false" style="--side-glyph: var(--i-tree);"><span class="side-label">Skills</span></button>
+        <button class="tab-btn side-link" data-tab="cultivator" role="tab" type="button" aria-selected="false" style="--side-glyph: var(--i-spark);"><span class="side-label">Level Up</span></button>
+        <button class="tab-btn side-link" data-tab="equipment" role="tab" type="button" aria-selected="false" style="--side-glyph: var(--i-sword);"><span class="side-label">Equipment</span></button>
+        <button class="tab-btn side-link" data-tab="cultivator" role="tab" type="button" aria-selected="false" style="--side-glyph: var(--i-trophy);"><span class="side-label">Records</span></button>
+      </div>
+      <div class="side-group">
+        <h2 class="side-group-title">Market</h2>
+        <button id="btn-pavilion" class="side-link" type="button" title="Treasure Pavilion — the auction house" style="--side-glyph: var(--i-coin);"><span class="side-label">Treasure Pavilion</span><span id="pavilion-mail-count" class="mail-badge hidden"></span></button>
+        <button id="btn-premium" class="side-link" type="button" title="Hall of Merit — premium Merit shop" style="--side-glyph: var(--i-spark);"><span class="side-label">Hall of Merit</span></button>
+      </div>
+      <div class="side-group">
+        <h2 class="side-group-title">Quests</h2>
+        <button class="tab-btn side-link" data-tab="quests" role="tab" type="button" aria-selected="false" style="--side-glyph: var(--i-scroll);"><span class="side-label">Quest Book</span></button>
+      </div>
+    </div>
+    <div class="side-footer">
+      <button id="btn-settings" class="side-link" type="button" title="Settings — display preferences, tutorial &amp; save" style="--side-glyph: var(--i-gear);"><span class="side-label">Settings</span></button>
+      <button id="btn-backup" class="side-link" type="button" title="Back up or restore your save" style="--side-glyph: var(--i-save);"><span class="side-label">Backup</span></button>
+    </div>
   </nav>
 
   <main id="layout">
@@ -129,6 +147,27 @@
           <div class="combat-buttons">
             <button id="btn-skip" type="button">Skip ▶▶</button>
             <button id="btn-close-combat" type="button" class="hidden">Continue</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Profile screen (FallenSword-style): emblem + statistics + enhancements
+         on the left, equipped inventory + backpack + active buffs on the right.
+         Rendered by js/profileview.js (renderProfilePage). -->
+    <section id="view-profile" class="tab-view" data-tab="profile" role="tabpanel" aria-label="Profile">
+      <div id="profile-page">
+        <h2 id="profile-heading">Cultivator's Profile</h2>
+        <div id="profile-cols">
+          <div id="profile-left">
+            <div id="profile-emblem" class="panel-box"></div>
+            <div id="profile-statistics" class="panel-box"></div>
+            <div id="profile-enhancements" class="panel-box"></div>
+          </div>
+          <div id="profile-right">
+            <div id="profile-inventory" class="panel-box"></div>
+            <div id="profile-backpack" class="panel-box"></div>
+            <div id="profile-active-buffs" class="panel-box"></div>
           </div>
         </div>
       </div>

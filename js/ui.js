@@ -31,6 +31,13 @@ function barWidth(id, ratio) {
   if (el) el.style.width = ratio + '%';
 }
 
+// Set text on a chip only if it's present — the FallenSword-style slim top bar
+// (UI-shell revamp) drops the Vitality/Points tiles, so those ids may be absent.
+function chipText(id, text) {
+  const el = $(id);
+  if (el) el.textContent = text;
+}
+
 export function renderPlayerBar(state) {
   const p = state.player;
   const eff = effectiveStats(p);
@@ -38,13 +45,19 @@ export function renderPlayerBar(state) {
   const atPeak = p.level >= MAX_STAGE;
   const qi = state.qi;
   const qiMax = maxQi(p);
-  $('chip-level').textContent = stageName(p.level);
-  $('chip-xp').textContent = atPeak ? `${p.xp} · peak` : `${p.xp} / ${need}`;
-  $('chip-points').textContent = `✦ ${p.statPoints}`;
-  $('chip-points').classList.toggle('attention', p.statPoints > 0);
-  $('chip-stones').textContent = `◆ ${p.spiritStones}`;
-  $('chip-hp').textContent = eff.maxHp;
-  $('chip-qi').textContent = `${qi} / ${qiMax}`;
+  chipText('chip-level', stageName(p.level));
+  chipText('chip-levelnum', String(p.level));
+  chipText('chip-xp', atPeak ? `${p.xp} · peak` : `${p.xp} / ${need}`);
+  chipText('chip-stones', `◆ ${p.spiritStones}`);
+  chipText('chip-merit', `✧ ${p.merit ?? 0}`);
+  chipText('chip-qi', `${qi} / ${qiMax}`);
+  // Retained (guarded) so a layout that still shows them keeps working.
+  chipText('chip-hp', eff.maxHp);
+  const pts = $('chip-points');
+  if (pts) {
+    pts.textContent = `✦ ${p.statPoints}`;
+    pts.classList.toggle('attention', p.statPoints > 0);
+  }
   // Meter fills.
   barWidth('bar-xp', atPeak ? 100 : pct(p.xp, need));
   barWidth('bar-qi', pct(qi, qiMax));

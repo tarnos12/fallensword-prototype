@@ -1,0 +1,175 @@
+/* =====================================================================
+   Profile page (UI-shell revamp) — the FallenSword-style character profile
+   rendered by js/profileview.js into #view-profile. Two columns; ink-and-
+   cinnabar tokens throughout so it themes light/dark for free.
+   ===================================================================== */
+
+#profile-page { max-width: 1040px; margin: 0 auto; }
+
+#profile-heading {
+  margin: 0 0 14px;
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--gold);
+}
+
+#profile-cols {
+  display: grid;
+  grid-template-columns: minmax(240px, 340px) 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+#profile-left,
+#profile-right { display: flex; flex-direction: column; gap: 14px; }
+
+#profile-page .panel-box { margin: 0; }
+
+.pv-panel-title {
+  margin: 0 0 10px;
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--dim);
+  border-bottom: 1px solid var(--panel-edge);
+  padding-bottom: 6px;
+}
+
+/* ---- Emblem: a geometric ☯ medallion with a cinnabar aura ----------- */
+#profile-emblem { text-align: center; padding: 20px 16px; }
+.pv-emblem-frame {
+  position: relative;
+  width: 128px;
+  height: 128px;
+  margin: 0 auto 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pv-emblem-aura {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 42%, rgba(200, 67, 58, 0.5), rgba(200, 67, 58, 0.12) 55%, transparent 72%);
+  filter: blur(2px);
+}
+.pv-emblem-medallion {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 35%, #2b2315, #17120c);
+  border: 2px solid var(--gold);
+  box-shadow: 0 0 0 4px rgba(200, 162, 74, 0.14), inset 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+.pv-emblem-glyph {
+  font-size: 3rem;
+  line-height: 1;
+  color: var(--gold);
+  text-shadow: 0 0 12px rgba(200, 162, 74, 0.5);
+}
+.pv-emblem-name {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.pv-emblem-title {
+  margin-top: 2px;
+  font-size: 0.82rem;
+  color: var(--gold);
+  letter-spacing: 0.04em;
+}
+
+/* ---- Statistics panel ------------------------------------------------ */
+.pv-stat-list { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 14px; }
+.pv-stat-list + .pv-stat-list {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--panel-edge);
+}
+.pv-combat { grid-template-columns: 1fr 1fr 1fr; }
+.pv-stat-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 0;
+}
+.pv-stat-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--dim);
+}
+.pv-stat-value {
+  font-size: 0.92rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.pv-combat .pv-stat-value { color: var(--gold); }
+
+/* ---- Enhancements: labelled progress bars --------------------------- */
+.pv-enh-list { display: flex; flex-direction: column; gap: 10px; }
+.pv-enh-row { display: flex; flex-direction: column; gap: 4px; }
+.pv-enh-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.pv-enh-name { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+.pv-enh-detail { font-size: 0.74rem; }
+.pv-enh-track {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+.pv-enh-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #8a6d2c, var(--gold));
+}
+.pv-enh-row.on .pv-enh-fill { background: linear-gradient(90deg, var(--cinnabar, #c8433a), var(--gold)); }
+.pv-enh-row.on .pv-enh-name { color: var(--gold); }
+
+/* ---- Inventory / Backpack item grids -------------------------------- */
+.pv-item-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  gap: 8px;
+}
+#profile-inventory .pv-item-grid { grid-template-columns: repeat(auto-fill, 52px); }
+/* .item-slot styling is inherited from style.css (icon-<rarity>, item-icon). */
+#profile-page .item-slot { cursor: default; }
+
+/* ---- Active buffs ---------------------------------------------------- */
+.pv-buff-list { display: flex; flex-direction: column; gap: 6px; }
+.pv-buff-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 8px;
+  border: 1px solid var(--panel-edge);
+  border-radius: var(--radius-sm, 4px);
+  background: rgba(0, 0, 0, 0.14);
+}
+.pv-buff-name { font-weight: 600; color: var(--text); font-size: 0.84rem; }
+.pv-buff-eff { flex: 1 1 auto; font-size: 0.76rem; }
+.pv-buff-time {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--qi, #63b585);
+}
+
+/* ---- Responsive: single column on narrow widths --------------------- */
+@media (max-width: 720px) {
+  #profile-cols { grid-template-columns: 1fr; }
+  .pv-combat { grid-template-columns: 1fr 1fr; }
+}

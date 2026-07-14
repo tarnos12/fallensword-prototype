@@ -79,7 +79,8 @@ import { stageName } from './progression.js';
 import { recordFight, initReplay, getLastFight, setReplayVisible } from './replay.js';
 import { initInput } from './input.js';
 import { initTooltips } from './tooltips.js';
-import { initTabs, setActiveTab } from './tabs.js';
+import { initTabs, setActiveTab, setTabChangeHandler } from './tabs.js';
+import { renderProfilePage } from './profileview.js';
 import { initStats } from './stats.js';
 import { initTitles } from './titles.js';
 
@@ -163,6 +164,7 @@ function renderAll() {
     renderAll();
   });
   renderSkillTree(state);
+  renderProfilePage(state); // FallenSword-style Profile view (js/profileview.js)
   renderEventLog(state);
   updatePavilionBadge(state);
   renderLoadouts(state);
@@ -424,7 +426,9 @@ initSockets(state, {
 });
 initToasts(); // unified toast/feedback host (task X)
 initTooltips(); // global instant-tooltip engine — styled hover tips over native title="" (slice T1)
-initTabs(); // full-view tab shell — wire the tab bar (markup lives in index.html)
+initTabs(); // full-view tab shell — wire the left sidebar nav (markup in index.html)
+// Refresh the Profile page the moment its tab is revealed (buff countdowns etc).
+setTabChangeHandler((id) => { if (id === 'profile') renderProfilePage(state); });
 // Combat's "Continue" button just hides the inline side-panel (ui.js owns that
 // handler) — no tab switch needed now that the fight resolves on the Map.
 initReplay(state, { onReplay: (result) => runPlayback(result) });

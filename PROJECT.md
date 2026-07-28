@@ -2,7 +2,8 @@
 
 Project detail for the agent team. **For team-running rules (the 3 rules, audit protocol, readiness
 gate, hygiene), see `CLAUDE.md`.** This file holds *what* is built; `CLAUDE.md` holds *how* the team
-operates. Keep the split clean.
+operates. Keep the split clean. **Where the last session left off — in-flight
+threads, parked decisions, lessons — lives in [`HANDOFF.md`](HANDOFF.md); read it before starting work.**
 
 ---
 
